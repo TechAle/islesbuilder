@@ -11,15 +11,23 @@ export class ItemManager {
 
     /** Inizializza le datalist HTML per i suggerimenti degli oggetti */
     initDatalists() {
-        Object.keys(dataStore.data.items).forEach(slot => {
-            const datalist = document.getElementById(`list-${slot}`);
-            if (!datalist) return;
-            datalist.innerHTML = '';
-            dataStore.data.items[slot].forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.name;
-                datalist.appendChild(opt);
-            });
+        Object.keys(dataStore.data.items).forEach(slots => {
+            if (slots === "ring") {
+                slots = ["ring1", "ring2"];
+            } else slots = [slots]
+            slots.forEach(slot => {
+                const datalist = document.getElementById(`list-${slot}`);
+                if (!datalist) return;
+                datalist.innerHTML = '';
+                let valData = slot
+                if (valData.includes("ring"))
+                    valData = "ring"
+                dataStore.data.items[valData].forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.name;
+                    datalist.appendChild(opt);
+                });
+            })
         });
     }
 

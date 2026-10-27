@@ -65,7 +65,7 @@ export let ITEM_DATABASE = {
     ],
     chestplate: [
     ],
-    ring1: [
+    ring: [
     ],
     leggings: [
     ],
@@ -74,6 +74,8 @@ export let ITEM_DATABASE = {
     feet: [
     ],
     core: [
+        {name: "Archer Core", stats: {"Pierce Damage": "20%"}},
+        {name: "Assassin Core", stats: {"Stab Damage": "20%"}}
     ],
     pets: [
         // { name: 'Fenice', stats: { HP: 150, 'Mana Regen': 10 } } Per ricordare cosa danno

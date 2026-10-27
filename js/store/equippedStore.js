@@ -14,7 +14,7 @@
  * @property {Record<'warrior'|'archer'|'mage', Map<string, number>>} treeLevels
  */
 
-import {dataStore} from "./dataStore";
+import {dataStore} from "./dataStore.js";
 
 /**
  * @callback StoreSubscriber
@@ -39,7 +39,7 @@ export class BuildStore {
                 helmet:     { name: '', stats: {}, augments: ['', '', ''] },
                 amulet:     { name: '', stats: {}, augments: ['', '', ''] },
                 chestplate: { name: '', stats: {}, augments: ['', '', ''] },
-                ring1:      { name: '', stats: {}, augments: ['', '', ''] },
+                ring:      { name: '', stats: {}, augments: ['', '', ''] },
                 leggings:   { name: '', stats: {}, augments: ['', '', ''] },
                 boots:      { name: '', stats: {}, augments: ['', '', ''] },
                 feet:       { name: '', stats: {}, augments: ['', '', ''] },

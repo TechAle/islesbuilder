@@ -6,7 +6,7 @@ import { StatsManager } from './modules/statsManager.js';
 import { DpsManager } from './modules/dpsManager.js';
 import { ShareManager } from './modules/shareManager.js';
 import {ApiManager} from "./modules/apiManager.js";
-import {dataStore} from "./store/dataStore";
+import {dataStore} from "./store/dataStore.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const itemMgr = new ItemManager();
