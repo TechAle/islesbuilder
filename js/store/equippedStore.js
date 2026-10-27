@@ -81,3 +81,4 @@ export class BuildStore {
 }
 
 export const equippedStore = new BuildStore();
+window.equippedStore = equippedStore;

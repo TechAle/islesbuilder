@@ -4,14 +4,13 @@ import { AUGMENT_DATABASE } from '../store/constants.js';
 export class StatsManager {
     constructor() {
         this.container = document.getElementById('detailed-stats-container');
+        /** @type {Record<string, number>} */
+        this.statsValues = {}
     }
 
     /** Ricalcola i valori aggregati di tutte le statistiche */
     recalculate() {
-        /** @type {Record<string, number>} */
-        const totals = {};
-        /** @type {Set<string>} */
-        const percentageStats = new Set();
+        this.statsValues = {}
         const { activeEquip, elixirs } = equippedStore.state;
 
         Object.values(activeEquip).forEach(item => {
@@ -19,86 +18,65 @@ export class StatsManager {
 
             Object.entries(item.stats).forEach(([stat, val]) => {
                 if (stat.includes("Ability") || stat.includes("Augment") || stat.includes("Level") || stat.includes("Damage Type"))
-                    return
+                    return;
+                let numericVal = 0;
+                let isPercent = false;
 
-                let numericVal = typeof val === 'number' ? val : 0;
-
-                if (typeof val === 'string') {
+                if (typeof val === 'number') {
+                    numericVal = val;
+                } else if (typeof val === 'string') {
                     if (val.includes('%')) {
                         numericVal = parseFloat(val.replace('%', '').replace(',', '.'));
-                        percentageStats.add(stat);
+                        isPercent = true;
                     } else {
                         numericVal = parseFloat(val.replace(',', '.')) || 0;
                     }
                 }
-
                 if (!isNaN(numericVal)) {
-                    totals[stat] = (totals[stat] || 0) + numericVal;
-                    if (typeof val === 'string' && val.includes('%')) percentageStats.add(stat);
+                    const statKey = (isPercent && !stat.endsWith('%')) ? stat + "%" : stat;
+                    this.statsValues[statKey] = (this.statsValues[statKey] || 0) + numericVal;
                 }
             });
-
-            if (item.augments) {
-                item.augments.forEach(augName => {
-                    if (!augName) return;
-                    const augPreset = AUGMENT_DATABASE.find(a => a.name.toLowerCase() === augName.toLowerCase());
-
-                    if (augPreset && augPreset.stats) {
-                        Object.entries(augPreset.stats).forEach(([stat, val]) => {
-                            let numericVal = typeof val === 'number' ? val : 0;
-                            if (typeof val === 'string') {
-                                if (val.includes('%')) {
-                                    numericVal = parseFloat(val.replace('%', '').replace(',', '.'));
-                                    percentageStats.add(stat);
-                                } else {
-                                    numericVal = parseFloat(val.replace(',', '.')) || 0;
-                                }
-                            }
-                            if (!isNaN(numericVal)) {
-                                totals[stat] = (totals[stat] || 0) + numericVal;
-                                if (typeof val === 'string' && val.includes('%')) percentageStats.add(stat);
-                            }
-                        });
-                    }
-                });
-            }
         });
 
         elixirs.forEach(el => {
             if (el.val > 0) {
-                totals[el.stat] = (totals[el.stat] || 0) + el.val;
-                if (el.stat.toLowerCase().includes('crit') || el.stat.toLowerCase().includes('chance')) {
-                    percentageStats.add(el.stat);
-                }
+                const bonus = el.val * el.perLevel;
+                const statKey = el.percent ? el.stat + "%" : el.stat;
+
+                this.statsValues[statKey] = (this.statsValues[statKey] || 0) + bonus;
             }
         });
 
-        this.render(totals, percentageStats);
+        this.render(this.statsValues);
     }
 
     /**
      * Renderizza l'output HTML nell'interfaccia
-     * @param {Record<string, number>} totals
-     * @param {Set<string>} percentageStats
      */
-    render(totals, percentageStats) {
+    render() {
         if (!this.container) return;
         this.container.innerHTML = '';
+        console.log("this.statsValues:", this.statsValues);
 
-        if (Object.keys(totals).length === 0) {
+        if (Object.keys(this.statsValues).length === 0) {
             this.container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Nessuna statistica applicata</div>';
             return;
         }
 
-        Object.entries(totals).forEach(([stat, val]) => {
+        Object.entries(this.statsValues).forEach(([stat, val]) => {
             const row = document.createElement('div');
             row.className = 'stat-row';
 
-            const isPercent = percentageStats.has(stat) || stat.toLowerCase().includes('crit') || stat.toLowerCase().includes('chance');
-            const displayVal = isPercent ? `+${val}%` : `+${val}`;
+            // Controlliamo direttamente se la chiave termina con '%' o include parole chiave
+            const isPercent = stat.endsWith('%') || stat.toLowerCase().includes('crit') || stat.toLowerCase().includes('chance');
+            const displayVal = isPercent ? `+${val.toFixed(2)}%` : `+${val.toFixed(2)}`;
 
             row.innerHTML = `<span class="stat-label">${stat}:</span><span class="stat-val">${displayVal}</span>`;
             this.container.appendChild(row);
         });
     }
 }
+
+export const statsMgr = new StatsManager();
+window.statsMgr = statsMgr;

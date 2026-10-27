@@ -31,4 +31,4 @@ class DataStore {
 }
 
 export const dataStore = new DataStore();
-window.testData = dataStore;
+window.dataStore = dataStore;

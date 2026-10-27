@@ -1,5 +1,6 @@
 import { APIurl } from "../store/constants.js";
 import { dataStore } from "../store/dataStore.js";
+import {equippedStore} from "../store/equippedStore.js";
 
 export class ApiManager {
     constructor() {
@@ -8,6 +9,7 @@ export class ApiManager {
 
     async update() {
         await this.updateItems();
+        await this.updateElixirs()
     }
 
     /**
@@ -162,6 +164,47 @@ export class ApiManager {
 
         } catch (error) {
             console.error("Errore durante il fetch delle categorie API:", error);
+        }
+    }
+
+    async updateElixirs() {
+        try {
+            const res = await fetch(this.url + "/elixirs");
+            if (!res.ok) throw new Error(`HTTP ${res.status} su /elixirs`);
+            const json = await res.json();
+            const rawElixirs = json.data || json;
+
+            // Mappiamo i dati separando il valore numerico dal flag percentuale
+            const mappedElixirs = rawElixirs.map(elixir => {
+                const name = elixir.name || "";
+                const firstLevelData = elixir.perLevel?.[0] || {};
+
+                const stat = firstLevelData.stat || "";
+                const perLevelValue = firstLevelData.perLevel ?? 0;
+                const isPercent = firstLevelData.percent === true;
+
+                return {
+                    name: name,
+                    stat: stat,
+                    val: 5,
+                    perLevel: perLevelValue, // Rimane un numero (es. 5)
+                    percent: isPercent       // True se è percentuale, false se è un valore piatto
+                };
+            });
+
+            // Aggiorniamo entrambi gli store
+            dataStore.updateData({
+                elixirsConfig: mappedElixirs
+            });
+
+            equippedStore.setState({
+                elixirs: structuredClone(mappedElixirs)
+            });
+
+            console.log("Elisir sincronizzati con distinzione percentuale!");
+
+        } catch (error) {
+            console.error("Errore durante il fetch degli elisir:", error);
         }
     }
 }
