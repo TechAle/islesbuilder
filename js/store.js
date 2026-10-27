@@ -40,7 +40,6 @@ export class BuildStore {
                 amulet:     { name: '', stats: {}, augments: ['', '', ''] },
                 chestplate: { name: '', stats: {}, augments: ['', '', ''] },
                 ring1:      { name: '', stats: {}, augments: ['', '', ''] },
-                ring2:      { name: '', stats: {}, augments: ['', '', ''] },
                 leggings:   { name: '', stats: {}, augments: ['', '', ''] },
                 boots:      { name: '', stats: {}, augments: ['', '', ''] },
                 feet:       { name: '', stats: {}, augments: ['', '', ''] },

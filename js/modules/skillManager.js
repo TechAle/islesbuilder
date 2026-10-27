@@ -7,7 +7,6 @@ export class SkillManager {
         this.svg = document.getElementById('wires');
         this.pointsEl = document.getElementById('points');
         this.classBtns = document.querySelectorAll('.class-btn');
-
         this.bindEvents();
     }
 

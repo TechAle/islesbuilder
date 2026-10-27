@@ -47,71 +47,45 @@
  * @property {Array<[string, string]>} edges
  */
 
+export const APIurl = "https://isleswiki.net/api/v1"
+
 /** @type {Augment[]} */
-export const AUGMENT_DATABASE = [
-    { name: 'Minor Health Runes (+30 HP)', stats: { HP: 30 } },
-    { name: 'Major Defense Gem (+15 Def)', stats: { Defense: 15 } },
-    { name: 'Feather Emblem (+10 Speed)', stats: { Speed: 10 } },
-    { name: 'Power Shard (+8 Strength)', stats: { Strength: 8 } },
-    { name: 'Sharpness Rune (+4% Crit)', stats: { 'Crit Chance': '4%' } }
+export let AUGMENT_DATABASE = [
 ];
 
 /** @type {Record<string, ItemPreset[]>} */
-export const ITEM_DATABASE = {
+export let ITEM_DATABASE = {
     weapon: [
-        { name: 'Spada del Drago', stats: { Strength: 45, 'Crit Chance': '10%' } },
-        { name: 'Arco della Tempesta', stats: { Agility: 50, Speed: 15 } }
     ],
     glove: [
-        { name: 'Guanti di Stint', stats: { Strength: 10, Speed: 8 } }
     ],
     helmet: [
-        { name: 'Elmo di Ferro', stats: { HP: 100, Defense: 25 } },
-        { name: 'Cappuccio Ombra', stats: { Speed: 15, 'Crit Chance': '5%' } }
     ],
     amulet: [
-        { name: 'Collana di Rubino', stats: { HP: 200, Strength: 10 } }
     ],
     chestplate: [
-        { name: 'Piastra di Drago', stats: { HP: 350, Defense: 80 } }
     ],
     ring1: [
-        { name: 'Anello della Rapidità', stats: { Speed: 10, Agility: 8 } }
-    ],
-    ring2: [
-        { name: 'Anello del Potere', stats: { Strength: 15 } }
     ],
     leggings: [
-        { name: 'Gambali di Cuoio', stats: { Defense: 15, Speed: 5 } }
     ],
     boots: [
-        { name: 'Stivali della Velocità', stats: { Speed: 25 } }
     ],
     feet: [
-        { name: 'Suole Chiodate', stats: { Strength: 5, Speed: 5 } }
     ],
     core: [
-        { name: 'Core Arcano', stats: { Intelligence: 30, 'Mana Regen': 12 } }
     ],
     pets: [
-        { name: 'Lupo da Guerra', stats: { Strength: 12, Speed: 8 } },
-        { name: 'Fenice', stats: { HP: 150, 'Mana Regen': 10 } }
+        // { name: 'Fenice', stats: { HP: 150, 'Mana Regen': 10 } } Per ricordare cosa danno
     ]
 };
 
 /** @type {Elixir[]} */
-export const INITIAL_ELIXIRS = [
-    { id: 'elixir_hp', name: 'Elixir of Life', stat: 'HP', val: 0 },
-    { id: 'elixir_def', name: 'Ironhide Elixir', stat: 'Defense', val: 0 },
-    { id: 'elixir_speed', name: 'Swiftness Elixir', stat: 'Speed', val: 0 },
-    { id: 'elixir_str', name: 'Might Elixir', stat: 'Strength', val: 0 },
-    { id: 'elixir_agi', name: 'Wind Elixir', stat: 'Agility', val: 0 },
-    { id: 'elixir_int', name: 'Mind Elixir', stat: 'Intelligence', val: 0 },
-    { id: 'elixir_crit', name: 'Precision Elixir', stat: 'Crit Chance', val: 0 }
+export let INITIAL_ELIXIRS = [
 ];
 
 /** @type {Record<'warrior'|'archer'|'mage', SkillTreeClass>} */
-export const CLASS_SKILL_TREES = {
+export let CLASS_SKILL_TREES = {
     warrior: {
         nodes: {
             'C':   { x: 50, y: 50, max: 10, costBase: 1, center: true },

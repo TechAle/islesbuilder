@@ -5,14 +5,16 @@ import { SkillManager } from './modules/skillManager.js';
 import { StatsManager } from './modules/statsManager.js';
 import { DpsManager } from './modules/dpsManager.js';
 import { ShareManager } from './modules/shareManager.js';
+import {ApiManager} from "./modules/apiManager.js";
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const itemMgr = new ItemManager();
     const elixirMgr = new ElixirManager();
     const skillMgr = new SkillManager();
     const statsMgr = new StatsManager();
     const dpsMgr = new DpsManager();
     const shareMgr = new ShareManager();
+    const apiMgr = new ApiManager();
 
     // Sottoscrizione alle modifiche dello Store per aggiornare automaticamente la UI
     store.subscribe(() => {
@@ -29,4 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render primario
     skillMgr.render();
     statsMgr.recalculate();
+
+    await apiMgr.update()
 });
