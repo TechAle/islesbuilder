@@ -1,4 +1,4 @@
-import { store } from '../store.js';
+import { equippedStore } from '../store/equippedStore.js';
 
 export class DpsManager {
     constructor() {
@@ -7,6 +7,6 @@ export class DpsManager {
 
     /** Calcola e aggiorna i dettagli del danno e DPS */
     recalculate() {
-        // Logica di calcolo del DPS sulla base delle statistiche dello store
+        // Logica di calcolo del DPS sulla base delle statistiche dello equippedStore
     }
 }

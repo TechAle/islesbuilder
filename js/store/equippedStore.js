@@ -1,5 +1,3 @@
-import { INITIAL_ELIXIRS, CLASS_SKILL_TREES } from './constants.js';
-
 /**
  * @typedef {Object} EquipSlotData
  * @property {string} name
@@ -15,6 +13,8 @@ import { INITIAL_ELIXIRS, CLASS_SKILL_TREES } from './constants.js';
  * @property {import('./constants.js').Elixir[]} elixirs
  * @property {Record<'warrior'|'archer'|'mage', Map<string, number>>} treeLevels
  */
+
+import {dataStore} from "./dataStore";
 
 /**
  * @callback StoreSubscriber
@@ -46,11 +46,11 @@ export class BuildStore {
                 core:       { name: '', stats: {}, augments: ['', '', ''] },
                 pets:       { name: '', stats: {}, augments: ['', '', ''] }
             },
-            elixirs: JSON.parse(JSON.stringify(INITIAL_ELIXIRS)),
+            elixirs: JSON.parse(JSON.stringify(dataStore.data.elixirsConfig)),
             treeLevels: {
-                warrior: new Map(Object.keys(CLASS_SKILL_TREES.warrior.nodes).map(id => [id, 0])),
-                archer:  new Map(Object.keys(CLASS_SKILL_TREES.archer.nodes).map(id => [id, 0])),
-                mage:    new Map(Object.keys(CLASS_SKILL_TREES.mage.nodes).map(id => [id, 0]))
+                warrior: new Map(Object.keys(dataStore.data.skillTrees.warrior.nodes).map(id => [id, 0])),
+                archer:  new Map(Object.keys(dataStore.data.skillTrees.archer.nodes).map(id => [id, 0])),
+                mage:    new Map(Object.keys(dataStore.data.skillTrees.mage.nodes).map(id => [id, 0]))
             }
         };
     }
@@ -79,4 +79,4 @@ export class BuildStore {
     }
 }
 
-export const store = new BuildStore();
+export const equippedStore = new BuildStore();

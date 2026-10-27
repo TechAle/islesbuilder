@@ -1,4 +1,4 @@
-import { store } from './store.js';
+import { equippedStore } from './store/equippedStore.js';
 import { ItemManager } from './modules/itemManager.js';
 import { ElixirManager } from './modules/elixirManager.js';
 import { SkillManager } from './modules/skillManager.js';
@@ -6,6 +6,7 @@ import { StatsManager } from './modules/statsManager.js';
 import { DpsManager } from './modules/dpsManager.js';
 import { ShareManager } from './modules/shareManager.js';
 import {ApiManager} from "./modules/apiManager.js";
+import {dataStore} from "./store/dataStore";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const itemMgr = new ItemManager();
@@ -16,8 +17,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const shareMgr = new ShareManager();
     const apiMgr = new ApiManager();
 
+    dataStore.subscribe( () => {
+        itemMgr.initDatalists()
+        skillMgr.render()
+        elixirMgr.render()
+    } )
+
     // Sottoscrizione alle modifiche dello Store per aggiornare automaticamente la UI
-    store.subscribe(() => {
+    equippedStore.subscribe(() => {
         itemMgr.updateInputsFromStore();
         elixirMgr.updateInputsFromStore();
         skillMgr.render();

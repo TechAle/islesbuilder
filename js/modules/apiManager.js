@@ -1,5 +1,5 @@
-import {APIurl} from "../constants.js";
-import {store} from "../store.js";
+import {APIurl} from "../store/constants.js";
+import {dataStore} from "../store/dataStore";
 
 export class ApiManager {
     constructor() {
@@ -22,6 +22,6 @@ export class ApiManager {
         const {data} = await res.json();
 
         // Modifico state
-        store.state
+
     }
 }

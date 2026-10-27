@@ -1,8 +1,8 @@
-import { store } from '../store.js';
+import { equippedStore } from '../store/equippedStore.js';
 
 /**
  * @typedef {Object} SerializedState
- * @property {Record<string, import('../store.js').EquipSlotData>} equip
+ * @property {Record<string, import('../store/equippedStore.js').EquipSlotData>} equip
  * @property {Array<{id: string, val: number}>} elixirs
  * @property {Record<'warrior'|'archer'|'mage', Array<[string, number]>>} treeLevels
  * @property {'warrior'|'archer'|'mage'} currentClass
@@ -22,15 +22,15 @@ export class ShareManager {
     generateShareLink() {
         /** @type {SerializedState} */
         const state = {
-            equip: store.state.activeEquip,
-            elixirs: store.state.elixirs.map(e => ({ id: e.id, val: e.val })),
+            equip: equippedStore.state.activeEquip,
+            elixirs: equippedStore.state.elixirs.map(e => ({ id: e.id, val: e.val })),
             treeLevels: {
-                warrior: Array.from(store.state.treeLevels.warrior.entries()),
-                archer: Array.from(store.state.treeLevels.archer.entries()),
-                mage: Array.from(store.state.treeLevels.mage.entries())
+                warrior: Array.from(equippedStore.state.treeLevels.warrior.entries()),
+                archer: Array.from(equippedStore.state.treeLevels.archer.entries()),
+                mage: Array.from(equippedStore.state.treeLevels.mage.entries())
             },
-            currentClass: store.state.currentClass,
-            sharedPoints: store.state.sharedPoints
+            currentClass: equippedStore.state.currentClass,
+            sharedPoints: equippedStore.state.sharedPoints
         };
 
         const jsonString = JSON.stringify(state);
@@ -66,13 +66,13 @@ export class ShareManager {
             /** @type {SerializedState} */
             const state = JSON.parse(jsonString);
 
-            /** @type {Partial<import('../store.js').BuildState>} */
+            /** @type {Partial<import('../store/equippedStore.js').BuildState>} */
             const newState = {};
 
             if (state.equip) newState.activeEquip = state.equip;
 
             if (state.elixirs) {
-                newState.elixirs = store.state.elixirs.map(e => {
+                newState.elixirs = equippedStore.state.elixirs.map(e => {
                     const match = state.elixirs.find(s => s.id === e.id);
                     return match ? { ...e, val: match.val } : e;
                 });
@@ -80,16 +80,16 @@ export class ShareManager {
 
             if (state.treeLevels) {
                 newState.treeLevels = {
-                    warrior: state.treeLevels.warrior ? new Map(state.treeLevels.warrior) : store.state.treeLevels.warrior,
-                    archer: state.treeLevels.archer ? new Map(state.treeLevels.archer) : store.state.treeLevels.archer,
-                    mage: state.treeLevels.mage ? new Map(state.treeLevels.mage) : store.state.treeLevels.mage
+                    warrior: state.treeLevels.warrior ? new Map(state.treeLevels.warrior) : equippedStore.state.treeLevels.warrior,
+                    archer: state.treeLevels.archer ? new Map(state.treeLevels.archer) : equippedStore.state.treeLevels.archer,
+                    mage: state.treeLevels.mage ? new Map(state.treeLevels.mage) : equippedStore.state.treeLevels.mage
                 };
             }
 
             if (state.currentClass) newState.currentClass = state.currentClass;
             if (typeof state.sharedPoints === 'number') newState.sharedPoints = state.sharedPoints;
 
-            store.setState(newState);
+            equippedStore.setState(newState);
         } catch (e) {
             console.error('Errore nel caricamento dello stato:', e);
             alert('Impossibile decodificare la build incollata. Assicurati che il codice o l\'URL sia corretto.');

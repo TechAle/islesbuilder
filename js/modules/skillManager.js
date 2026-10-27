@@ -1,5 +1,5 @@
-import { store } from '../store.js';
-import { CLASS_SKILL_TREES } from '../constants.js';
+import { equippedStore } from '../store/equippedStore.js';
+import {dataStore} from "../store/dataStore.js";
 
 export class SkillManager {
     constructor() {
@@ -19,15 +19,15 @@ export class SkillManager {
                 this.classBtns.forEach(b => b.classList.remove('active'));
                 target.classList.add('active');
 
-                store.state.currentClass = selectedClass;
-                store.notify();
+                equippedStore.state.currentClass = selectedClass;
+                equippedStore.notify();
             });
         });
     }
 
-    getActiveNodes() { return CLASS_SKILL_TREES[store.state.currentClass].nodes; }
-    getActiveEdges() { return CLASS_SKILL_TREES[store.state.currentClass].edges; }
-    getActiveLevels() { return store.state.treeLevels[store.state.currentClass]; }
+    getActiveNodes() { return dataStore.data.skillTrees[equippedStore.state.currentClass].nodes; }
+    getActiveEdges() { return dataStore.data.skillTrees[equippedStore.state.currentClass].edges; }
+    getActiveLevels() { return equippedStore.state.treeLevels[equippedStore.state.currentClass]; }
 
     /**
      * Verifica se un nodo dell'albero abilità è sbloccabile
@@ -52,19 +52,19 @@ export class SkillManager {
 
         if (event.shiftKey) {
             if (curLvl === 0) return;
-            store.state.sharedPoints += curLvl * node.costBase;
+            equippedStore.state.sharedPoints += curLvl * node.costBase;
             currentLevels.set(id, curLvl - 1);
-            store.notify();
+            equippedStore.notify();
             return;
         }
 
         if (!this.isAvailable(id) || curLvl >= node.max) return;
         const cost = (curLvl + 1) * node.costBase;
-        if (store.state.sharedPoints < cost) return;
+        if (equippedStore.state.sharedPoints < cost) return;
 
-        store.state.sharedPoints -= cost;
+        equippedStore.state.sharedPoints -= cost;
         currentLevels.set(id, curLvl + 1);
-        store.notify();
+        equippedStore.notify();
     }
 
     /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità */
@@ -117,10 +117,10 @@ export class SkillManager {
             this.layer.appendChild(b);
         });
 
-        if (this.pointsEl) this.pointsEl.textContent = String(store.state.sharedPoints);
+        if (this.pointsEl) this.pointsEl.textContent = String(equippedStore.state.sharedPoints);
         this.classBtns.forEach(btn => {
             const btnClass = /** @type {HTMLElement} */ (btn).dataset.class;
-            btn.classList.toggle('active', btnClass === store.state.currentClass);
+            btn.classList.toggle('active', btnClass === equippedStore.state.currentClass);
         });
 
         this.drawWires();

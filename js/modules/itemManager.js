@@ -1,5 +1,5 @@
-import { store } from '../store.js';
-import { ITEM_DATABASE } from '../constants.js';
+import { equippedStore } from '../store/equippedStore.js';
+import {dataStore} from "../store/dataStore.js";
 
 export class ItemManager {
     constructor() {
@@ -11,11 +11,11 @@ export class ItemManager {
 
     /** Inizializza le datalist HTML per i suggerimenti degli oggetti */
     initDatalists() {
-        Object.keys(ITEM_DATABASE).forEach(slot => {
+        Object.keys(dataStore.data.items).forEach(slot => {
             const datalist = document.getElementById(`list-${slot}`);
             if (!datalist) return;
             datalist.innerHTML = '';
-            ITEM_DATABASE[slot].forEach(item => {
+            dataStore.data.items[slot].forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.name;
                 datalist.appendChild(opt);
@@ -62,13 +62,13 @@ export class ItemManager {
      */
     handleItemInput(slot, value) {
         const trimmed = value.trim();
-        const activeEquip = store.state.activeEquip;
+        const activeEquip = equippedStore.state.activeEquip;
 
         if (!trimmed) {
             activeEquip[slot].name = '';
             activeEquip[slot].stats = {};
         } else {
-            const preset = ITEM_DATABASE[slot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
+            const preset = dataStore.data.items[slot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
             if (preset) {
                 activeEquip[slot].name = preset.name;
                 activeEquip[slot].stats = { ...preset.stats };
@@ -76,7 +76,7 @@ export class ItemManager {
                 activeEquip[slot].name = value;
             }
         }
-        store.notify();
+        equippedStore.notify();
     }
 
     /**
@@ -85,8 +85,8 @@ export class ItemManager {
      * @param {string} value
      */
     handleAugmentInput(slot, index, value) {
-        store.state.activeEquip[slot].augments[index] = value.trim();
-        store.notify();
+        equippedStore.state.activeEquip[slot].augments[index] = value.trim();
+        equippedStore.notify();
     }
 
     /**
@@ -95,7 +95,7 @@ export class ItemManager {
      */
     openModal(slot) {
         this.editingSlot = slot;
-        const current = store.state.activeEquip[slot];
+        const current = equippedStore.state.activeEquip[slot];
 
         const titleEl = document.getElementById('modal-slot-title');
         const nameEl = /** @type {HTMLInputElement} */ (document.getElementById('modal-item-name'));
@@ -146,7 +146,7 @@ export class ItemManager {
         const name = nameEl.value.trim();
         const rows = document.querySelectorAll('#modal-stat-list .stat-edit-row');
 
-        /** @type {import('../constants.js').ItemStats} */
+        /** @type {import('../store/constants.js').ItemStats} */
         const newStats = {};
 
         rows.forEach(row => {
@@ -165,21 +165,21 @@ export class ItemManager {
             }
         });
 
-        const currentSlot = store.state.activeEquip[this.editingSlot];
+        const currentSlot = equippedStore.state.activeEquip[this.editingSlot];
         currentSlot.name = name;
         currentSlot.stats = newStats;
 
         const inputEl = /** @type {HTMLInputElement} */ (document.querySelector(`input[data-slot="${this.editingSlot}"]`));
         if (inputEl) inputEl.value = name;
 
-        store.notify();
+        equippedStore.notify();
         this.closeModal();
     }
 
     /** Sincronizza i valori degli input con lo stato corrente dello Store */
     updateInputsFromStore() {
-        Object.keys(store.state.activeEquip).forEach(slot => {
-            const item = store.state.activeEquip[slot];
+        Object.keys(equippedStore.state.activeEquip).forEach(slot => {
+            const item = equippedStore.state.activeEquip[slot];
             const input = /** @type {HTMLInputElement} */ (document.querySelector(`input[data-slot="${slot}"]`));
             if (input) input.value = item.name || '';
 

@@ -1,5 +1,5 @@
-import { store } from '../store.js';
-import { AUGMENT_DATABASE } from '../constants.js';
+import { equippedStore } from '../store/equippedStore.js';
+import { AUGMENT_DATABASE } from '../store/constants.js';
 
 export class StatsManager {
     constructor() {
@@ -12,7 +12,7 @@ export class StatsManager {
         const totals = {};
         /** @type {Set<string>} */
         const percentageStats = new Set();
-        const { activeEquip, elixirs } = store.state;
+        const { activeEquip, elixirs } = equippedStore.state;
 
         Object.values(activeEquip).forEach(item => {
             if (!item.stats) return;
