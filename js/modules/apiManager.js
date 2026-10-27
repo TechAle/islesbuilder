@@ -111,7 +111,9 @@ export class ApiManager {
                 "staff": "weapon",
                 "sword": "weapon",
                 "tome": "weapon",
-                "wands": "weapon"
+                "wand": "weapon",
+                "greaves": "feet",
+                "blowpipe": "weapon"
             };
 
             // Svuotiamo preventivamente solo le categorie coinvolte
@@ -130,7 +132,10 @@ export class ApiManager {
                 const normalizedSlot = rawSlot.toLowerCase();
                 const targetCategory = slotMapping[normalizedSlot];
 
-                if (!targetCategory) return; // Ignora backpack, pouch, quiver, ecc.
+                if (!targetCategory) {
+                    //console.log(normalizedSlot)
+                    return
+                }
 
                 const name = item.name || item.gear?.name;
                 const gear = item.gear || {};

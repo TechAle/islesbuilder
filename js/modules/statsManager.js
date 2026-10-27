@@ -18,6 +18,9 @@ export class StatsManager {
             if (!item.stats) return;
 
             Object.entries(item.stats).forEach(([stat, val]) => {
+                if (stat.includes("Ability") || stat.includes("Augment") || stat.includes("Level") || stat.includes("Damage Type"))
+                    return
+
                 let numericVal = typeof val === 'number' ? val : 0;
 
                 if (typeof val === 'string') {

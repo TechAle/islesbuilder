@@ -3,19 +3,19 @@ const GLFW = Java.type("org.lwjgl.glfw.GLFW");
 function parseCharacter(char) {
     switch(char) {
         case "":
-            return "blunt"
+            return "Blunt"
         case "":
-            return "melee"
+            return "Slash"
         case "":
-            return "illusion"
+            return "Illusion"
         case "":
-            return "piercing"
+            return "Pierce"
         case "":
-            return "arcade"
+            return "Arcade"
         case "":
-            return "aura"
+            return "Aura"
         case "":
-            return "stab"
+            return "Stab"
         default:
             Chat.log("Uknown character: " + char)
             setClipboard(char)
@@ -68,7 +68,7 @@ function pureJsBase64(str) {
 
 
 
-function generateItem(item) {
+function generateItem(item, weapon) {
     if (!item) return { name: '', stats: {}, augments: ['', '', ''] };
     
     let loreList = item.getLore();
@@ -85,41 +85,42 @@ function generateItem(item) {
         let parts = lore.split(/\s+/);
         if (parts.length < 2) continue;
         
-        parts[0] = parts[0].replace("", "")
         
         if (parts[0] == "Default") {
-            stats["AtkSpeed"] = parts[2]
+            stats["Default Attack"] = parts[2]
             continue
         }
+       
             
-            
-        
+        parts[0] = parts[0].replace("", "").replace("", "").replace("", "")
         // Verifica rapida se la riga inizia con un numero (o segno + / -)
         if (!/^[+-]?\d/.test(parts[0])) continue;
+       
 
         // 1) Caso Dual Stat: esattamente 4 parti (es. "10  20 ") e la terza parte è un numero
         if (parts.length === 4 && /^[+-]?\d/.test(parts[2])) {
             let val1 = parts[0];
             let char1 = parts[1];
-            let stat1 = (char1.length === 1 && char1.charCodeAt(0) > 127) ? parseCharacter(char1) : char1;
+            let stat1 = (char1.length === 1 && char1.charCodeAt(0) > 127) ? parseCharacter(char1) + " Defense" : char1;
             stats[stat1] = val1;
 
             let val2 = parts[2];
             let char2 = parts[3];
-            let stat2 = (char2.length === 1 && char2.charCodeAt(0) > 127) ? parseCharacter(char2) : char2;
+            let stat2 = (char2.length === 1 && char2.charCodeAt(0) > 127) ? parseCharacter(char2) + " Defense" : char2;
             stats[stat2] = val2;
 
         } else {
             // 2) Caso Standard Singolo (es. "45.2 Base Defense")
             let valueStr = parts[0];
             let stat = parts.slice(1).join(' ')
+               
             
             // Gestione delle parole di lunghezza 1 nel testo della stat
             stat = stat.split(' ').map(word => {
                 if (word.length === 1) {
                     let charCode = word.charCodeAt(0);
                     if (charCode > 127) {
-                        return parseCharacter(word);
+                        return parseCharacter(word) + (parts.length < 3 ? (weapon ? " Damage" : " Defense") : "");
                     } else {
                         return ""; 
                     }
@@ -176,11 +177,12 @@ JsMacros.on("OpenScreen", JavaWrapper.methodToJava((e, ctx) => {
             };
 
             for (let slotIdx of slots) {
+                //if (slotIdx !== 20) continue
                 let itemStack = inventory.getSlot(slotIdx);
                 let targetSlotKey = slotMapping[slotIdx];
                 
                 if (targetSlotKey && itemStack) {
-                    activeEquip[targetSlotKey] = generateItem(itemStack);
+                    activeEquip[targetSlotKey] = generateItem(itemStack, slotIdx == 10);
                 }
             }
 
