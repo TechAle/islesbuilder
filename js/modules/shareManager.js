@@ -69,7 +69,34 @@ export class ShareManager {
             /** @type {Partial<import('../store/equippedStore.js').BuildState>} */
             const newState = {};
 
-            if (state.equip) newState.activeEquip = state.equip;
+            if (state.equip) {
+                const reconstructedEquip = structuredClone(state.equip);
+
+                Object.keys(reconstructedEquip).forEach(slot => {
+                    const item = reconstructedEquip[slot];
+                    if (!item || !item.name) return;
+
+                    // Determina la categoria corretta nel dataStore (ring1 e ring2 usano la categoria "ring")
+                    let dataCategory = slot;
+                    if (dataCategory.startsWith("ring")) {
+                        dataCategory = "ring";
+                    }
+
+                    // Cerca l'oggetto corrispondente nel database globale
+                    const dbItems = dataStore.data.items[dataCategory] || [];
+                    const matchedPreset = dbItems.find(i => i.name.toLowerCase() === item.name.toLowerCase());
+
+                    if (matchedPreset) {
+                        // Unisce le statistiche: se l'oggetto salvato non ha una stat che il preset ha, la aggiunge
+                        item.stats = {
+                            ...matchedPreset.stats,
+                            ...item.stats // Le stats salvate mantengono la precedenza se l'utente le aveva personalizzate
+                        };
+                    }
+                });
+
+                newState.activeEquip = reconstructedEquip;
+            }
 
             if (state.elixirs) {
                 newState.elixirs = equippedStore.state.elixirs.map(e => {

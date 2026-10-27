@@ -6,6 +6,7 @@ import { DpsManager } from './modules/dpsManager.js';
 import { ShareManager } from './modules/shareManager.js';
 import {ApiManager} from "./modules/apiManager.js";
 import {dataStore} from "./store/dataStore.js";
+import {statsMgr} from "./modules/statsManager.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
     const itemMgr = new ItemManager();
@@ -31,12 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         elixirMgr.render()
     });
 
-    // Leggi lo stato dall'URL se presente l'hash `#...`
-    shareMgr.loadStateFromUrl();
-
     // Render primario
     skillMgr.render();
     statsMgr.recalculate();
 
     await apiMgr.update()
+    shareMgr.loadStateFromUrl();
 });

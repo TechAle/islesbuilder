@@ -47,20 +47,20 @@ function pureJsBase64(str) {
             bytes.push((code & 63) | 128);
         }
     }
-    
+
     let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     let result = '';
     for (let i = 0; i < bytes.length; i += 3) {
         let b1 = bytes[i];
         let b2 = i + 1 < bytes.length ? bytes[i + 1] : NaN;
         let b3 = i + 2 < bytes.length ? bytes[i + 2] : NaN;
-        
+
         let chunk = (b1 << 16) | ((isNaN(b2) ? 0 : b2) << 8) | (isNaN(b3) ? 0 : b3);
-        
+
         result += chars[(chunk >> 18) & 63] +
-                  chars[(chunk >> 12) & 63] +
-                  (isNaN(b2) ? '=' : chars[(chunk >> 6) & 63]) +
-                  (isNaN(b3) ? '=' : chars[chunk & 63]);
+            chars[(chunk >> 12) & 63] +
+            (isNaN(b2) ? '=' : chars[(chunk >> 6) & 63]) +
+            (isNaN(b3) ? '=' : chars[chunk & 63]);
     }
     return result;
 }
@@ -70,13 +70,13 @@ function pureJsBase64(str) {
 
 function generateItem(item, weapon) {
     if (!item) return { name: '', stats: {}, augments: ['', '', ''] };
-    
+
     let loreList = item.getLore();
     let itemName = item.getName().getStringStripFormatting();
     let stats = {};
 
     for (let loreIdx in loreList) {
-        if (loreIdx == 0) continue; 
+        if (loreIdx == 0) continue;
 
         let lore = loreList[loreIdx].getStringStripFormatting().trim();
         if (!lore) continue;
@@ -84,18 +84,18 @@ function generateItem(item, weapon) {
         // Dividiamo la riga per spazi in modo super veloce
         let parts = lore.split(/\s+/);
         if (parts.length < 2) continue;
-        
-        
+
+
         if (parts[0] == "Default") {
             stats["Default Attack"] = parts[2]
             continue
         }
-       
-            
+
+
         parts[0] = parts[0].replace("", "").replace("", "").replace("", "")
         // Verifica rapida se la riga inizia con un numero (o segno + / -)
         if (!/^[+-]?\d/.test(parts[0])) continue;
-       
+
 
         // 1) Caso Dual Stat: esattamente 4 parti (es. "10  20 ") e la terza parte è un numero
         if (parts.length === 4 && /^[+-]?\d/.test(parts[2])) {
@@ -113,8 +113,8 @@ function generateItem(item, weapon) {
             // 2) Caso Standard Singolo (es. "45.2 Base Defense")
             let valueStr = parts[0];
             let stat = parts.slice(1).join(' ')
-               
-            
+
+
             // Gestione delle parole di lunghezza 1 nel testo della stat
             stat = stat.split(' ').map(word => {
                 if (word.length === 1) {
@@ -122,14 +122,14 @@ function generateItem(item, weapon) {
                     if (charCode > 127) {
                         return parseCharacter(word) + (parts.length < 3 ? (weapon ? " Damage" : " Defense") : "");
                     } else {
-                        return ""; 
+                        return "";
                     }
                 }
                 return word;
-            }).join(' ').replace(/\s+/g, ' ').trim(); 
-           
+            }).join(' ').replace(/\s+/g, ' ').trim();
 
-            stats[stat] = valueStr; 
+
+            stats[stat] = valueStr;
         }
     }
 
@@ -145,7 +145,7 @@ JsMacros.on("OpenScreen", JavaWrapper.methodToJava((e, ctx) => {
     if (e.screenName == "4 Row Chest") {
         e.screen.addButton(0, 40, 50, 20, "Copy URL", JavaWrapper.methodToJavaAsync(() => {
             let inventory = Player.openInventory();
-            
+
             let activeEquip = {
                 weapon:     { name: '', stats: {}, augments: ['', '', ''] },
                 glove:      { name: '', stats: {}, augments: ['', '', ''] },
@@ -180,7 +180,7 @@ JsMacros.on("OpenScreen", JavaWrapper.methodToJava((e, ctx) => {
                 //if (slotIdx !== 20) continue
                 let itemStack = inventory.getSlot(slotIdx);
                 let targetSlotKey = slotMapping[slotIdx];
-                
+
                 if (targetSlotKey && itemStack) {
                     activeEquip[targetSlotKey] = generateItem(itemStack, slotIdx == 10);
                 }
@@ -209,6 +209,6 @@ JsMacros.on("OpenScreen", JavaWrapper.methodToJava((e, ctx) => {
 
             setClipboard(finalUrl);
             Chat.log("§aURL della build copiato negli appunti!");
-        }));  
+        }));
     }
 }));
