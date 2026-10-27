@@ -24,7 +24,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="weapon" list="list-weapon" placeholder="Cerca o inserisci...">
                             <datalist id="list-weapon"></datalist>
-                            <button class="btn-edit" onclick="openModal('weapon')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="weapon" title="Modifica / Custom">⚙️</button>
                         </div>
                         <div class="augments-container">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="weapon" data-aug-index="0">
@@ -42,7 +42,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="glove" list="list-glove" placeholder="Cerca o inserisci...">
                             <datalist id="list-glove"></datalist>
-                            <button class="btn-edit" onclick="openModal('glove')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="glove" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -55,12 +55,12 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="helmet" list="list-helmet" placeholder="Cerca o inserisci...">
                             <datalist id="list-helmet"></datalist>
-                            <button class="btn-edit" onclick="openModal('helmet')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="helmet" title="Modifica / Custom">⚙️</button>
                         </div>
                         <div class="augments-container">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="helmet" data-aug-index="0">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="helmet" data-aug-index="1">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="helmet" data-aug-index="2">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="helmet" data-augment-slot="helmet" data-aug-index="2">
                         </div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="amulet" list="list-amulet" placeholder="Cerca o inserisci...">
                             <datalist id="list-amulet"></datalist>
-                            <button class="btn-edit" onclick="openModal('amulet')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="amulet" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="chestplate" list="list-chestplate" placeholder="Cerca o inserisci...">
                             <datalist id="list-chestplate"></datalist>
-                            <button class="btn-edit" onclick="openModal('chestplate')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="chestplate" title="Modifica / Custom">⚙️</button>
                         </div>
                         <div class="augments-container">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="chestplate" data-aug-index="0">
@@ -104,7 +104,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="ring1" list="list-ring1" placeholder="Cerca o inserisci...">
                             <datalist id="list-ring1"></datalist>
-                            <button class="btn-edit" onclick="openModal('ring1')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="ring1" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -117,7 +117,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="leggings" list="list-leggings" placeholder="Cerca o inserisci...">
                             <datalist id="list-leggings"></datalist>
-                            <button class="btn-edit" onclick="openModal('leggings')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="leggings" title="Modifica / Custom">⚙️</button>
                         </div>
                         <div class="augments-container">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="leggings" data-aug-index="0">
@@ -133,9 +133,9 @@
                     <div class="equip-details">
                         <span class="equip-title">Ring 2</span>
                         <div class="equip-controls">
-                            <input type="text" class="item-input" data-slot="ring2" list="list-ring1" placeholder="Cerca o inserisci...">
+                            <input type="text" class="item-input" data-slot="ring2" list="list-ring2" placeholder="Cerca o inserisci...">
                             <datalist id="list-ring2"></datalist>
-                            <button class="btn-edit" onclick="openModal('ring2')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="ring2" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -148,11 +148,11 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="boots" list="list-boots" placeholder="Cerca o inserisci...">
                             <datalist id="list-boots"></datalist>
-                            <button class="btn-edit" onclick="openModal('boots')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="boots" title="Modifica / Custom">⚙️</button>
                         </div>
                         <div class="augments-container">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="boots" data-aug-index="0">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="boots" data-augment-slot="boots" data-aug-index="1">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="boots" data-aug-index="1">
                             <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="boots" data-aug-index="2">
                         </div>
                     </div>
@@ -166,7 +166,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="feet" list="list-feet" placeholder="Cerca o inserisci...">
                             <datalist id="list-feet"></datalist>
-                            <button class="btn-edit" onclick="openModal('feet')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="feet" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -179,7 +179,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="core" list="list-core" placeholder="Cerca o inserisci...">
                             <datalist id="list-core"></datalist>
-                            <button class="btn-edit" onclick="openModal('core')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="core" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>
@@ -192,7 +192,7 @@
                         <div class="equip-controls">
                             <input type="text" class="item-input" data-slot="pets" list="list-pets" placeholder="Cerca o inserisci...">
                             <datalist id="list-pets"></datalist>
-                            <button class="btn-edit" onclick="openModal('pets')" title="Modifica / Custom">⚙️</button>
+                            <button class="btn-edit" data-slot="pets" title="Modifica / Custom">⚙️</button>
                         </div>
                     </div>
                 </div>

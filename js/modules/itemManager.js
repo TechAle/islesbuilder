@@ -11,56 +11,49 @@ export class ItemManager {
 
     /** Inizializza le datalist HTML per i suggerimenti degli oggetti */
     initDatalists() {
+        const uniqueStats = new Set();
+
         Object.keys(dataStore.data.items).forEach(slots => {
-            if (slots === "ring") {
-                slots = ["ring1", "ring2"];
-            } else slots = [slots]
-            slots.forEach(slot => {
+            const slotList = slots === "ring" ? ["ring1", "ring2"] : [slots];
+
+            slotList.forEach(slot => {
                 const datalist = document.getElementById(`list-${slot}`);
                 if (!datalist) return;
                 datalist.innerHTML = '';
-                let valData = slot
-                if (valData.includes("ring"))
-                    valData = "ring"
-                dataStore.data.items[valData].forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.name;
-                    datalist.appendChild(opt);
-                });
-            })
-        });
-    }
 
-    /** Associa gli eventi degli elementi DOM */
-    bindEvents() {
-        document.querySelectorAll('.item-input').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const target = /** @type {HTMLInputElement} */ (e.target);
-                const slot = target.dataset.slot;
-                if (slot) this.handleItemInput(slot, target.value);
+                let valData = slot;
+                if (valData.includes("ring")) {
+                    valData = "ring";
+                }
+
+                if (dataStore.data.items[valData]) {
+                    dataStore.data.items[valData].forEach(item => {
+                        // Popola il datalist dell'oggetto
+                        const opt = document.createElement('option');
+                        opt.value = item.name;
+                        datalist.appendChild(opt);
+
+                        // Raccoglie tutte le statistiche uniche da item.stats
+                        if (item.stats) {
+                            Object.keys(item.stats).forEach(statKey => {
+                                uniqueStats.add(statKey);
+                            });
+                        }
+                    });
+                }
             });
         });
 
-        document.querySelectorAll('.augment-input').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const target = /** @type {HTMLInputElement} */ (e.target);
-                const slot = target.dataset.augmentSlot;
-                const index = parseInt(target.dataset.augIndex || '0', 10);
-                if (slot) this.handleAugmentInput(slot, index, target.value);
+        // Popola dinamicamente il datalist dei suggerimenti per le statistiche (stat-suggestions)
+        const statDatalist = document.getElementById('stat-suggestions');
+        if (statDatalist) {
+            statDatalist.innerHTML = '';
+            uniqueStats.forEach(statName => {
+                const opt = document.createElement('option');
+                opt.value = statName;
+                statDatalist.appendChild(opt);
             });
-        });
-
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const target = /** @type {HTMLElement} */ (e.target);
-                const slot = target.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-                if (slot) this.openModal(slot);
-            });
-        });
-
-        document.getElementById('btn-add-stat')?.addEventListener('click', () => this.addModalStatRow());
-        document.getElementById('btn-save-modal')?.addEventListener('click', () => this.saveModalChanges());
-        document.querySelectorAll('.btn-close-modal').forEach(btn => btn.addEventListener('click', () => this.closeModal()));
+        }
     }
 
     /**
@@ -76,7 +69,10 @@ export class ItemManager {
             activeEquip[slot].name = '';
             activeEquip[slot].stats = {};
         } else {
-            const preset = dataStore.data.items[slot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
+            let storeSlot = slot
+            if (slot.includes("ring"))
+                storeSlot = "ring"
+            const preset = dataStore.data.items[storeSlot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
             if (preset) {
                 activeEquip[slot].name = preset.name;
                 activeEquip[slot].stats = { ...preset.stats };
@@ -198,5 +194,39 @@ export class ItemManager {
                 });
             }
         });
+    }
+
+    bindEvents() {
+        // Catturiamo l'istanza di ItemManager in una costante sicura
+        const self = this;
+
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = /** @type {HTMLElement} */ (e.currentTarget);
+                const slot = target.dataset.slot;
+                if (slot) self.openModal(slot); // Usiamo self anziché this
+            });
+        });
+
+        document.querySelectorAll('.item-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const target = /** @type {HTMLInputElement} */ (e.target);
+                const slot = target.dataset.slot;
+                if (slot) self.handleItemInput(slot, target.value);
+            });
+        });
+
+        document.querySelectorAll('.augment-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const target = /** @type {HTMLInputElement} */ (e.target);
+                const slot = target.dataset.augmentSlot;
+                const index = parseInt(target.dataset.augIndex || '0', 10);
+                if (slot) self.handleAugmentInput(slot, index, target.value);
+            });
+        });
+
+        document.getElementById('btn-add-stat')?.addEventListener('click', () => self.addModalStatRow());
+        document.getElementById('btn-save-modal')?.addEventListener('click', () => self.saveModalChanges());
+        document.querySelectorAll('.btn-close-modal').forEach(btn => btn.addEventListener('click', () => self.closeModal()));
     }
 }

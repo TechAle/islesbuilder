@@ -10,6 +10,59 @@ export class ApiManager {
         await this.updateItems();
     }
 
+    /**
+     * Funzione di appoggio per estrarre e formattare tutte le statistiche e proprietà dell'item
+     * @param {Object} gear
+     * @param {string} targetCategory
+     * @returns {Record<string, any>}
+     */
+    formatGearStats(gear, targetCategory) {
+        const statsObj = {};
+
+        // 1. Statistiche standard dall'array stats dell'API
+        if (gear.stats && Array.isArray(gear.stats)) {
+            gear.stats.forEach(s => {
+                if (s.stat) {
+                    statsObj[s.stat] = s.percent ? `${s.max}%` : s.max;
+                }
+            });
+        }
+
+        // 2. Proprietà specifiche se è un'arma
+        if (targetCategory === "weapon") {
+            if (gear.attackEnergy !== undefined) statsObj["Attack Energy"] = gear.attackEnergy;
+            if (gear.defaultAttack !== undefined) statsObj["Default Attack"] = gear.defaultAttack;
+            if (gear.normalAttack?.max !== undefined) statsObj["Normal Attack"] = gear.normalAttack.max;
+            else if (gear.normalAttack !== undefined) statsObj["Normal Attack"] = gear.normalAttack;
+            if (gear.damageType !== undefined) statsObj["Damage Type"] = gear.damageType;
+        }
+
+        // 3. Slot per gli augment (se presenti)
+        if (gear.augmentSlots !== undefined) {
+            statsObj["Augment Slots"] = gear.augmentSlots;
+        }
+
+        // 4. Livello dell'oggetto (level)
+        if (gear.level !== undefined) {
+            statsObj["Level"] = gear.level;
+        }
+
+        // 5. Abilità (array di oggetti o stringhe -> estraiamo il nome)
+        if (gear.abilities && Array.isArray(gear.abilities)) {
+            gear.abilities.forEach((ability, index) => {
+                const abilityName = typeof ability === 'object' && ability !== null
+                    ? (ability.name || ability.title || '')
+                    : ability;
+
+                if (abilityName) {
+                    statsObj[`Ability ${index + 1}`] = abilityName;
+                }
+            });
+        }
+
+        return statsObj;
+    }
+
     async updateItems() {
         try {
             // 1. Le 4 chiamate in parallelo
@@ -32,8 +85,7 @@ export class ApiManager {
             // 2. Cloniamo la struttura attuale con structuredClone
             const itemsCopy = structuredClone(dataStore.data.items);
 
-            // 3. Dizionario di mappatura (chiave inminuscolo per sicurezza dall'API -> categoria dello store)
-            // Gli slot non presenti qui (come backpack, pouch, quiver) verranno ignorati in automatico.
+            // 3. Dizionario di mappatura degli slot
             const slotMapping = {
                 "amulet": "amulet",
                 "axe": "weapon",
@@ -45,7 +97,7 @@ export class ApiManager {
                 "dagger": "weapon",
                 "focus": "weapon",
                 "gauntlet": "weapon",
-                "gloves": "glove", // Nota: singolare nel tuo store
+                "gloves": "glove",
                 "greatbow": "weapon",
                 "hammer": "weapon",
                 "handcannon": "weapon",
@@ -59,13 +111,10 @@ export class ApiManager {
                 "staff": "weapon",
                 "sword": "weapon",
                 "tome": "weapon",
-                "wand": "weapon",
-                "blowpipe": "weapon",
-                "greaves": "feet"
+                "wands": "weapon"
             };
 
-            // Svuotiamo preventivamente solo le categorie che l'API va a toccare,
-            // così eliminiamo i vecchi dati locali di quelle categorie senza toccare il resto (es. pets)
+            // Svuotiamo preventivamente solo le categorie coinvolte
             const targetCategories = new Set(Object.values(slotMapping));
             targetCategories.forEach(category => {
                 if (itemsCopy[category]) {
@@ -73,31 +122,21 @@ export class ApiManager {
                 }
             });
 
-            // 4. Smistamento e formattazione basati sul dizionario
+            // 4. Smistamento e formattazione
             allFetchedItems.forEach(item => {
                 const rawSlot = item.gear?.slot;
-                const name = item.name || item.gear?.name;
-                if (name === "Archer Class Core")
-                    debugger
                 if (!rawSlot) return;
 
-                // Normalizziamo in minuscolo per confrontarlo col dizionario
                 const normalizedSlot = rawSlot.toLowerCase();
                 const targetCategory = slotMapping[normalizedSlot];
 
-                // Se non è mappato nel dizionario (es. backpack, pouch, quiver), lo ignora
-                if (!targetCategory) {
-                    //console.log(normalizedSlot)
-                    return;
-                }
+                if (!targetCategory) return; // Ignora backpack, pouch, quiver, ecc.
 
-                const statsArray = item.gear?.stats || [];
+                const name = item.name || item.gear?.name;
+                const gear = item.gear || {};
 
-                // Formattiamo le statistiche nel formato { StatName: valore }
-                const statsObj = {};
-                statsArray.forEach(s => {
-                    statsObj[s.stat] = s.percent ? `${s.max}%` : s.max;
-                });
+                // Chiamata alla funzione di appoggio per generare tutte le statistiche pulite
+                const statsObj = this.formatGearStats(gear, targetCategory);
 
                 if (!itemsCopy[targetCategory]) {
                     itemsCopy[targetCategory] = [];
@@ -109,12 +148,12 @@ export class ApiManager {
                 });
             });
 
-            // 5. Aggiorniamo il dataStore e scateniamo la notify()
+            // 5. Aggiornamento dello store e notifica automatica
             dataStore.updateData({
                 items: itemsCopy
             });
 
-            console.log("Oggetti sincronizzati e smistati correttamente tramite dizionario!");
+            console.log("Oggetti, armi, abilità e statistiche sincronizzati con successo!");
 
         } catch (error) {
             console.error("Errore durante il fetch delle categorie API:", error);
