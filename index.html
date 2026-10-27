@@ -1,10 +1,305 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Character Build Manager</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-$END$
+
+<div class="app-container">
+
+    <!-- LEFT: EQUIPMENT + ELIXIRS + SKILL TREE (70%) -->
+    <div class="left-panel">
+
+        <!-- Equipment Grid Panel -->
+        <section class="equip-panel">
+            <div class="equip-grid">
+
+                <!-- Weapon -->
+                <div class="equip-slot">
+                    <div class="equip-icon">⚔️</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Weapon</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="weapon" list="list-weapon" placeholder="Cerca o inserisci...">
+                            <datalist id="list-weapon"></datalist>
+                            <button class="btn-edit" onclick="openModal('weapon')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                        <div class="augments-container">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="weapon" data-aug-index="0">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="weapon" data-aug-index="1">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="weapon" data-aug-index="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Glove -->
+                <div class="equip-slot">
+                    <div class="equip-icon">🧤</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Glove</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="glove" list="list-glove" placeholder="Cerca o inserisci...">
+                            <datalist id="list-glove"></datalist>
+                            <button class="btn-edit" onclick="openModal('glove')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Helmet -->
+                <div class="equip-slot">
+                    <div class="equip-icon">🪖</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Helmet</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="helmet" list="list-helmet" placeholder="Cerca o inserisci...">
+                            <datalist id="list-helmet"></datalist>
+                            <button class="btn-edit" onclick="openModal('helmet')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                        <div class="augments-container">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="helmet" data-aug-index="0">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="helmet" data-aug-index="1">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="helmet" data-aug-index="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amulet -->
+                <div class="equip-slot">
+                    <div class="equip-icon">📿</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Amulet</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="amulet" list="list-amulet" placeholder="Cerca o inserisci...">
+                            <datalist id="list-amulet"></datalist>
+                            <button class="btn-edit" onclick="openModal('amulet')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chestplate -->
+                <div class="equip-slot">
+                    <div class="equip-icon">🛡️</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Chestplate</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="chestplate" list="list-chestplate" placeholder="Cerca o inserisci...">
+                            <datalist id="list-chestplate"></datalist>
+                            <button class="btn-edit" onclick="openModal('chestplate')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                        <div class="augments-container">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="chestplate" data-aug-index="0">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="chestplate" data-aug-index="1">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="chestplate" data-aug-index="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ring 1 -->
+                <div class="equip-slot">
+                    <div class="equip-icon">💍</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Ring 1</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="ring1" list="list-ring1" placeholder="Cerca o inserisci...">
+                            <datalist id="list-ring1"></datalist>
+                            <button class="btn-edit" onclick="openModal('ring1')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leggings -->
+                <div class="equip-slot">
+                    <div class="equip-icon">👖</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Leggings</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="leggings" list="list-leggings" placeholder="Cerca o inserisci...">
+                            <datalist id="list-leggings"></datalist>
+                            <button class="btn-edit" onclick="openModal('leggings')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                        <div class="augments-container">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="leggings" data-aug-index="0">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="leggings" data-aug-index="1">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="leggings" data-aug-index="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ring 2 -->
+                <div class="equip-slot">
+                    <div class="equip-icon">💍</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Ring 2</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="ring2" list="list-ring2" placeholder="Cerca o inserisci...">
+                            <datalist id="list-ring2"></datalist>
+                            <button class="btn-edit" onclick="openModal('ring2')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boots -->
+                <div class="equip-slot">
+                    <div class="equip-icon">🥾</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Boots</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="boots" list="list-boots" placeholder="Cerca o inserisci...">
+                            <datalist id="list-boots"></datalist>
+                            <button class="btn-edit" onclick="openModal('boots')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                        <div class="augments-container">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="boots" data-aug-index="0">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="boots" data-augment-slot="boots" data-aug-index="1">
+                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="boots" data-aug-index="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feet -->
+                <div class="equip-slot">
+                    <div class="equip-icon">🦶</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Feet Slots</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="feet" list="list-feet" placeholder="Cerca o inserisci...">
+                            <datalist id="list-feet"></datalist>
+                            <button class="btn-edit" onclick="openModal('feet')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core -->
+                <div class="equip-slot">
+                    <div class="equip-icon round">🔮</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Core</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="core" list="list-core" placeholder="Cerca o inserisci...">
+                            <datalist id="list-core"></datalist>
+                            <button class="btn-edit" onclick="openModal('core')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pets -->
+                <div class="equip-slot">
+                    <div class="equip-icon">🐾</div>
+                    <div class="equip-details">
+                        <span class="equip-title">Pets</span>
+                        <div class="equip-controls">
+                            <input type="text" class="item-input" data-slot="pets" list="list-pets" placeholder="Cerca o inserisci...">
+                            <datalist id="list-pets"></datalist>
+                            <button class="btn-edit" onclick="openModal('pets')" title="Modifica / Custom">⚙️</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Elixirs Section -->
+        <section class="elixirs-panel">
+            <div class="section-title">🧪 Elixirs (0 - 5)</div>
+            <div class="elixirs-grid" id="elixirs-container"></div>
+        </section>
+
+        <!-- Skill Tree Section -->
+        <section class="tree-panel">
+            <nav class="class-selector">
+                <button class="class-btn" data-class="warrior">Warrior</button>
+                <button class="class-btn active" data-class="archer">Archer</button>
+                <button class="class-btn" data-class="mage">Mage</button>
+            </nav>
+            <div class="tree-viewport">
+                <svg id="wires" viewBox="0 0 1000 620" preserveAspectRatio="none"></svg>
+                <div class="nodes" id="nodes"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);">
+                <span>SP Rimanenti: <strong id="points" style="color:var(--gold);">100</strong></span>
+                <span>Click: Potenzia | Shift+Click: Depotenzia</span>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- RIGHT: DETAILED & DAMAGE (30%) -->
+    <div class="right-panel">
+        <div class="output-card full-height">
+            <div class="card-title">Damage Overview</div>
+            <div class="damage-highlight">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Average DPS</div>
+                <div class="damage-dps">2,485.50</div>
+            </div>
+            <div class="stat-row"><span class="stat-label">Non-Critical Hit:</span><span class="stat-val">650</span></div>
+            <div class="stat-row"><span class="stat-label">Critical Hit:</span><span class="stat-val">1,820</span></div>
+            <div class="stat-row"><span class="stat-label">Critical Chance:</span><span class="stat-val">35.0%</span></div>
+            <div class="stat-row"><span class="stat-label">Attack Speed:</span><span class="stat-val">1.85 /s</span></div>
+        </div>
+
+        <div class="output-card">
+            <div class="card-title">Detailed Stats</div>
+            <div id="detailed-stats-container"></div>
+            <div class="action-buttons-group">
+                <button class="btn-share" id="btn-share-build">🔗 Condividi Build</button>
+                <button class="btn-paste" id="btn-paste-build">📋 Incolla Build</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL EDITOR PER OGGETTI / STATISTICHE CUSTOM -->
+<div class="modal-backdrop" id="modal-editor">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-slot-title">Modifica Oggetto</h3>
+            <button class="btn-close-modal" style="background:none; border:none; color:#fff; cursor:pointer;">✕</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:6px;">
+            <label style="font-size:12px; color:var(--text-muted);">Nome Oggetto Base:</label>
+            <input type="text" id="modal-item-name" style="background:var(--bg-main); border:1px solid var(--border-color); color:#fff; padding:6px; border-radius:4px;">
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-size:12px; color:var(--text-muted);">Statistiche Base:</label>
+            <button class="btn-add-stat" id="btn-add-stat">+ Aggiungi Statistica</button>
+        </div>
+
+        <div class="stat-edit-list" id="modal-stat-list"></div>
+
+        <div class="modal-footer">
+            <button class="btn-action btn-cancel btn-close-modal">Annulla</button>
+            <button class="btn-action btn-save" id="btn-save-modal">Salva Oggetto</button>
+        </div>
+    </div>
+</div>
+
+<!-- DATALIST SUGGERIMENTI -->
+<datalist id="stat-suggestions">
+    <option value="HP">
+    <option value="Defense">
+    <option value="Speed">
+    <option value="Strength">
+    <option value="Agility">
+    <option value="Intelligence">
+    <option value="Crit Chance">
+    <option value="Crit Damage">
+    <option value="Mana Regen">
+</datalist>
+
+<datalist id="list-augments">
+    <option value="Minor Health Runes (+30 HP)">
+    <option value="Major Defense Gem (+15 Def)">
+    <option value="Feather Emblem (+10 Speed)">
+    <option value="Power Shard (+8 Strength)">
+    <option value="Sharpness Rune (+4% Crit)">
+</datalist>
+
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
