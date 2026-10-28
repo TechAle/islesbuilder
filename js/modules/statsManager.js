@@ -48,6 +48,52 @@ export class StatsManager {
             }
         });
 
+        // 1. Recupera i nodi e i livelli della classe corrente
+        const currentNodes = dataStore.data.skillTrees[equippedStore.state.currentClass].nodes;
+        const currentLevels = equippedStore.state.treeLevels[equippedStore.state.currentClass];
+
+// 2. Itera su tutti i nodi dell'albero
+        Object.keys(currentNodes).forEach(id => {
+            const node = currentNodes[id];
+            const curLvl = currentLevels.get(id) || 0;
+
+            // Se il nodo ha punti investiti ed ha una statKey definita
+            if (curLvl > 0 && node.statKey) {
+                let numericVal = 0;
+                let rawStat = node.statKey;
+
+                // Controlla se la statKey originale indica un valore negativo (es. inizia con "-")
+                const isNegative = rawStat.trim().startsWith('-');
+
+                // Calcolo del valore scalato tramite i parametri
+                if (node.parameters && Object.keys(node.parameters).length > 0) {
+                    const [paramKey, paramData] = Object.entries(node.parameters)[0];
+                    const calculatedVal = paramData.base + (paramData.increase * (curLvl - 1));
+
+                    numericVal = isNegative ? -Math.abs(calculatedVal) : calculatedVal;
+
+                    // Rimpiazza il segnaposto con il valore calcolato
+                    rawStat = rawStat.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), calculatedVal);
+                }
+
+                // Rimuove il segno meno opzionale, il numero e lo spazio (es. "-3% Energy Consumption" diventa "% Energy Consumption")
+                rawStat = rawStat.replace(/^-?\d+([.,]\d+)?\s*/, '');
+
+                let isPercent = false;
+                if (rawStat.includes('%')) {
+                    isPercent = true;
+                    rawStat = rawStat.replace('%', '');
+                }
+
+                if (!isNaN(numericVal) && numericVal !== 0) {
+                    // Ricostruisce la statKey pulita (es. "Energy Consumption%")
+                    const finalStatKey = isPercent ? rawStat.trim() + "%" : rawStat.trim();
+
+                    this.statsValues[finalStatKey] = (this.statsValues[finalStatKey] || 0) + numericVal;
+                }
+            }
+        });
+
         this.render(this.statsValues);
     }
 
@@ -70,7 +116,8 @@ export class StatsManager {
 
             // Controlliamo direttamente se la chiave termina con '%' o include parole chiave
             const isPercent = stat.endsWith('%') || stat.toLowerCase().includes('crit') || stat.toLowerCase().includes('chance');
-            const displayVal = isPercent ? `+${val.toFixed(2)}%` : `+${val.toFixed(2)}`;
+            let displayVal = isPercent ? `${val.toFixed(2)}%` : `${val.toFixed(2)}`;
+            if (val > 0) displayVal = '+' + displayVal
 
             row.innerHTML = `<span class="stat-label">${stat}:</span><span class="stat-val">${displayVal}</span>`;
             this.container.appendChild(row);

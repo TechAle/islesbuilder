@@ -1,5 +1,5 @@
 import { equippedStore } from '../store/equippedStore.js';
-import {dataStore} from "../store/dataStore.js";
+import { dataStore } from "../store/dataStore.js";
 
 export class SkillManager {
     constructor() {
@@ -7,7 +7,23 @@ export class SkillManager {
         this.svg = document.getElementById('wires');
         this.pointsEl = document.getElementById('points');
         this.classBtns = document.querySelectorAll('.class-btn');
+
+        // Creazione del tooltip per l'hover se non esiste già nel DOM
+        this.tooltip = document.getElementById('skill-tooltip') || this.createTooltip();
+
         this.bindEvents();
+    }
+
+    createTooltip() {
+        const tip = document.createElement('div');
+        tip.id = 'skill-tooltip';
+        tip.className = 'skill-tooltip';
+        tip.style.display = 'none';
+        tip.style.position = 'absolute';
+        tip.style.zIndex = '1000';
+        tip.style.pointerEvents = 'none';
+        document.body.appendChild(tip);
+        return tip;
     }
 
     bindEvents() {
@@ -68,9 +84,25 @@ export class SkillManager {
     }
 
     /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità */
+    /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità */
     drawWires() {
-        if (!this.svg) return;
+        if (!this.svg || !this.layer) return;
         this.svg.innerHTML = '';
+
+        // Otteniamo le dimensioni reali in pixel del contenitore dei nodi
+        const rect = this.layer.getBoundingClientRect();
+        const width = rect.width || this.layer.clientWidth || 500;
+        const height = rect.height || this.layer.clientHeight || 500;
+
+        // Impostiamo viewBox ed dimensioni esplicite sul tag SVG per allinearlo perfettamente al layer dei nodi
+        this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        this.svg.style.width = '100%';
+        this.svg.style.height = '100%';
+        this.svg.style.position = 'absolute';
+        this.svg.style.top = '0';
+        this.svg.style.left = '0';
+        this.svg.style.pointerEvents = 'none';
+
         const currentNodes = this.getActiveNodes();
         const currentLevels = this.getActiveLevels();
 
@@ -78,10 +110,15 @@ export class SkillManager {
             const p = currentNodes[a], q = currentNodes[b];
             if (!p || !q) return;
 
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            const x1 = p.x * 10, y1 = p.y * 6.2, x2 = q.x * 10, y2 = q.y * 6.2;
+            // Convertiamo le percentuali (x, y) nelle coordinate reali in pixel basate sulle dimensioni del container
+            const x1 = (p.x / 100) * width;
+            const y1 = (p.y / 100) * height;
+            const x2 = (q.x / 100) * width;
+            const y2 = (q.y / 100) * height;
 
-            const d = Math.abs(p.x - q.x) > Math.abs(p.y - q.y)
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+            const d = Math.abs(x1 - x2) > Math.abs(y1 - y2)
                 ? `M${x1} ${y1} H${(x1 + x2) / 2} V${y2} H${x2}`
                 : `M${x1} ${y1} V${(y1 + y2) / 2} H${x2} V${y2}`;
 
@@ -112,7 +149,43 @@ export class SkillManager {
             b.style.top = n.y + '%';
             b.disabled = (!available && curLvl === 0);
             b.innerHTML = curLvl > 0 ? `${curLvl}<span class="lvl-badge">${curLvl}/${n.max}</span>` : '';
+
+            // Eventi Click
             b.addEventListener('click', (e) => this.handleNodeClick(id, e));
+
+            // Eventi Hover per il Tooltip
+            b.addEventListener('mouseenter', (e) => {
+                if (!this.tooltip) return;
+
+                let desc = n.description || "Nessuna descrizione disponibile.";
+
+                // Se il nodo ha dei parametri di scaling definiti
+                if (n.parameters) {
+                    Object.entries(n.parameters).forEach(([key, param]) => {
+                        // Calcolo del valore: base + (aumento * livello)
+                        // Nota: se il livello è 0, mostriamo comunque il valore base o 0 a seconda di come preferisci
+                        const effectiveLvl = curLvl > 0 ? curLvl : 1;
+                        const calculatedVal = param.base + (param.increase * (effectiveLvl - 1));
+
+                        // Sostituisce {key} nella stringa (es. {c}) con il valore calcolato
+                        desc = desc.replace(new RegExp(`\\{${key}\\}`, 'g'), calculatedVal.toFixed(1));
+                    });
+                }
+
+                this.tooltip.innerHTML = `<strong>${n.name}</strong> (${curLvl}/${n.max})<br>${desc}<br><small>Costo prossimo livello: ${n.costBase} SP</small>`;
+                this.tooltip.style.display = 'block';
+            });
+
+            b.addEventListener('mousemove', (e) => {
+                if (!this.tooltip) return;
+                this.tooltip.style.left = (e.pageX + 15) + 'px';
+                this.tooltip.style.top = (e.pageY + 15) + 'px';
+            });
+
+            b.addEventListener('mouseleave', () => {
+                if (!this.tooltip) return;
+                this.tooltip.style.display = 'none';
+            });
 
             this.layer.appendChild(b);
         });
@@ -126,3 +199,5 @@ export class SkillManager {
         this.drawWires();
     }
 }
+
+export const skillManager = new SkillManager();
