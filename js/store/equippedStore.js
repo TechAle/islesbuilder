@@ -32,6 +32,7 @@ export class BuildStore {
         /** @type {BuildState} */
         this.state = {
             sharedPoints: 100,
+            // Used for the active skill tree
             currentClass: 'archer',
             activeEquip: {
                 weapon:     { name: '', stats: {}, augments: ['', '', ''] },

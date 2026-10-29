@@ -6,11 +6,22 @@ export class StatsManager {
         this.container = document.getElementById('detailed-stats-container');
         /** @type {Record<string, number>} */
         this.statsValues = {}
+        /** @type {Record<string, Record<string, number>>} */
+        this.skillValues = {
+            "warrior": {},
+            "archer": {},
+            "mage": {}
+        }
     }
 
     /** Ricalcola i valori aggregati di tutte le statistiche */
     recalculate() {
         this.statsValues = {}
+        this.skillValues = {
+            "warrior": {},
+            "archer": {},
+            "mage": {}
+        }
         const { activeEquip, elixirs } = equippedStore.state;
 
         Object.values(activeEquip).forEach(item => {
@@ -49,51 +60,74 @@ export class StatsManager {
         });
 
         // 1. Recupera i nodi e i livelli della classe corrente
-        const currentNodes = dataStore.data.skillTrees[equippedStore.state.currentClass].nodes;
-        const currentLevels = equippedStore.state.treeLevels[equippedStore.state.currentClass];
+        for(const classCheck of ["warrior", "mage", "archer"]) {
+            const currentNodes = dataStore.data.skillTrees[classCheck].nodes;
+            const currentLevels = equippedStore.state.treeLevels[classCheck];
 
 // 2. Itera su tutti i nodi dell'albero
-        Object.keys(currentNodes).forEach(id => {
-            const node = currentNodes[id];
-            const curLvl = currentLevels.get(id) || 0;
+            Object.keys(currentNodes).forEach(id => {
+                const node = currentNodes[id];
+                const curLvl = currentLevels.get(id) || 0;
 
-            // Se il nodo ha punti investiti ed ha una statKey definita
-            if (curLvl > 0 && node.statKey) {
-                let numericVal = 0;
-                let rawStat = node.statKey;
+                // Se il nodo ha punti investiti ed ha una statKey definita
+                if (curLvl > 0 && node.statKey) {
+                    let numericVal = 0;
+                    let rawStat = node.statKey;
+                    let isDirect = node.isDirect
 
-                // Controlla se la statKey originale indica un valore negativo (es. inizia con "-")
-                const isNegative = rawStat.trim().startsWith('-');
+                    if (!isDirect) {
+                        rawStat = rawStat.replace("{level}", curLvl);
+                    }
 
-                // Calcolo del valore scalato tramite i parametri
-                if (node.parameters && Object.keys(node.parameters).length > 0) {
-                    const [paramKey, paramData] = Object.entries(node.parameters)[0];
-                    const calculatedVal = paramData.base + (paramData.increase * (curLvl - 1));
+                    const isNegative = rawStat.trim().startsWith('-');
+                    const [numberCheck, ...nameParts] = rawStat.split(" ");
+                    const name = nameParts.join(" ");
 
-                    numericVal = isNegative ? -Math.abs(calculatedVal) : calculatedVal;
+                    let finalStatKey = "";
 
-                    // Rimpiazza il segnaposto con il valore calcolato
-                    rawStat = rawStat.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), calculatedVal);
+// Controlliamo se esiste il parametro corrispondente a 'name'
+                    const paramData = node.parameters && node.parameters[name];
+
+                    if (node.parameters && paramData) {
+                        // --- CASO 1: Il parametro esiste ---
+                        const calculatedVal = paramData.base + (paramData.increase * (curLvl - 1));
+                        numericVal = isNegative ? -Math.abs(calculatedVal) : calculatedVal;
+
+                        // Rimpiazza il segnaposto con il valore calcolato
+                        rawStat = rawStat.replace(new RegExp(`\\{${name}\\}`, 'g'), calculatedVal);
+
+                        // Pulizia standard di rawStat
+                        rawStat = rawStat.replace(/^-?\d+([.,]\d+)?\s*/, '');
+                        let isPercent = rawStat.includes('%');
+                        if (isPercent) rawStat = rawStat.replace('%', '');
+
+                        finalStatKey = isPercent ? rawStat.trim() + "%" : rawStat.trim();
+
+                    } else {
+                        // --- CASO 2: Il parametro è null / non esiste (Fallback) ---
+                        // Estraiamo il valore numerico da numberCheck (es. "-3%" -> -3)
+                        const cleanNumStr = numberCheck.replace(/[^0-9.,-]/g, '').replace(',', '.');
+                        numericVal = parseFloat(cleanNumStr) || 0;
+
+                        // finalStatKey diventa 'name' (pulito da eventuali percentuali)
+                        let cleanName = name;
+                        let isPercent = cleanName.includes('%');
+                        if (isPercent) cleanName = cleanName.replace('%', '');
+
+                        finalStatKey = isPercent ? cleanName.trim() + "%" : cleanName.trim();
+                    }
+
+// Salvataggio del valore calcolato
+                    if (!isNaN(numericVal) && numericVal !== 0) {
+                        if (isDirect)
+                            this.statsValues[finalStatKey] = (this.statsValues[finalStatKey] || 0) + numericVal;
+                        else
+                            this.skillValues[classCheck][finalStatKey] = numericVal;
+                    }
                 }
+            });
 
-                // Rimuove il segno meno opzionale, il numero e lo spazio (es. "-3% Energy Consumption" diventa "% Energy Consumption")
-                rawStat = rawStat.replace(/^-?\d+([.,]\d+)?\s*/, '');
-
-                let isPercent = false;
-                if (rawStat.includes('%')) {
-                    isPercent = true;
-                    rawStat = rawStat.replace('%', '');
-                }
-
-                if (!isNaN(numericVal) && numericVal !== 0) {
-                    // Ricostruisce la statKey pulita (es. "Energy Consumption%")
-                    const finalStatKey = isPercent ? rawStat.trim() + "%" : rawStat.trim();
-
-                    this.statsValues[finalStatKey] = (this.statsValues[finalStatKey] || 0) + numericVal;
-                }
-            }
-        });
-
+        }
         this.render(this.statsValues);
     }
 
