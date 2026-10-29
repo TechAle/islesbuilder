@@ -168,11 +168,15 @@ export class SkillManager {
                         const calculatedVal = param.base + (param.increase * (effectiveLvl - 1));
 
                         // Sostituisce {key} nella stringa (es. {c}) con il valore calcolato
-                        desc = desc.replace(new RegExp(`\\{${key}\\}`, 'g'), calculatedVal.toFixed(1));
+                        const formattedVal = Number(calculatedVal.toFixed(2));
+                        desc = desc.replace(new RegExp(`\\{${key}\\}`, 'g'), formattedVal);
                     });
                 }
 
-                this.tooltip.innerHTML = `<strong>${n.name}</strong> (${curLvl}/${n.max})<br>${desc}<br><small>Costo prossimo livello: ${n.costBase} SP</small>`;
+                const nextLevel = curLvl < n.max ? curLvl + 1 : curLvl;
+                const nextCost = nextLevel * n.costBase;
+
+                this.tooltip.innerHTML = `<strong>${n.name}</strong> (${curLvl}/${n.max})<br>${desc}<br><small>Costo prossimo livello: ${curLvl >= n.max ? "MAX" : nextCost + " SP"}</small>`;
                 this.tooltip.style.display = 'block';
             });
 

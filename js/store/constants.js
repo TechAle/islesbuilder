@@ -299,7 +299,7 @@ export let CLASS_SKILL_TREES = {
                 'C': {
                     x: 50, y: 50, max: 10, costBase: 1, center: true,
                     name: "Ranged Mastery",
-                    statKey: "{c}% Ranged Melee",
+                    statKey: "{c}% Ranged Damage",
                     description: "Increase any Ranged Damage by {c}%.",
                     parameters: { c: { base: 5.0, increase: 5.0 } }
                 },
@@ -484,33 +484,180 @@ export let CLASS_SKILL_TREES = {
     },
     mage: {
         nodes: {
-            'C':   { x: 50, y: 50, max: 12, costBase: 1, center: true, description: "Essenza Arcana: Aumenta il pool di Mana massimo e la potenza magica globale." },
-            'UL':  { x: 38, y: 30, max: 6, costBase: 2, description: "Scudo di Mana: Assorbe una percentuale dei danni entranti usando il mana anziché gli HP." },
-            'UR': { x: 62, y: 30, max: 6, costBase: 2, description: "Catalizzatore: Riduce i tempi di casting di tutti gli incantesimi." },
-            'DL':  { x: 38, y: 70, max: 6, costBase: 2, description: "Meditazione: Aumenta notevolmente la rigenerazione naturale del mana." },
-            'DR': { x: 62, y: 70, max: 6, costBase: 2, description: "Affinità Elementale: Aumenta i danni inflitti da tutti gli elementi." },
-            'L':   { x: 26, y: 50, max: 4, costBase: 4, description: "Maestria del Vuoto: Riduce il costo in mana delle abilità avanzate." },
-            'R':  { x: 74, y: 50, max: 4, costBase: 4, description: "Sovraccarico: Aumenta la potenza magica a discapito di un maggior consumo di mana." },
-            'UL1': { x: 28, y: 14, max: 4, costBase: 3, description: "Barriera Protettiva: Aumenta la resistenza magica." },
-            'UL2':{ x: 42, y: 14, max: 4, costBase: 3, description: "Rifrazione: Ha una probabilità di respingere gli incantesimi nemici." },
-            'UR1': { x: 58, y: 14, max: 4, costBase: 3, description: "Velocità Incantata: Aumenta la velocità di movimento durante il lancio." },
-            'UR2':{ x: 72, y: 14, max: 4, costBase: 3, description: "Eco Arcano: Permette agli incantesimi di ripetersi con probabilità ridotta." },
-            'DL1': { x: 28, y: 86, max: 4, costBase: 3, description: "Tranquillità: Aumenta la rigenerazione del mana quando si è immobili." },
-            'DL2':{ x: 42, y: 86, max: 4, costBase: 3, description: "Risucchio Energetico: Ricarica mana quando si sconfiggono i nemici." },
-            'DR1': { x: 58, y: 86, max: 4, costBase: 3, description: "Pietra Filosofale: Aumenta l'efficacia dei buff e delle pozioni." },
-            'DR2':{ x: 72, y: 86, max: 4, costBase: 3, description: "Maestria Critica Magica: Aumenta probabilità e danno dei critici magici." },
-            'L1':  { x: 16, y: 36, max: 5, costBase: 2, description: "Saggezza Antica: Aumenta permanentemente la riserva di mana." },
-            'L2': { x: 16, y: 64, max: 5, costBase: 2, description: "Concentrazione Mentale: Immunità all'interruzione degli incantesimi per danni subiti." },
-            'L1a': { x: 6,  y: 26, max: 3, costBase: 2, description: "Mente Brillante: Incrementa ulteriormente la potenza magica." },
-            'L1b':{ x: 6,  y: 44, max: 3, costBase: 2, description: "Risparmio Energetico: Riduce i costi di mana degli incantesimi di supporto." },
-            'L2a': { x: 6,  y: 56, max: 3, costBase: 2, description: "Tempesta Mentale: Aumenta la velocità di recupero delle abilità ad area." },
-            'L2b':{ x: 6,  y: 74, max: 3, costBase: 2, description: "Trascendenza: Aumenta tutte le statistiche magiche quando il mana è al massimo." },
-            'R1':  { x: 84, y: 36, max: 5, costBase: 2, description: "Piromanzia: Aumenta specificamente i danni da fuoco." },
-            'R2': { x: 84, y: 64, max: 5, costBase: 2, description: "Criomanzia: Aumenta i danni da gelo e applica rallentamenti." },
-            'R1a': { x: 94, y: 26, max: 3, costBase: 2, description: "Colpo Infernale: Aumenta il raggio e l'area d'effetto delle magie di fuoco." },
-            'R1b':{ x: 94, y: 44, max: 3, costBase: 2, description: "Combustione: Aumenta i danni prolungati da ustione." },
-            'R2a': { x: 94, y: 56, max: 3, costBase: 2, description: "Permafrost: Aumenta la durata dei congelamenti sui nemici." },
-            'R2b': { x: 94, y: 74, max: 3, costBase: 2, description: "Tormenta: Sblocca l'incantesimo di controllo di massa della tormenta." }
+            'C': {
+                x: 50, y: 50, max: 10, costBase: 1, center: true,
+                name: "Magic Mastery",
+                statKey: "{c}% Magic Damage",
+                description: "Increase any Magic Damage by {c}%.",
+                parameters: { c: { base: 5.0, increase: 5.0 } }
+            },
+
+            'UL': {
+                x: 42, y: 32, max: 5, costBase: 2,
+                name: "The Avatar",
+                statKey: "{val}% Elemental Power",
+                description: "Increase Elemental Power by {val}%.",
+                parameters: { val: { base: 8.0, increase: 8.0 } }
+            },
+            'UL1': {
+                x: 34, y: 16, max: 5, costBase: 1,
+                name: "Crystal Insights",
+                description: "Landing a CRIT has a {a}% chance to spawn a Crystal Shard that increases Elemental Power by {b}% for 8s when near.",
+                parameters: { a: { base: 5, increase: 5}, b: { base: 6, increase: 6} }
+            },
+            'UL2': {
+                x: 43, y: 16, max: 5, costBase: 1,
+                name: "Natural Distillation",
+                description: "Converts {val}% of your Crit Damage into Elemental Power.",
+                parameters: { val: { base: 5.0, increase: 5.0 } }
+            },
+
+            'UR': {
+                x: 58, y: 32, max: 5, costBase: 2,
+                name: "Elemental Synergy",
+                description: "Gain {a} Elemental Power for every 1 Energy Regen above 10/s, up to {b}",
+                parameters: { a: { base: 2, increase: 2 }, b: { base: 10.0, increase: 10.0 } }
+            },
+            'UR1': {
+                x: 57, y: 16, max: 5, costBase: 1,
+                name: "Potential Charge",
+                description: "Killing an enemy will lower the Ultimate cooldown by {val}s.",
+                parameters: { val: { base: 0.8, increase: 0.8 } }
+            },
+            'UR2': {
+                x: 66, y: 16, max: 5, costBase: 1,
+                name: "Ultimate Cheering",
+                description: "Casting your Ultimate will recover {a}% Max Health and {b} Energy split across 5s.",
+                parameters: { a: { base: 2.5, increase: 2.5 }, b: { base: 5.0, increase: 5.0 } }
+            },
+
+            'DL': {
+                x: 42, y: 68, max: 5, costBase: 2,
+                name: "Energetic",
+                statKey: "{val}% Energy Regen",
+                description: "Gain {val} Energy Regen",
+                parameters: { val: { base: 5.0, increase: 5.0 } }
+            },
+            'DL1': {
+                x: 34, y: 84, max: 5, costBase: 1,
+                name: "Mystic Flow",
+                statKey: "-{val}% Attack Costs",
+                description: "Default attacks take {val}% less energy.",
+                parameters: { val: { base: 5.0, increase: 5.0 } }
+            },
+            'DL2': {
+                x: 43, y: 84, max: 5, costBase: 1,
+                name: "Mystic Surge",
+                statKey: "-{val}% Ability Costs",
+                description: "Weapon abilities take {val}% less energy.",
+                parameters: { val: { base: 4.0, increase: 4.0 } }
+            },
+
+            'DR': {
+                x: 58, y: 68, max: 5, costBase: 2,
+                name: "Elemental channeling",
+                description: "Gain {val} Elemental Damage of every type",
+                parameters: { val: { base: 2.5, increase: 2.5 } }
+            },
+            'DR1': {
+                x: 57, y: 84, max: 5, costBase: 1,
+                name: "Elemental Knowledge",
+                description: "Gain {val}% damage for every unique elemental defense.",
+                parameters: { val: { base: 1.0, increase: 1.0 } }
+            },
+            'DR2': {
+                x: 66, y: 84, max: 5, costBase: 1,
+                name: "Reenergize",
+                description: "Recover {val} Energy for every 1% damage taken.",
+                parameters: { val: { base: 0.15, increase: 0.15 } }
+            },
+
+            'L': {
+                x: 28, y: 50, max: 5, costBase: 3,
+                name: "Infinite Ammo",
+                description: "Consume {val}% less magic ammo.",
+                parameters: { val: { base: 4.0, increase: 4.0 } }
+            },
+            'L1': {
+                x: 18, y: 32, max: 5, costBase: 2,
+                name: "Focus Stacks",
+                description: "Every shared kill within {a}s will grant 1 Focus stack, increasing damage by {val}% per stack, up to 3 stacks.",
+                parameters: { val: { base: 1.0, increase: 1.0 }, a: { base: 1.0, increase: 1.0 } }
+            },
+            'L1a': {
+                x: 8,  y: 22, max: 5, costBase: 1,
+                name: "Focus Capacity",
+                description: "Increase the max stacks of Focus by {val}.",
+                parameters: { val: { base: 1.0, increase: 1.0 } }
+            },
+            'L1b': {
+                x: 8,  y: 42, max: 5, costBase: 1,
+                name: "Mindful Recovery",
+                description: "When Focus expires, regain {a} Energy and {b}% Max Health per stack.",
+                parameters: { a: { base: 1.5, increase: 1.5 }, b: { base: 0.5, increase: 0.5 } }
+            },
+            'L2': {
+                x: 18, y: 68, max: 5, costBase: 2,
+                name: "Grief Infliction",
+                description: "Killing an enemy will inflict Grief to nearby enemies for {a}s. Affected enemies take {val}% more damage.",
+                parameters: { val: { base: 13.0, increase: 13.0 }, a: { base: 2, increase: 2 } }
+            },
+            'L2a': {
+                x: 8,  y: 58, max: 5, costBase: 1,
+                name: "Empathic Soul",
+                description: "Enemies inflicted with Grief will recover {val}% Max Health on kill.",
+                parameters: { val: { base: 2.0, increase: 2.0 } }
+            },
+            'L2b': {
+                x: 8,  y: 78, max: 5, costBase: 1,
+                name: "Last Sorrow",
+                description: "When Grief expires, the enemy will take {val}% more damage on the next hit.",
+                parameters: { val: { base: 5.0, increase: 5.0 } }
+            },
+
+            'R': {
+                x: 72, y: 50, max: 5, costBase: 3,
+                name: "Power Reservation",
+                statKey: "-{val}% Magic Energy Consumption",
+                description: "Magic weapons consume -{val}% energy.",
+                parameters: { val: { base: 3.0, increase: 3.0 } }
+            },
+            'R1': {
+                x: 82, y: 32, max: 5, costBase: 2,
+                name: "Recover Crystal",
+                description: "Hitting an enemy has a {a}% chance to drop a Healing Crystal. Pick it up to recover {b}% Max Health. 0.5s cooldown",
+                parameters: { a: { base: 4.0, increase: 4.0 }, b: { base: 2.0, increase: 2.0 } }
+            },
+            'R1a': {
+                x: 92, y: 22, max: 5, costBase: 1,
+                name: "Power Crystal",
+                description: "Hitting an enemy has a {a}% chance to drop an Energy Crystal. Pick it up to recover {b} Energy. 0.5s cooldown",
+                parameters: { a: { base: 5.0, increase: 5.0 }, b: { base: 30.0, increase: 30.0 } }
+            },
+            'R1b': {
+                x: 92, y: 42, max: 5, costBase: 1,
+                name: "Crystal Combustion",
+                description: "Crystals that despawn will deal {val}% damage to nearby enemies.",
+                parameters: { val: { base: 30.0, increase: 30.0 } }
+            },
+            'R2': {
+                x: 82, y: 68, max: 5, costBase: 2,
+                name: "Support Orbs",
+                description: "Hits have a {a}% chance to spawn a Magical Orb around you, shooting at enemies. Lasts {b}s, up to 3 orbs. RED: Deals {c}% damage. GREEN: Heals a player for {d}%. BLUE: The enemy takes {e}% damage.",
+                parameters: { a: { base: 6.0, increase: 3.0 }, b: { base: 4.0, increase: 1.0 }, c: { base: 30.0, increase: 10.0 }, d: { base: 6.0, increase: 3.0 }, e: { base: 4.0, increase: 4.0 } }
+            },
+            'R2a': {
+                x: 92, y: 58, max: 5, costBase: 1,
+                name: "Magical Capacity",
+                description: "CRITS have a {val}% chance to restore 1 Charge, up to 3. Recharging takes {a}s per orb.",
+                parameters: { val: { base: 10.0, increase: 10.0 }, a: { base: 12.0, increase: -2.0 } }
+            },
+            'R2b': {
+                x: 92, y: 78, max: 5, costBase: 1,
+                name: "Magical Syphon",
+                description: "When an orb expires, recover {a}% Max Health and 6.0 Energy to yourself and nearby players.",
+                parameters: { a: { base: 1.0, increase: 1.0 }, b: { base: 6.0, increase: 3.0 } }
+            }
         },
         edges: [
             ['C','L'], ['C','R'], ['C','UL'], ['C','UR'], ['C','DL'], ['C','DR'],
