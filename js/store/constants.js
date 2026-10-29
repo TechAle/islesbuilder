@@ -238,8 +238,8 @@ export let CLASS_SKILL_TREES = {
             'R': {
                 x: 72, y: 50, max: 5, costBase: 3,
                 name: "Power Reservation",
-                statKey: "-{val}% Energy Consumption",
-                description: "-{val}% Energy Consumption",
+                statKey: "-{val}% Melee Energy Consumption",
+                description: "-{val}% Energy Consumption for melee",
                 parameters: { val: { base: 3, increase: 3 } }
             },
             'R1': {
@@ -294,44 +294,193 @@ export let CLASS_SKILL_TREES = {
             ['R1','R1a'], ['R1','R1b'], ['R2','R2a'], ['R2','R2b']
         ]
     },
-    archer: {
-        nodes: {
-            'C':   { x: 50, y: 50, max: 10, costBase: 1, center: true, description: "Concentrazione dell'Arciere: Aumenta la precisione generale e la gittata." },
-            'UL':  { x: 42, y: 32, max: 5, costBase: 3, description: "Agilità Naturale: Aumenta la velocità di movimento e la schivata." },
-            'UR': { x: 58, y: 32, max: 5, costBase: 3, description: "Tino Rapido: Riduce il tempo di caricamento dell'arco." },
-            'DL':  { x: 42, y: 68, max: 5, costBase: 3, description: "Passo Felpato: Riduce la minaccia generata e aumenta i danni da distanza." },
-            'DR': { x: 58, y: 68, max: 5, costBase: 3, description: "Occhio di Falco: Aumenta drasticamente la probabilità di critico a distanza." },
-            'L':   { x: 30, y: 50, max: 5, costBase: 3, description: "Focalizzazione: Aumenta la rigenerazione di energia/mana per le abilità." },
-            'R':  { x: 70, y: 50, max: 5, costBase: 3, description: "Balistica Avanzata: Aumenta la velocità dei proiettili scoccati." },
-            'UL1': { x: 34, y: 16, max: 5, costBase: 1, description: "Riflessi Pronti: Aumenta la finestra temporale per i contrattacchi." },
-            'UL2':{ x: 43, y: 16, max: 5, costBase: 1, description: "Schivata acrobatica: Fornisce invulnerabilità momentanea durante il movimento rapido." },
-            'UR1': { x: 57, y: 16, max: 5, costBase: 1, description: "Tiro Multiplo: Consente di scoccare dardi addizionali." },
-            'UR2':{ x: 66, y: 16, max: 5, costBase: 1, description: "Raffica: Aumenta temporaneamente la cadenza di fuoco." },
-            'DL1': { x: 34, y: 84, max: 5, costBase: 1, description: "Camuffamento: Aumenta la furtività fuori dal combattimento." },
-            'DL2':{ x: 43, y: 84, max: 5, costBase: 1, description: "Trappole: Aumenta l'efficacia e il danno delle trappole posizionate." },
-            'DR1': { x: 57, y: 84, max: 5, costBase: 1, description: "Tiro Perforante: I colpi ignorano una percentuale dell'armatura nemica." },
-            'DR2':{ x: 66, y: 84, max: 5, costBase: 1, description: "Cecchino: Danno bonus aumentato in base alla distanza dal bersaglio." },
-            'L1':  { x: 20, y: 32, max: 5, costBase: 1, description: "Riserva di Stamina: Aumenta la stamina massima disponibile." },
-            'L2': { x: 20, y: 68, max: 5, costBase: 1, description: "Recupero Veloce: Rigenera stamina più rapidamente dopo una schivata." },
-            'L1a': { x: 10, y: 22, max: 5, costBase: 1, description: "Maestria della Faretra: Aumenta la capacità massima delle munizioni speciali." },
-            'L1b':{ x: 10, y: 42, max: 5, costBase: 1, description: "Frecce Leggere: Riduce il consumo di stamina per tiro." },
-            'L2a': { x: 10, y: 58, max: 5, costBase: 1, description: "Mobilità Estrema: Nessuna penalità di movimento mentre si carica l'arco." },
-            'L2b':{ x: 10, y: 78, max: 5, costBase: 1, description: "Vento Favorevole: Aumenta la velocità d'attacco in spazi aperti." },
-            'R1':  { x: 80, y: 32, max: 5, costBase: 1, description: "Tiro Preciso: Aumenta la stabilità della mira." },
-            'R2': { x: 80, y: 68, max: 5, costBase: 1, description: "Impatto Violento: I dardi infliggono maggiore spinta indietro." },
-            'R1a': { x: 90, y: 22, max: 5, costBase: 1, description: "Tiro alla Testa: Danni critici notevolmente aumentati sui punti deboli." },
-            'R1b':{ x: 90, y: 42, max: 5, costBase: 1, description: "Esplosione Elementale: Le frecce applicano effetti elementali ad area." },
-            'R2a': { x: 90, y: 58, max: 5, costBase: 1, description: "Puntatore Laser: Riduce la dispersione dei tiri a lunga distanza." },
-            'R2b': { x: 90, y: 78, max: 5, costBase: 1, description: "Tempesta di Frecce: Sblocca un attacco speciale ad area a pioggia." }
-        },
-        edges: [
-            ['C','L'], ['C','R'], ['C','UL'], ['C','UR'], ['C','DL'], ['C','DR'],
-            ['UL','UL1'], ['UL','UL2'], ['UR','UR1'], ['UR','UR2'],
-            ['DL','DL1'], ['DL','DL2'], ['DR','DR1'], ['DR','DR2'],
-            ['L','L1'], ['L','L2'], ['R','R1'], ['R','R2'],
-            ['L1','L1a'], ['L1','L1b'], ['L2','L2a'], ['L2','L2b'],
-            ['R1','R1a'], ['R1','R1b'], ['R2','R2a'], ['R2','R2b']
-        ]
+        archer: {
+            nodes: {
+                'C': {
+                    x: 50, y: 50, max: 10, costBase: 1, center: true,
+                    name: "Ranged Mastery",
+                    statKey: "{c}% Ranged Melee",
+                    description: "Increase any Ranged Damage by {c}%.",
+                    parameters: { c: { base: 5.0, increase: 5.0 } }
+                },
+
+                'UL': {
+                    x: 42, y: 32, max: 5, costBase: 2,
+                    name: "Calculated Strike",
+                    description: "Killing an enemy has a {val}% chance to reset your attack cooldown.",
+                    parameters: { val: { base: 10.0, increase: 10.0 } }
+                },
+                'UL1': {
+                    x: 34, y: 16, max: 5, costBase: 1,
+                    name: "Ricochet",
+                    description: "Ranged attacks have a {val}% chance to fire an arrow to the nearest enemy. 2s cooldown. Does not include magic attacks.",
+                    parameters: { val: { base: 10.0, increase: 10.0 } }
+                },
+                'UL2': {
+                    x: 43, y: 16, max: 5, costBase: 1,
+                    name: "Critical Pity",
+                    description: "Missing a CRIT will increase your Crit Chance by {a} for 2.0s, up to {b} times. Removed when crit.",
+                    parameters: { a: { base: 0.35, increase: 0.35 }, b: {base: 2, increase: 1} }
+                },
+
+                'UR': {
+                    x: 58, y: 32, max: 5, costBase: 2,
+                    name: "Elemental Burst",
+                    description: "Gain {val} Crit Damage for every unique Elemental Defense active.",
+                    parameters: { val: { base: 1.5, increase: 1.5 } }
+                },
+                'UR1': {
+                    x: 57, y: 16, max: 5, costBase: 1,
+                    name: "Ultimatum Criterium",
+                    description: "Casting your Ultimate will increase your Crit Chance by {val} for 5s.",
+                    parameters: { val: { base: 2.0, increase: 2.0 } }
+                },
+                'UR2': {
+                    x: 66, y: 16, max: 5, costBase: 1,
+                    name: "Ultimatum Vagrus",
+                    description: "Casting your Ultimate will increase your Crit Damage by {val} for 5s.",
+                    parameters: { val: { base: 4.0, increase: 4.0 } }
+                },
+
+                'DL': {
+                    x: 42, y: 68, max: 5, costBase: 2,
+                    name: "Powerful",
+                    statKey: "{val}% Crit Damage",
+                    description: "{val}% more Critical Damage.",
+                    parameters: { val: { base: 8.0, increase: 8.0 } }
+                },
+                'DL1': {
+                    x: 34, y: 84, max: 5, costBase: 1,
+                    name: "Swift strikes",
+                    statKey: "-{val}% Attack Cooldown",
+                    description: "Decrease the cooldown of your default attacks by {val}%.",
+                    parameters: { val: { base: 5.0, increase: 5.0 } }
+                },
+                'DL2': {
+                    x: 43, y: 84, max: 5, costBase: 1,
+                    name: "Swift channels",
+                    statKey: "{val}% Ability Cooldown",
+                    description: "Decrease the cooldown of your weapon abilities by {val}%.",
+                    parameters: { val: { base: 5.0, increase: 5.0 } }
+                },
+
+                'DR': {
+                    x: 58, y: 68, max: 5, costBase: 2,
+                    name: "Tactcal",
+                    statKey: "{val}% Crit Chance",
+                    description: "Gain {val} Critical Chance.",
+                    parameters: { val: { base: 4.0, increase: 4.0 } }
+                },
+                'DR1': {
+                    x: 57, y: 84, max: 5, costBase: 1,
+                    name: "Evasion",
+                    description: "Taking damage grants {val} speed for {b}a",
+                    parameters: { val: { base: 5.0, increase: 5.0 }, b: { base: 2, increase: 0.5 } }
+                },
+                'DR2': {
+                    x: 66, y: 84, max: 5, costBase: 1,
+                    name: "Steady footing",
+                    statKey: "{val}% Defense",
+                    description: "Take {val}% less damage while moving.",
+                    parameters: { val: { base: 4.0, increase: 4.0 } }
+                },
+
+                'L': {
+                    x: 28, y: 50, max: 5, costBase: 3,
+                    name: "Infinite ammo",
+                    description: "Consume {val}% less ranged ammo.",
+                    parameters: { val: { base: 4.0, increase: 4.0 } }
+                },
+                'L1': {
+                    x: 18, y: 32, max: 5, costBase: 2,
+                    name: "Sharpshooter stacks",
+                    description: "Every hit within {a}s grants 1 Sharpshooter stack, increasing damage by {val}% per stack. Up to 10 stacks. Will reset upon taking damage. 0.2s cooldown.",
+                    parameters: { val: { base: 0.3, increase: 0.3 }, a: { base: 0.4, increase: 0.4 } }
+                },
+                'L1a': {
+                    x: 8,  y: 22, max: 5, costBase: 1,
+                    name: "Sharpshooter capacity",
+                    description: "Increase the max stacks of Sharpshooter by {val}.",
+                    parameters: { val: { base: 3.0, increase: 3.0 } }
+                },
+                'L1b': {
+                    x: 8,  y: 42, max: 5, costBase: 1,
+                    name: "Hot streak",
+                    description: "Upon reaching 10 stacks, gain {a} Crit Chance and {b} Crit Damage for 5s.",
+                    parameters: { a: { base: 1.5, increase: 1.5 }, b: { base: 4, increase: 4 } },
+                },
+                'L2': {
+                    x: 18, y: 68, max: 5, costBase: 2,
+                    name: "Deadeye stacks",
+                    description: "Critical Hits grant 1 Deadeye stack, increasing Crit Chance by {val} per stack for {b}s, up to 3 stacks.",
+                    parameters: { val: { base: 0.5, increase: 0.5 }, b: { base: 1.25, increase: 1.25 } }
+                },
+                'L2a': {
+                    x: 8,  y: 58, max: 5, costBase: 1,
+                    name: "Deadeye capacity",
+                    description: "Increase the max stacks of Deadeye by {val}.",
+                    parameters: { val: { base: 1.0, increase: 1.0 } }
+                },
+                'L2b': {
+                    x: 8,  y: 78, max: 5, costBase: 1,
+                    name: "Perfect Chain",
+                    description: "At max stacks, increase Crit Damage by {val} for 5s and remove all stacks.",
+                    parameters: { val: { base: 4.0, increase: 4.0 } }
+                },
+
+                'R': {
+                    x: 72, y: 50, max: 5, costBase: 3,
+                    name: "Power Reservation",
+                    statKey: "-{val}% Ranged Energy Consumption",
+                    description: "Ranged weapons consume -{val}% energy.",
+                    parameters: { val: { base: 3.0, increase: 3.0 } }
+                },
+                'R1': {
+                    x: 82, y: 32, max: 5, costBase: 2,
+                    name: "Glass cannon max health",
+                    description: "Max Health by -{a}%, but increase your damage by {val}%.",
+                    parameters: { val: { base: 7.5, increase: 7.5 }, a: { base: 30, increase: 10 } }
+                },
+                'R1a': {
+                    x: 92, y: 22, max: 5, costBase: 1,
+                    name: "Glass cannon health regen",
+                    description: "Health Regen by -{a}%, but increase your damage by {val}%.",
+                    parameters: { val: { base: 2.5, increase: 2.5 }, a: { base: 40, increase: 15 } }
+                },
+                'R1b': {
+                    x: 92, y: 42, max: 5, costBase: 1,
+                    name: "Glass cannon defense",
+                    description: "Base Defense by {a}%, but increase your damage by {val}%.",
+                    parameters: { val: { base: 6.0, increase: 6.0 }, a: { base: 20, increase: 10 } }
+                },
+                'R2': {
+                    x: 82, y: 68, max: 5, costBase: 2,
+                    name: "Crazy crits",
+                    description: "Any Crit Chance beyond 100% can land a CRAZY CRIT, increasing your damage by {val}%.",
+                    parameters: { val: { base: 5.0, increase: 5.0 } }
+                },
+                'R2a': {
+                    x: 92, y: 58, max: 5, costBase: 1,
+                    name: "Crazy damage more crit damage",
+                    description: "Add {val}% of your Crit Damage to CRAZY CRITS.",
+                    parameters: { val: { base: 4.0, increase: 4.0 } }
+                },
+                'R2b': {
+                    x: 92, y: 78, max: 5, costBase: 1,
+                    name: "Crazy damage less crit chance",
+                    description: "CRAZY CRITS can trigger at {val}% less Crit Chance.",
+                    parameters: { val: { base: 2.0, increase: 2.0 } }
+                }
+            },
+            edges: [
+                ['C','L'], ['C','R'], ['C','UL'], ['C','UR'], ['C','DL'], ['C','DR'],
+                ['UL','UL1'], ['UL','UL2'], ['UR','UR1'], ['UR','UR2'],
+                ['DL','DL1'], ['DL','DL2'], ['DR','DR1'], ['DR','DR2'],
+                ['L','L1'], ['L','L2'], ['R','R1'], ['R','R2'],
+                ['L1','L1a'], ['L1','L1b'], ['L2','L2a'], ['L2','L2b'],
+                ['R1','R1a'], ['R1','R1b'], ['R2','R2a'], ['R2','R2b']
+            ]
+
     },
     mage: {
         nodes: {
