@@ -35,8 +35,7 @@ export class SkillManager {
                 this.classBtns.forEach(b => b.classList.remove('active'));
                 target.classList.add('active');
 
-                equippedStore.state.currentClass = selectedClass;
-                equippedStore.notify();
+                equippedStore.setCurrentClass(selectedClass);
             });
         });
     }
@@ -63,14 +62,19 @@ export class SkillManager {
      */
     handleNodeClick(id, event) {
         const node = this.getActiveNodes()[id];
+        const className = equippedStore.state.currentClass;
         const currentLevels = this.getActiveLevels();
         const curLvl = currentLevels.get(id) || 0;
 
         if (event.shiftKey) {
             if (curLvl === 0) return;
-            equippedStore.state.sharedPoints += curLvl * node.costBase;
-            currentLevels.set(id, curLvl - 1);
-            equippedStore.notify();
+            const refund = curLvl * node.costBase;
+            equippedStore.applySkillChange(
+                className,
+                id,
+                curLvl - 1,
+                equippedStore.state.sharedPoints + refund
+            );
             return;
         }
 
@@ -78,9 +82,12 @@ export class SkillManager {
         const cost = (curLvl + 1) * node.costBase;
         if (equippedStore.state.sharedPoints < cost) return;
 
-        equippedStore.state.sharedPoints -= cost;
-        currentLevels.set(id, curLvl + 1);
-        equippedStore.notify();
+        equippedStore.applySkillChange(
+            className,
+            id,
+            curLvl + 1,
+            equippedStore.state.sharedPoints - cost
+        );
     }
 
     /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità */

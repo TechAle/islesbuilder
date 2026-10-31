@@ -1,4 +1,5 @@
 import { equippedStore } from '../store/equippedStore.js';
+import { dataStore } from '../store/dataStore.js';
 
 /**
  * @typedef {Object} SerializedState

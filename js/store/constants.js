@@ -26,10 +26,12 @@
 
 /**
  * @typedef {Object} Elixir
- * @property {string} id
+ * @property {string} id - Identificativo univoco dell'elisir (usato per condivisione/salvataggio)
  * @property {string} name
- * @property {string} stat
- * @property {number} val
+ * @property {string} stat - Statistica modificata dall'elisir
+ * @property {number} val - Livello selezionato dell'elisir (0-5)
+ * @property {number} perLevel - Valore della statistica per ogni livello
+ * @property {boolean} percent - True se il valore è percentuale
  */
 
 /**

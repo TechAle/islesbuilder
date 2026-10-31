@@ -63,24 +63,33 @@ export class ItemManager {
      */
     handleItemInput(slot, value) {
         const trimmed = value.trim();
-        const activeEquip = equippedStore.state.activeEquip;
 
         if (!trimmed) {
-            activeEquip[slot].name = '';
-            activeEquip[slot].stats = {};
-        } else {
-            let storeSlot = slot
-            if (slot.includes("ring"))
-                storeSlot = "ring"
-            const preset = dataStore.data.items[storeSlot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
-            if (preset) {
-                activeEquip[slot].name = preset.name;
-                activeEquip[slot].stats = { ...preset.stats };
-            } else {
-                activeEquip[slot].name = value;
-            }
+            equippedStore.setEquipSlot(slot, {
+                name: '',
+                stats: {},
+                augments: ['', '', '']
+            });
+            return;
         }
-        equippedStore.notify();
+
+        let storeSlot = slot;
+        if (slot.includes("ring"))
+            storeSlot = "ring";
+
+        const preset = dataStore.data.items[storeSlot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
+        if (preset) {
+            equippedStore.setEquipSlot(slot, {
+                name: preset.name,
+                stats: { ...preset.stats }
+            });
+        } else {
+            // Nome personalizzato: non possiamo mantenere le statistiche del vecchio oggetto
+            equippedStore.setEquipSlot(slot, {
+                name: trimmed,
+                stats: {}
+            });
+        }
     }
 
     /**
@@ -89,8 +98,7 @@ export class ItemManager {
      * @param {string} value
      */
     handleAugmentInput(slot, index, value) {
-        equippedStore.state.activeEquip[slot].augments[index] = value.trim();
-        equippedStore.notify();
+        equippedStore.setAugment(slot, index, value.trim());
     }
 
     /**
@@ -169,14 +177,11 @@ export class ItemManager {
             }
         });
 
-        const currentSlot = equippedStore.state.activeEquip[this.editingSlot];
-        currentSlot.name = name;
-        currentSlot.stats = newStats;
+        equippedStore.setEquipSlot(this.editingSlot, {
+            name: name,
+            stats: newStats
+        });
 
-        const inputEl = /** @type {HTMLInputElement} */ (document.querySelector(`input[data-slot="${this.editingSlot}"]`));
-        if (inputEl) inputEl.value = name;
-
-        equippedStore.notify();
         this.closeModal();
     }
 

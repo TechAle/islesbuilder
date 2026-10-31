@@ -40,8 +40,7 @@ export class ElixirManager {
         if (isNaN(parsed) || parsed < 0) parsed = 0;
         if (parsed > 5) parsed = 5;
 
-        equippedStore.state.elixirs[index].val = parsed;
-        equippedStore.notify();
+        equippedStore.setElixirValue(index, parsed);
     }
 
     /** Aggiorna il valore numerico dei vari input elisir */

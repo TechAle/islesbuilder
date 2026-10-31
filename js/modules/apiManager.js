@@ -8,8 +8,36 @@ export class ApiManager {
     }
 
     async update() {
-        await this.updateItems();
-        await this.updateElixirs()
+        await Promise.all([
+            this.updateItems(),
+            this.updateElixirs()
+        ]);
+    }
+
+    /**
+     * Esegue una GET verso l'API con timeout e un tentativo di retry.
+     * @param {string} endpoint
+     * @returns {Promise<any>}
+     */
+    async fetchJson(endpoint) {
+        const attempts = 2;
+        let lastError;
+
+        for (let attempt = 0; attempt < attempts; attempt++) {
+            try {
+                const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+                    ? AbortSignal.timeout(10000)
+                    : undefined;
+                const res = await fetch(this.url + endpoint, { signal });
+                if (!res.ok) throw new Error(`HTTP ${res.status} su ${endpoint}`);
+                const json = await res.json();
+                return json.data || json;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw lastError;
     }
 
     /**
@@ -109,19 +137,14 @@ export class ApiManager {
 
     async updateItems() {
         try {
-            // 1. Le 4 chiamate in parallelo
+            // 1. Le 3 chiamate in parallelo
             const endpoints = [
                 "/items?category=weapons",
                 "/items?category=armor",
                 "/items?category=accessories"
             ];
 
-            const promises = endpoints.map(async (endpoint) => {
-                const res = await fetch(this.url + endpoint);
-                if (!res.ok) throw new Error(`HTTP ${res.status} su ${endpoint}`);
-                const json = await res.json();
-                return json.data || json;
-            });
+            const promises = endpoints.map(endpoint => this.fetchJson(endpoint));
 
             const results = await Promise.all(promises);
             const allFetchedItems = results.flat();
@@ -211,10 +234,7 @@ export class ApiManager {
 
     async updateElixirs() {
         try {
-            const res = await fetch(this.url + "/elixirs");
-            if (!res.ok) throw new Error(`HTTP ${res.status} su /elixirs`);
-            const json = await res.json();
-            const rawElixirs = json.data || json;
+            const rawElixirs = await this.fetchJson("/elixirs");
 
             // Mappiamo i dati separando il valore numerico dal flag percentuale
             const mappedElixirs = rawElixirs.map(elixir => {
@@ -226,6 +246,7 @@ export class ApiManager {
                 const isPercent = firstLevelData.percent === true;
 
                 return {
+                    id: elixir.id || name,
                     name: name,
                     stat: stat,
                     val: 5,

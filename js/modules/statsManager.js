@@ -1,4 +1,5 @@
 import { equippedStore } from '../store/equippedStore.js';
+import { dataStore } from '../store/dataStore.js';
 import { AUGMENT_DATABASE } from '../store/constants.js';
 
 export class StatsManager {
@@ -28,7 +29,7 @@ export class StatsManager {
             if (!item.stats) return;
 
             Object.entries(item.stats).forEach(([stat, val]) => {
-                if (stat.includes("Ability") || stat.includes("Augment") || stat.includes("Level") || stat.includes("Damage Type"))
+                if (stat.includes("Augment") || stat.includes("Level") || stat.includes("Damage Type"))
                     return;
                 let numericVal = 0;
                 let isPercent = false;
@@ -40,7 +41,7 @@ export class StatsManager {
                         numericVal = parseFloat(val.replace('%', '').replace(',', '.'));
                         isPercent = true;
                     } else {
-                        numericVal = parseFloat(val.replace(',', '.')) || 0;
+                        numericVal = parseFloat(val.replace(',', '.'));
                     }
                 }
                 if (!isNaN(numericVal)) {
@@ -70,58 +71,39 @@ export class StatsManager {
 
                 // Se il nodo ha punti investiti ed ha una statKey definita
                 if (curLvl > 0 && node.statKey) {
-                    let numericVal = 0;
+                    const isDirect = node.isDirect;
                     let rawStat = node.statKey;
-                    let isDirect = node.isDirect
 
-                    if (!isDirect) {
-                        rawStat = rawStat.replace("{level}", curLvl);
+                    // Sostituisce ogni segnaposto ({val}, {c}, {a}, ...) con il valore
+                    // calcolato per il livello attuale del nodo.
+                    if (node.parameters) {
+                        for (const [key, param] of Object.entries(node.parameters)) {
+                            const calculatedVal = param.base + (param.increase * (curLvl - 1));
+                            rawStat = rawStat.replaceAll(`{${key}}`, String(calculatedVal));
+                        }
                     }
+                    rawStat = rawStat.replaceAll("{level}", String(curLvl)).trim();
 
-                    const isNegative = rawStat.trim().startsWith('-');
-                    const [numberCheck, ...nameParts] = rawStat.split(" ");
-                    const name = nameParts.join(" ");
+                    // Il valore numerico è sempre il primo token della statKey
+                    // (es. "5% Ranged Damage", "-3% Melee Energy Consumption")
+                    const numberMatch = rawStat.match(/^-?\d+(?:[.,]\d+)?%?/);
+                    if (!numberMatch) return;
 
-                    let finalStatKey = "";
+                    const numericVal = parseFloat(numberMatch[0].replace('%', '').replace(',', '.')) || 0;
+                    const isPercent = numberMatch[0].includes('%');
+                    const isNegative = rawStat.startsWith('-');
 
-// Controlliamo se esiste il parametro corrispondente a 'name'
-                    const paramData = node.parameters && node.parameters[name];
-
-                    if (node.parameters && paramData) {
-                        // --- CASO 1: Il parametro esiste ---
-                        const calculatedVal = paramData.base + (paramData.increase * (curLvl - 1));
-                        numericVal = isNegative ? -Math.abs(calculatedVal) : calculatedVal;
-
-                        // Rimpiazza il segnaposto con il valore calcolato
-                        rawStat = rawStat.replace(new RegExp(`\\{${name}\\}`, 'g'), calculatedVal);
-
-                        // Pulizia standard di rawStat
-                        rawStat = rawStat.replace(/^-?\d+([.,]\d+)?\s*/, '');
-                        let isPercent = rawStat.includes('%');
-                        if (isPercent) rawStat = rawStat.replace('%', '');
-
-                        finalStatKey = isPercent ? rawStat.trim() + "%" : rawStat.trim();
-
-                    } else {
-                        // --- CASO 2: Il parametro è null / non esiste (Fallback) ---
-                        // Estraiamo il valore numerico da numberCheck (es. "-3%" -> -3)
-                        const cleanNumStr = numberCheck.replace(/[^0-9.,-]/g, '').replace(',', '.');
-                        numericVal = parseFloat(cleanNumStr) || 0;
-
-                        // finalStatKey diventa 'name' (pulito da eventuali percentuali)
-                        let cleanName = name;
-                        let isPercent = cleanName.includes('%');
-                        if (isPercent) cleanName = cleanName.replace('%', '');
-
-                        finalStatKey = isPercent ? cleanName.trim() + "%" : cleanName.trim();
-                    }
+                    let finalStatKey = rawStat.slice(numberMatch[0].length).trim();
+                    if (isPercent && !finalStatKey.endsWith('%')) finalStatKey += '%';
 
 // Salvataggio del valore calcolato
-                    if (!isNaN(numericVal) && numericVal !== 0) {
+                    if (!isNaN(numericVal) && numericVal !== 0 && finalStatKey) {
+                        const value = isNegative ? -Math.abs(numericVal) : numericVal;
+
                         if (isDirect)
-                            this.statsValues[finalStatKey] = (this.statsValues[finalStatKey] || 0) + numericVal;
+                            this.statsValues[finalStatKey] = (this.statsValues[finalStatKey] || 0) + value;
                         else
-                            this.skillValues[classCheck][finalStatKey] = numericVal;
+                            this.skillValues[classCheck][finalStatKey] = value;
                     }
                 }
             });
@@ -136,7 +118,6 @@ export class StatsManager {
     render() {
         if (!this.container) return;
         this.container.innerHTML = '';
-        console.log("this.statsValues:", this.statsValues);
 
         if (Object.keys(this.statsValues).length === 0) {
             this.container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Nessuna statistica applicata</div>';
