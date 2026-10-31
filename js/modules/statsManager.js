@@ -64,7 +64,6 @@ export class StatsManager {
             const currentNodes = dataStore.data.skillTrees[classCheck].nodes;
             const currentLevels = equippedStore.state.treeLevels[classCheck];
 
-// 2. Itera su tutti i nodi dell'albero
             Object.keys(currentNodes).forEach(id => {
                 const node = currentNodes[id];
                 const curLvl = currentLevels.get(id) || 0;

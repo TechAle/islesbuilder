@@ -16,9 +16,10 @@ export class ApiManager {
      * Funzione di appoggio per estrarre e formattare tutte le statistiche e proprietà dell'item
      * @param {Object} gear
      * @param {string} targetCategory
+     * @param {Object} toolTip
      * @returns {Record<string, any>}
      */
-    formatGearStats(gear, targetCategory) {
+    formatGearStats(gear, targetCategory, toolTip) {
         const statsObj = {};
 
         // 1. Statistiche standard dall'array stats dell'API
@@ -32,11 +33,52 @@ export class ApiManager {
 
         // 2. Proprietà specifiche se è un'arma
         if (targetCategory === "weapon") {
+            const slotMapping = {
+                "axe": "melee",
+                "bow": "ranged",
+                "crossbow": "ranged",
+                "crux": "magic",
+                "dagger": "melee",
+                "focus": "magic",
+                "gauntlet": "melee",
+                "gloves": "melee",
+                "greatbow": "ranged",
+                "hammer": "melee",
+                "handcannon": "ranged",
+                "kunai": "ranged",
+                "mace": "melee",
+                "pot": "ranged",
+                "spear": "melee",
+                "staff": "magic",
+                "sword": "melee",
+                "tome": "magic",
+                "wand": "magic",
+                "blowpipe": "magic"
+            };
+            const charToElement = {
+                "": "nature",
+                "": "void",
+                "": "thunder",
+                "": "radiant"
+            }
+
             if (gear.attackEnergy !== undefined) statsObj["Attack Energy"] = gear.attackEnergy;
             if (gear.defaultAttack !== undefined) statsObj["Default Attack"] = gear.defaultAttack;
             if (gear.normalAttack?.max !== undefined) statsObj["Normal Attack"] = gear.normalAttack.max;
             else if (gear.normalAttack !== undefined) statsObj["Normal Attack"] = gear.normalAttack;
             if (gear.damageType !== undefined) statsObj["Damage Type"] = gear.damageType;
+            if (gear.slot !== undefined) statsObj["Weapon Type"] = slotMapping[gear.slot.toLowerCase()];
+
+
+            if (toolTip !== null && toolTip.length > 1) {
+                let firstRow = toolTip[1].extra
+                if (firstRow.length > 1) {
+                    let elementalRow = firstRow[0].text
+                    if (elementalRow.length > 9) {
+                        statsObj["element"] = charToElement[elementalRow[10]];
+                    }
+                }
+            }
         }
 
         // 3. Slot per gli augment (se presenti)
@@ -143,7 +185,7 @@ export class ApiManager {
                 const gear = item.gear || {};
 
                 // Chiamata alla funzione di appoggio per generare tutte le statistiche pulite
-                const statsObj = this.formatGearStats(gear, targetCategory);
+                const statsObj = this.formatGearStats(gear, targetCategory, item.tooltipJson);
 
                 if (!itemsCopy[targetCategory]) {
                     itemsCopy[targetCategory] = [];
