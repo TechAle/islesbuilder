@@ -33,3 +33,13 @@ export function findPercent(statsValues, statName) {
 export function findFlat(statsValues, statName) {
     return findStat(statsValues, statName)?.flat ?? 0;
 }
+
+/**
+ * Moltiplicatore percentuale: `1 + percent / 100`.
+ * @param {Record<string, StatTotals>} statsValues
+ * @param {string} statName
+ * @returns {number}
+ */
+export function findPercentMultiplier(statsValues, statName) {
+    return 1 + findPercent(statsValues, statName) / 100;
+}

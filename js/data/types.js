@@ -176,7 +176,9 @@
  * Risultato dello step "Critical Damage".
  * @typedef {Object} CriticalDamageStepResult
  * @property {number} baseDamage - Danno non critico di partenza
- * @property {number} critChance - Probabilità di critico (0-100)
+ * @property {number} critChance - Probabilità di critico (può superare 100)
+ * @property {number} effectiveCritChance - Probabilità usata nella media (max 100)
+ * @property {number} critChanceOverflow - Quanto il crit chance supera 100
  * @property {number} critDamagePercent - Crit Damage totale (base + statistica)
  * @property {number} criticalHit - Danno del colpo critico
  * @property {number} averageDamage - Danno medio pesato sul crit rate

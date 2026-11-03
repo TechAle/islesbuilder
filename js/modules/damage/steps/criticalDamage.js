@@ -5,25 +5,15 @@ import { findPercent } from '../statLookup.js';
 /** @typedef {import('../../../data/types.js').CriticalDamageStepResult} CriticalDamageStepResult */
 
 /**
- * Limita un valore tra min e max.
- * @param {number} value
- * @param {number} min
- * @param {number} max
- * @returns {number}
- */
-function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, value));
-}
-
-/**
  * Step 3 — Critical Damage.
  *
  * - Crit Damage totale = 50% base + `Crit Damage%` dalle statistiche.
  * - Colpo critico = danno × (1 + critDamage / 100).
- * - Danno medio = non crit × (1 - critChance) + critico × critChance.
+ * - Danno medio = non crit × (1 - critChanceEff) + critico × critChanceEff.
  *
- * Il Crit Chance viene limitato tra 0% e 100%, perché nell'API può essere
- * anche negativo.
+ * Il Crit Chance viene limitato solo verso il basso (0), perché nell'API può
+ * essere negativo. Sopra il 100% non viene tagliato: il critico ha sempre
+ * successo e l'eccesso resta disponibile in `critChanceOverflow`.
  *
  * @type {import('../../../data/types.js').DamageStep}
  */
@@ -43,6 +33,8 @@ export const criticalDamageStep = {
             return {
                 baseDamage: 0,
                 critChance: 0,
+                effectiveCritChance: 0,
+                critChanceOverflow: 0,
                 critDamagePercent: BASE_CRIT_DAMAGE,
                 criticalHit: 0,
                 averageDamage: 0,
@@ -50,15 +42,20 @@ export const criticalDamageStep = {
             };
         }
 
-        const critChance = clamp(findPercent(context.statsValues, 'Crit Chance'), 0, 100);
+        const critChance = Math.max(0, findPercent(context.statsValues, 'Crit Chance'));
+        const effectiveCritChance = Math.min(100, critChance);
+        const critChanceOverflow = Math.max(0, critChance - 100);
         const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
 
         const criticalHit = baseDamage * (1 + critDamagePercent / 100);
-        const averageDamage = baseDamage * (1 - critChance / 100) + criticalHit * (critChance / 100);
+        const averageDamage = baseDamage * (1 - effectiveCritChance / 100)
+            + criticalHit * (effectiveCritChance / 100);
 
         return {
             baseDamage,
             critChance,
+            effectiveCritChance,
+            critChanceOverflow,
             critDamagePercent,
             criticalHit,
             averageDamage,

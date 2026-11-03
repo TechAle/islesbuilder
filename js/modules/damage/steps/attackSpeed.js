@@ -4,7 +4,7 @@ import {
     BASE_MAX_ENERGY
 } from '../../../data/constants.js';
 import { computeEnergyState, getSustainLabel } from '../energy.js';
-import { findFlat, findPercent } from '../statLookup.js';
+import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').AttackSpeedStepResult} AttackSpeedStepResult */
@@ -69,9 +69,10 @@ export const attackSpeedStep = {
 
         const energyPerSecond = energyRegen - attackEnergyCost * attacksPerSecond;
 
+        // Max Energy: prima (base + flat), poi aumento percentuale.
+        const maxEnergyBase = BASE_MAX_ENERGY + findFlat(context.statsValues, 'Max Energy');
         const maxEnergy = Math.max(0,
-            (BASE_MAX_ENERGY + findFlat(context.statsValues, 'Max Energy'))
-            * (1 + findPercent(context.statsValues, 'Max Energy') / 100)
+            maxEnergyBase * findPercentMultiplier(context.statsValues, 'Max Energy')
         );
 
         const energyState = computeEnergyState(energyPerSecond, maxEnergy);
