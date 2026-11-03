@@ -1,11 +1,19 @@
 import { AUGMENT_DATABASE, ITEM_DATABASE, INITIAL_ELIXIRS, CLASS_SKILL_TREES } from './constants.js';
 
+/** @typedef {import('./constants.js').DomainData} DomainData */
+
+/**
+ * @callback DataStoreSubscriber
+ * @param {DomainData} data
+ */
+
 class DataStore {
     constructor() {
-        /** @type {Set<(data: any) => void>} */
+        /** @type {Set<DataStoreSubscriber>} */
         this.listeners = new Set();
 
         // Dati globali di riferimento (modificabili via API)
+        /** @type {DomainData} */
         this.data = {
             items: ITEM_DATABASE,
             augments: AUGMENT_DATABASE,
@@ -14,16 +22,25 @@ class DataStore {
         };
     }
 
+    /**
+     * Registra una callback di aggiornamento dei dati globali.
+     * @param {DataStoreSubscriber} callback
+     * @returns {() => boolean} Funzione per rimuovere la sottoscrizione
+     */
     subscribe(callback) {
         this.listeners.add(callback);
         return () => this.listeners.delete(callback);
     }
 
+    /** Notifica tutti i subscriber con i dati correnti. */
     notify() {
         this.listeners.forEach(callback => callback(this.data));
     }
 
-    /** Aggiorna i dati (es. chiamato dall'ApiManager) e avvisa tutti i subscriber */
+    /**
+     * Aggiorna i dati globali (es. chiamato dall'ApiManager) e avvisa tutti i subscriber.
+     * @param {Partial<DomainData>} newDomainData
+     */
     updateData(newDomainData) {
         Object.assign(this.data, newDomainData);
         this.notify();
@@ -31,4 +48,4 @@ class DataStore {
 }
 
 export const dataStore = new DataStore();
-window.dataStore = dataStore;
+/** @type {any} */ (window).dataStore = dataStore;

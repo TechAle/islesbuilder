@@ -1,7 +1,7 @@
 import { equippedStore } from './store/equippedStore.js';
 import { ItemManager } from './modules/itemManager.js';
 import { ElixirManager } from './modules/elixirManager.js';
-import {skillManager, SkillManager} from './modules/skillManager.js';
+import { skillManager } from './modules/skillManager.js';
 import { DpsManager } from './modules/dpsManager.js';
 import { ShareManager } from './modules/shareManager.js';
 import {ApiManager} from "./modules/apiManager.js";

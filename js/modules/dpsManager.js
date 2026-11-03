@@ -1,7 +1,6 @@
-import { equippedStore } from '../store/equippedStore.js';
-
 export class DpsManager {
     constructor() {
+        /** @type {HTMLElement|null} */
         this.dpsEl = document.querySelector('.damage-dps');
     }
 

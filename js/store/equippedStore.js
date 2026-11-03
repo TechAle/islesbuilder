@@ -1,25 +1,33 @@
-/**
- * @typedef {Object} EquipSlotData
- * @property {string} name
- * @property {import('./constants.js').ItemStats} stats
- * @property {string[]} augments
- */
+import {
+    AUGMENT_SLOTS_PER_ITEM,
+    CLASS_KEYS,
+    DEFAULT_CLASS,
+    DEFAULT_SHARED_POINTS,
+    EQUIP_SLOTS
+} from './constants.js';
+import { dataStore } from "./dataStore.js";
 
-/**
- * @typedef {Object} BuildState
- * @property {number} sharedPoints
- * @property {'warrior'|'archer'|'mage'} currentClass
- * @property {Record<string, EquipSlotData>} activeEquip
- * @property {import('./constants.js').Elixir[]} elixirs
- * @property {Record<'warrior'|'archer'|'mage', Map<string, number>>} treeLevels
- */
-
-import {dataStore} from "./dataStore.js";
+/** @typedef {import('./constants.js').BuildState} BuildState */
+/** @typedef {import('./constants.js').ClassKey} ClassKey */
+/** @typedef {import('./constants.js').EquipSlot} EquipSlot */
+/** @typedef {import('./constants.js').EquipSlotData} EquipSlotData */
 
 /**
  * @callback StoreSubscriber
  * @param {BuildState} state
  */
+
+/**
+ * Crea un nuovo slot equipaggiamento vuoto.
+ * @returns {EquipSlotData}
+ */
+function createEmptyEquipSlot() {
+    return {
+        name: '',
+        stats: {},
+        augments: Array(AUGMENT_SLOTS_PER_ITEM).fill('')
+    };
+}
 
 export class BuildStore {
     constructor() {
@@ -28,32 +36,30 @@ export class BuildStore {
         this.resetState();
     }
 
+    /** Riporta lo store allo stato iniziale. */
     resetState() {
+        /** @type {Record<EquipSlot, EquipSlotData>} */
+        const activeEquip = /** @type {Record<EquipSlot, EquipSlotData>} */ ({});
+        EQUIP_SLOTS.forEach(slot => {
+            activeEquip[slot] = createEmptyEquipSlot();
+        });
+
+        /** @type {Record<ClassKey, Map<string, number>>} */
+        const treeLevels = /** @type {Record<ClassKey, Map<string, number>>} */ ({});
+        CLASS_KEYS.forEach(classKey => {
+            treeLevels[classKey] = new Map(
+                Object.keys(dataStore.data.skillTrees[classKey].nodes).map(id => [id, 0])
+            );
+        });
+
         /** @type {BuildState} */
         this.state = {
-            sharedPoints: 100,
+            sharedPoints: DEFAULT_SHARED_POINTS,
             // Used for the active skill tree
-            currentClass: 'archer',
-            activeEquip: {
-                weapon:     { name: '', stats: {}, augments: ['', '', ''] },
-                glove:      { name: '', stats: {}, augments: ['', '', ''] },
-                helmet:     { name: '', stats: {}, augments: ['', '', ''] },
-                amulet:     { name: '', stats: {}, augments: ['', '', ''] },
-                chestplate: { name: '', stats: {}, augments: ['', '', ''] },
-                ring1:      { name: '', stats: {}, augments: ['', '', ''] },
-                ring2:      { name: '', stats: {}, augments: ['', '', ''] },
-                leggings:   { name: '', stats: {}, augments: ['', '', ''] },
-                boots:      { name: '', stats: {}, augments: ['', '', ''] },
-                feet:       { name: '', stats: {}, augments: ['', '', ''] },
-                core:       { name: '', stats: {}, augments: ['', '', ''] },
-                pets:       { name: '', stats: {}, augments: ['', '', ''] }
-            },
-            elixirs: JSON.parse(JSON.stringify(dataStore.data.elixirsConfig)),
-            treeLevels: {
-                warrior: new Map(Object.keys(dataStore.data.skillTrees.warrior.nodes).map(id => [id, 0])),
-                archer:  new Map(Object.keys(dataStore.data.skillTrees.archer.nodes).map(id => [id, 0])),
-                mage:    new Map(Object.keys(dataStore.data.skillTrees.mage.nodes).map(id => [id, 0]))
-            }
+            currentClass: DEFAULT_CLASS,
+            activeEquip,
+            elixirs: structuredClone(dataStore.data.elixirsConfig),
+            treeLevels
         };
     }
 
@@ -67,6 +73,7 @@ export class BuildStore {
         return () => this.listeners.delete(callback);
     }
 
+    /** Notifica tutti i subscriber con lo stato corrente. */
     notify() {
         this.listeners.forEach(callback => callback(this.state));
     }
@@ -92,7 +99,7 @@ export class BuildStore {
 
     /**
      * Aggiorna i dati di uno slot equipaggiato.
-     * @param {string} slot
+     * @param {EquipSlot} slot
      * @param {Partial<EquipSlotData>} patch
      */
     setEquipSlot(slot, patch) {
@@ -105,7 +112,7 @@ export class BuildStore {
 
     /**
      * Aggiorna un augment di uno slot equipaggiato.
-     * @param {string} slot
+     * @param {EquipSlot} slot
      * @param {number} index
      * @param {string} value
      */
@@ -132,10 +139,10 @@ export class BuildStore {
 
     /**
      * Cambia la classe attiva.
-     * @param {'warrior'|'archer'|'mage'} className
+     * @param {ClassKey} className
      */
     setCurrentClass(className) {
-        if (!['warrior', 'archer', 'mage'].includes(className)) return;
+        if (!CLASS_KEYS.includes(className)) return;
         this.update(state => {
             state.currentClass = className;
         });
@@ -143,7 +150,7 @@ export class BuildStore {
 
     /**
      * Aggiorna atomicamente livello di un nodo abilità e punti condivisi.
-     * @param {'warrior'|'archer'|'mage'} className
+     * @param {ClassKey} className
      * @param {string} nodeId
      * @param {number} level
      * @param {number} sharedPoints
@@ -159,4 +166,4 @@ export class BuildStore {
 }
 
 export const equippedStore = new BuildStore();
-window.equippedStore = equippedStore;
+/** @type {any} */ (window).equippedStore = equippedStore;

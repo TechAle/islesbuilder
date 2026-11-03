@@ -1,9 +1,18 @@
 import { equippedStore } from '../store/equippedStore.js';
-import {dataStore} from "../store/dataStore.js";
+import { dataStore } from "../store/dataStore.js";
+import {
+    AUGMENT_SLOTS_PER_ITEM,
+    EQUIP_SLOTS,
+    RING_ITEM_CATEGORY,
+    RING_SLOTS,
+    getItemCategoryForSlot
+} from '../store/constants.js';
+
+/** @typedef {import('../store/constants.js').EquipSlot} EquipSlot */
 
 export class ItemManager {
     constructor() {
-        /** @type {string|null} Slot attualmente in fase di modifica nel modale */
+        /** @type {EquipSlot|null} Slot attualmente in fase di modifica nel modale */
         this.editingSlot = null;
         this.initDatalists();
         this.bindEvents();
@@ -13,21 +22,18 @@ export class ItemManager {
     initDatalists() {
         const uniqueStats = new Set();
 
-        Object.keys(dataStore.data.items).forEach(slots => {
-            const slotList = slots === "ring" ? ["ring1", "ring2"] : [slots];
+        Object.keys(dataStore.data.items).forEach(itemCategory => {
+            const slotList = itemCategory === RING_ITEM_CATEGORY ? RING_SLOTS : [itemCategory];
 
             slotList.forEach(slot => {
                 const datalist = document.getElementById(`list-${slot}`);
                 if (!datalist) return;
                 datalist.innerHTML = '';
 
-                let valData = slot;
-                if (valData.includes("ring")) {
-                    valData = "ring";
-                }
+                const itemCategoryForSlot = getItemCategoryForSlot(slot);
 
-                if (dataStore.data.items[valData]) {
-                    dataStore.data.items[valData].forEach(item => {
+                if (dataStore.data.items[itemCategoryForSlot]) {
+                    dataStore.data.items[itemCategoryForSlot].forEach(item => {
                         // Popola il datalist dell'oggetto
                         const opt = document.createElement('option');
                         opt.value = item.name;
@@ -57,8 +63,8 @@ export class ItemManager {
     }
 
     /**
-     * Modifica l'oggetto selezionato per uno slot specifico
-     * @param {string} slot
+     * Modifica l'oggetto selezionato per uno slot specifico.
+     * @param {EquipSlot} slot
      * @param {string} value
      */
     handleItemInput(slot, value) {
@@ -68,15 +74,12 @@ export class ItemManager {
             equippedStore.setEquipSlot(slot, {
                 name: '',
                 stats: {},
-                augments: ['', '', '']
+                augments: Array(AUGMENT_SLOTS_PER_ITEM).fill('')
             });
             return;
         }
 
-        let storeSlot = slot;
-        if (slot.includes("ring"))
-            storeSlot = "ring";
-
+        const storeSlot = getItemCategoryForSlot(slot);
         const preset = dataStore.data.items[storeSlot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
         if (preset) {
             equippedStore.setEquipSlot(slot, {
@@ -93,7 +96,8 @@ export class ItemManager {
     }
 
     /**
-     * @param {string} slot
+     * Aggiorna il valore di un augment per lo slot indicato.
+     * @param {EquipSlot} slot
      * @param {number} index
      * @param {string} value
      */
@@ -102,8 +106,8 @@ export class ItemManager {
     }
 
     /**
-     * Apre la finestra modale per inserire statistiche personalizzate
-     * @param {string} slot
+     * Apre la finestra modale per inserire statistiche personalizzate.
+     * @param {EquipSlot} slot
      */
     openModal(slot) {
         this.editingSlot = slot;
@@ -125,13 +129,14 @@ export class ItemManager {
         document.getElementById('modal-editor')?.classList.add('active');
     }
 
+    /** Chiude la finestra modale delle statistiche personalizzate. */
     closeModal() {
         document.getElementById('modal-editor')?.classList.remove('active');
         this.editingSlot = null;
     }
 
     /**
-     * Aggiunge una riga di attributo alla finestra modale
+     * Aggiunge una riga di attributo alla finestra modale.
      * @param {string} [statName='']
      * @param {number|string} [statVal='']
      */
@@ -151,6 +156,7 @@ export class ItemManager {
         container.appendChild(row);
     }
 
+    /** Salva le statistiche inserite nel modale nello store. */
     saveModalChanges() {
         if (!this.editingSlot) return;
 
@@ -187,7 +193,7 @@ export class ItemManager {
 
     /** Sincronizza i valori degli input con lo stato corrente dello Store */
     updateInputsFromStore() {
-        Object.keys(equippedStore.state.activeEquip).forEach(slot => {
+        EQUIP_SLOTS.forEach(slot => {
             const item = equippedStore.state.activeEquip[slot];
             const input = /** @type {HTMLInputElement} */ (document.querySelector(`input[data-slot="${slot}"]`));
             if (input) input.value = item.name || '';
@@ -201,6 +207,7 @@ export class ItemManager {
         });
     }
 
+    /** Collega gli eventi DOM del pannello oggetti e del modale. */
     bindEvents() {
         // Catturiamo l'istanza di ItemManager in una costante sicura
         const self = this;
@@ -208,7 +215,7 @@ export class ItemManager {
         document.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const target = /** @type {HTMLElement} */ (e.currentTarget);
-                const slot = target.dataset.slot;
+                const slot = /** @type {EquipSlot|undefined} */ (target.dataset.slot);
                 if (slot) self.openModal(slot); // Usiamo self anziché this
             });
         });
@@ -216,7 +223,7 @@ export class ItemManager {
         document.querySelectorAll('.item-input').forEach(input => {
             input.addEventListener('input', (e) => {
                 const target = /** @type {HTMLInputElement} */ (e.target);
-                const slot = target.dataset.slot;
+                const slot = /** @type {EquipSlot|undefined} */ (target.dataset.slot);
                 if (slot) self.handleItemInput(slot, target.value);
             });
         });
@@ -224,7 +231,7 @@ export class ItemManager {
         document.querySelectorAll('.augment-input').forEach(input => {
             input.addEventListener('input', (e) => {
                 const target = /** @type {HTMLInputElement} */ (e.target);
-                const slot = target.dataset.augmentSlot;
+                const slot = /** @type {EquipSlot|undefined} */ (target.dataset.augmentSlot);
                 const index = parseInt(target.dataset.augIndex || '0', 10);
                 if (slot) self.handleAugmentInput(slot, index, target.value);
             });

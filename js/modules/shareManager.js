@@ -1,12 +1,16 @@
 import { equippedStore } from '../store/equippedStore.js';
 import { dataStore } from '../store/dataStore.js';
+import { CLASS_KEYS, getItemCategoryForSlot } from '../store/constants.js';
+
+/** @typedef {import('../store/constants.js').ClassKey} ClassKey */
+/** @typedef {import('../store/constants.js').EquipSlotData} EquipSlotData */
 
 /**
  * @typedef {Object} SerializedState
- * @property {Record<string, import('../store/equippedStore.js').EquipSlotData>} equip
+ * @property {Record<string, EquipSlotData>} equip
  * @property {Array<{id: string, val: number}>} elixirs
- * @property {Record<'warrior'|'archer'|'mage', Array<[string, number]>>} treeLevels
- * @property {'warrior'|'archer'|'mage'} currentClass
+ * @property {Record<ClassKey, Array<[string, number]>>} treeLevels
+ * @property {ClassKey} currentClass
  * @property {number} sharedPoints
  */
 
@@ -15,21 +19,25 @@ export class ShareManager {
         this.bindEvents();
     }
 
+    /** Collega gli eventi di condivisione della build. */
     bindEvents() {
         document.getElementById('btn-share-build')?.addEventListener('click', () => this.generateShareLink());
         document.getElementById('btn-paste-build')?.addEventListener('click', () => this.pasteBuildLink());
     }
 
+    /** Genera un link condivisibile con lo stato corrente e lo copia negli appunti. */
     generateShareLink() {
+        /** @type {Record<ClassKey, Array<[string, number]>>} */
+        const treeLevels = /** @type {Record<ClassKey, Array<[string, number]>>} */ ({});
+        CLASS_KEYS.forEach(classKey => {
+            treeLevels[classKey] = Array.from(equippedStore.state.treeLevels[classKey].entries());
+        });
+
         /** @type {SerializedState} */
         const state = {
             equip: equippedStore.state.activeEquip,
             elixirs: equippedStore.state.elixirs.map(e => ({ id: e.id, val: e.val })),
-            treeLevels: {
-                warrior: Array.from(equippedStore.state.treeLevels.warrior.entries()),
-                archer: Array.from(equippedStore.state.treeLevels.archer.entries()),
-                mage: Array.from(equippedStore.state.treeLevels.mage.entries())
-            },
+            treeLevels,
             currentClass: equippedStore.state.currentClass,
             sharedPoints: equippedStore.state.sharedPoints
         };
@@ -43,6 +51,7 @@ export class ShareManager {
         });
     }
 
+    /** Chiede un link/codice all'utente e prova a caricarlo. */
     async pasteBuildLink() {
         let inputVal = prompt("Incolla qui il link della build oppure direttamente il codice hash (valore):");
         if (!inputVal) return;
@@ -59,6 +68,7 @@ export class ShareManager {
         this.loadStateFromUrl();
     }
 
+    /** Carica la build codificata nell'hash dell'URL, se presente. */
     loadStateFromUrl() {
         if (!window.location.hash) return;
         try {
@@ -67,7 +77,7 @@ export class ShareManager {
             /** @type {SerializedState} */
             const state = JSON.parse(jsonString);
 
-            /** @type {Partial<import('../store/equippedStore.js').BuildState>} */
+            /** @type {Partial<import('../store/constants.js').BuildState>} */
             const newState = {};
 
             if (state.equip) {
@@ -77,13 +87,9 @@ export class ShareManager {
                     const item = reconstructedEquip[slot];
                     if (!item || !item.name) return;
 
-                    // Determina la categoria corretta nel dataStore (ring1 e ring2 usano la categoria "ring")
-                    let dataCategory = slot;
-                    if (dataCategory.startsWith("ring")) {
-                        dataCategory = "ring";
-                    }
-
                     // Cerca l'oggetto corrispondente nel database globale
+                    // (ring1 e ring2 usano la categoria "ring")
+                    const dataCategory = getItemCategoryForSlot(slot);
                     const dbItems = dataStore.data.items[dataCategory] || [];
                     const matchedPreset = dbItems.find(i => i.name.toLowerCase() === item.name.toLowerCase());
 
@@ -107,11 +113,15 @@ export class ShareManager {
             }
 
             if (state.treeLevels) {
-                newState.treeLevels = {
-                    warrior: state.treeLevels.warrior ? new Map(state.treeLevels.warrior) : equippedStore.state.treeLevels.warrior,
-                    archer: state.treeLevels.archer ? new Map(state.treeLevels.archer) : equippedStore.state.treeLevels.archer,
-                    mage: state.treeLevels.mage ? new Map(state.treeLevels.mage) : equippedStore.state.treeLevels.mage
-                };
+                /** @type {Record<ClassKey, Map<string, number>>} */
+                const treeLevels = /** @type {Record<ClassKey, Map<string, number>>} */ ({});
+                CLASS_KEYS.forEach(classKey => {
+                    const savedLevels = state.treeLevels[classKey];
+                    treeLevels[classKey] = savedLevels
+                        ? new Map(savedLevels)
+                        : equippedStore.state.treeLevels[classKey];
+                });
+                newState.treeLevels = treeLevels;
             }
 
             if (state.currentClass) newState.currentClass = state.currentClass;

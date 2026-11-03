@@ -1,28 +1,36 @@
 import { equippedStore } from '../store/equippedStore.js';
 import { dataStore } from '../store/dataStore.js';
-import { AUGMENT_DATABASE } from '../store/constants.js';
+import { CLASS_KEYS } from '../store/constants.js';
+
+/** @typedef {import('../store/constants.js').ClassKey} ClassKey */
 
 export class StatsManager {
     constructor() {
+        /** @type {HTMLElement|null} */
         this.container = document.getElementById('detailed-stats-container');
         /** @type {Record<string, number>} */
         this.statsValues = {}
-        /** @type {Record<string, Record<string, number>>} */
-        this.skillValues = {
-            "warrior": {},
-            "archer": {},
-            "mage": {}
-        }
+        /** @type {Record<ClassKey, Record<string, number>>} */
+        this.skillValues = this.createSkillValues();
     }
 
-    /** Ricalcola i valori aggregati di tutte le statistiche */
+    /**
+     * Crea la struttura vuota dei valori delle skill per ogni classe.
+     * @returns {Record<ClassKey, Record<string, number>>}
+     */
+    createSkillValues() {
+        /** @type {Record<ClassKey, Record<string, number>>} */
+        const values = /** @type {Record<ClassKey, Record<string, number>>} */ ({});
+        CLASS_KEYS.forEach(classKey => {
+            values[classKey] = {};
+        });
+        return values;
+    }
+
+    /** Ricalcola i valori aggregati di tutte le statistiche. */
     recalculate() {
         this.statsValues = {}
-        this.skillValues = {
-            "warrior": {},
-            "archer": {},
-            "mage": {}
-        }
+        this.skillValues = this.createSkillValues();
         const { activeEquip, elixirs } = equippedStore.state;
 
         Object.values(activeEquip).forEach(item => {
@@ -61,7 +69,7 @@ export class StatsManager {
         });
 
         // 1. Recupera i nodi e i livelli della classe corrente
-        for(const classCheck of ["warrior", "mage", "archer"]) {
+        for (const classCheck of CLASS_KEYS) {
             const currentNodes = dataStore.data.skillTrees[classCheck].nodes;
             const currentLevels = equippedStore.state.treeLevels[classCheck];
 
@@ -109,18 +117,17 @@ export class StatsManager {
             });
 
         }
-        this.render(this.statsValues);
+        this.render();
     }
 
-    /**
-     * Renderizza l'output HTML nell'interfaccia
-     */
+    /** Renderizza l'output HTML delle statistiche nell'interfaccia. */
     render() {
         if (!this.container) return;
-        this.container.innerHTML = '';
+        const container = this.container;
+        container.innerHTML = '';
 
         if (Object.keys(this.statsValues).length === 0) {
-            this.container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Nessuna statistica applicata</div>';
+            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Nessuna statistica applicata</div>';
             return;
         }
 
@@ -134,10 +141,10 @@ export class StatsManager {
             if (val > 0) displayVal = '+' + displayVal
 
             row.innerHTML = `<span class="stat-label">${stat}:</span><span class="stat-val">${displayVal}</span>`;
-            this.container.appendChild(row);
+            container.appendChild(row);
         });
     }
 }
 
 export const statsMgr = new StatsManager();
-window.statsMgr = statsMgr;
+/** @type {any} */ (window).statsMgr = statsMgr;

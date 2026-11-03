@@ -1,12 +1,66 @@
-import { APIurl } from "../store/constants.js";
+import {
+    API_URL,
+    API_ITEM_ENDPOINTS,
+    API_ELIXIRS_ENDPOINT,
+    API_MAX_ATTEMPTS,
+    API_REQUEST_TIMEOUT_MS,
+    MAX_ELIXIR_LEVEL,
+    ELEMENT_CHAR_TO_NAME,
+    SLOT_TO_ITEM_CATEGORY,
+    WEAPON_SLOT_TO_WEAPON_TYPE
+} from "../store/constants.js";
 import { dataStore } from "../store/dataStore.js";
-import {equippedStore} from "../store/equippedStore.js";
+import { equippedStore } from "../store/equippedStore.js";
+
+/** @typedef {import('../store/constants.js').ItemStats} ItemStats */
+
+/**
+ * @typedef {Object} ApiGearStat
+ * @property {string} stat
+ * @property {number} max
+ * @property {boolean} [percent]
+ */
+
+/**
+ * @typedef {Object} ApiGear
+ * @property {string} [name]
+ * @property {ApiGearStat[]} [stats]
+ * @property {number} [attackEnergy]
+ * @property {string|number} [defaultAttack]
+ * @property {{max?: number}|number} [normalAttack]
+ * @property {string} [damageType]
+ * @property {string} [slot]
+ * @property {number} [augmentSlots]
+ * @property {number} [level]
+ * @property {Array<string|{name?: string, title?: string}>} [abilities]
+ */
+
+/**
+ * Tooltip JSON grezzo restituito dall'API.
+ * @typedef {Array<any>} ApiTooltip
+ */
+
+/**
+ * @typedef {Object} ApiElixirLevel
+ * @property {string} stat
+ * @property {number} perLevel
+ * @property {boolean} [percent]
+ */
+
+/**
+ * @typedef {Object} ApiElixir
+ * @property {string} [id]
+ * @property {string} [name]
+ * @property {ApiElixirLevel[]} [perLevel]
+ */
 
 export class ApiManager {
     constructor() {
-        this.url = APIurl;
+        /** @type {string} */
+        this.url = API_URL;
     }
 
+    /** Aggiorna in parallelo oggetti ed elisir dall'API. */
     async update() {
         await Promise.all([
             this.updateItems(),
@@ -20,13 +74,12 @@ export class ApiManager {
      * @returns {Promise<any>}
      */
     async fetchJson(endpoint) {
-        const attempts = 2;
         let lastError;
 
-        for (let attempt = 0; attempt < attempts; attempt++) {
+        for (let attempt = 0; attempt < API_MAX_ATTEMPTS; attempt++) {
             try {
                 const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
-                    ? AbortSignal.timeout(10000)
+                    ? AbortSignal.timeout(API_REQUEST_TIMEOUT_MS)
                     : undefined;
                 const res = await fetch(this.url + endpoint, { signal });
                 if (!res.ok) throw new Error(`HTTP ${res.status} su ${endpoint}`);
@@ -41,13 +94,14 @@ export class ApiManager {
     }
 
     /**
-     * Funzione di appoggio per estrarre e formattare tutte le statistiche e proprietà dell'item
-     * @param {Object} gear
+     * Funzione di appoggio per estrarre e formattare tutte le statistiche e proprietà dell'item.
+     * @param {ApiGear} gear
      * @param {string} targetCategory
-     * @param {Object} toolTip
-     * @returns {Record<string, any>}
+     * @param {ApiTooltip|null|undefined} toolTip
+     * @returns {ItemStats}
      */
     formatGearStats(gear, targetCategory, toolTip) {
+        /** @type {ItemStats} */
         const statsObj = {};
 
         // 1. Statistiche standard dall'array stats dell'API
@@ -61,49 +115,24 @@ export class ApiManager {
 
         // 2. Proprietà specifiche se è un'arma
         if (targetCategory === "weapon") {
-            const slotMapping = {
-                "axe": "melee",
-                "bow": "ranged",
-                "crossbow": "ranged",
-                "crux": "magic",
-                "dagger": "melee",
-                "focus": "magic",
-                "gauntlet": "melee",
-                "gloves": "melee",
-                "greatbow": "ranged",
-                "hammer": "melee",
-                "handcannon": "ranged",
-                "kunai": "ranged",
-                "mace": "melee",
-                "pot": "ranged",
-                "spear": "melee",
-                "staff": "magic",
-                "sword": "melee",
-                "tome": "magic",
-                "wand": "magic",
-                "blowpipe": "magic"
-            };
-            const charToElement = {
-                "": "nature",
-                "": "void",
-                "": "thunder",
-                "": "radiant"
-            }
-
             if (gear.attackEnergy !== undefined) statsObj["Attack Energy"] = gear.attackEnergy;
             if (gear.defaultAttack !== undefined) statsObj["Default Attack"] = gear.defaultAttack;
-            if (gear.normalAttack?.max !== undefined) statsObj["Normal Attack"] = gear.normalAttack.max;
-            else if (gear.normalAttack !== undefined) statsObj["Normal Attack"] = gear.normalAttack;
+            if (gear.normalAttack !== undefined && gear.normalAttack !== null) {
+                if (gear.normalAttack.max !== undefined) {
+                    statsObj["Normal Attack"] = gear.normalAttack.max;
+                }
+            }
             if (gear.damageType !== undefined) statsObj["Damage Type"] = gear.damageType;
-            if (gear.slot !== undefined) statsObj["Weapon Type"] = slotMapping[gear.slot.toLowerCase()];
+            if (gear.slot !== undefined) {
+                statsObj["Weapon Type"] = WEAPON_SLOT_TO_WEAPON_TYPE[gear.slot.toLowerCase()];
+            }
 
-
-            if (toolTip !== null && toolTip.length > 1) {
-                let firstRow = toolTip[1].extra
+            if (toolTip !== null && toolTip !== undefined && toolTip.length > 1) {
+                const firstRow = toolTip[1].extra;
                 if (firstRow.length > 1) {
-                    let elementalRow = firstRow[0].text
+                    const elementalRow = firstRow[0].text;
                     if (elementalRow.length > 9) {
-                        statsObj["element"] = charToElement[elementalRow[10]];
+                        statsObj["element"] = ELEMENT_CHAR_TO_NAME[elementalRow[10]];
                     }
                 }
             }
@@ -135,16 +164,11 @@ export class ApiManager {
         return statsObj;
     }
 
+    /** Recupera e normalizza gli oggetti dall'API. */
     async updateItems() {
         try {
             // 1. Le 3 chiamate in parallelo
-            const endpoints = [
-                "/items?category=weapons",
-                "/items?category=armor",
-                "/items?category=accessories"
-            ];
-
-            const promises = endpoints.map(endpoint => this.fetchJson(endpoint));
+            const promises = API_ITEM_ENDPOINTS.map(endpoint => this.fetchJson(endpoint));
 
             const results = await Promise.all(promises);
             const allFetchedItems = results.flat();
@@ -152,39 +176,8 @@ export class ApiManager {
             // 2. Cloniamo la struttura attuale con structuredClone
             const itemsCopy = structuredClone(dataStore.data.items);
 
-            // 3. Dizionario di mappatura degli slot
-            const slotMapping = {
-                "amulet": "amulet",
-                "axe": "weapon",
-                "boots": "boots",
-                "bow": "weapon",
-                "chestplate": "chestplate",
-                "crossbow": "weapon",
-                "crux": "weapon",
-                "dagger": "weapon",
-                "focus": "weapon",
-                "gauntlet": "weapon",
-                "gloves": "glove",
-                "greatbow": "weapon",
-                "hammer": "weapon",
-                "handcannon": "weapon",
-                "helmet": "helmet",
-                "kunai": "weapon",
-                "leggings": "leggings",
-                "mace": "weapon",
-                "pot": "weapon",
-                "ring": "ring",
-                "spear": "weapon",
-                "staff": "weapon",
-                "sword": "weapon",
-                "tome": "weapon",
-                "wand": "weapon",
-                "greaves": "feet",
-                "blowpipe": "weapon"
-            };
-
-            // Svuotiamo preventivamente solo le categorie coinvolte
-            const targetCategories = new Set(Object.values(slotMapping));
+            // 3. Svuotiamo preventivamente solo le categorie coinvolte
+            const targetCategories = new Set(Object.values(SLOT_TO_ITEM_CATEGORY));
             targetCategories.forEach(category => {
                 if (itemsCopy[category]) {
                     itemsCopy[category] = [];
@@ -197,7 +190,7 @@ export class ApiManager {
                 if (!rawSlot) return;
 
                 const normalizedSlot = rawSlot.toLowerCase();
-                const targetCategory = slotMapping[normalizedSlot];
+                const targetCategory = SLOT_TO_ITEM_CATEGORY[normalizedSlot];
 
                 if (!targetCategory) {
                     //console.log(normalizedSlot)
@@ -232,14 +225,17 @@ export class ApiManager {
         }
     }
 
+    /** Recupera e normalizza gli elisir dall'API. */
     async updateElixirs() {
         try {
-            const rawElixirs = await this.fetchJson("/elixirs");
+            /** @type {ApiElixir[]} */
+            const rawElixirs = await this.fetchJson(API_ELIXIRS_ENDPOINT);
 
             // Mappiamo i dati separando il valore numerico dal flag percentuale
             const mappedElixirs = rawElixirs.map(elixir => {
                 const name = elixir.name || "";
-                const firstLevelData = elixir.perLevel?.[0] || {};
+                /** @type {ApiElixirLevel} */
+                const firstLevelData = elixir.perLevel?.[0] ?? { stat: "", perLevel: 0 };
 
                 const stat = firstLevelData.stat || "";
                 const perLevelValue = firstLevelData.perLevel ?? 0;
@@ -249,7 +245,7 @@ export class ApiManager {
                     id: elixir.id || name,
                     name: name,
                     stat: stat,
-                    val: 5,
+                    val: MAX_ELIXIR_LEVEL,
                     perLevel: perLevelValue, // Rimane un numero (es. 5)
                     percent: isPercent       // True se è percentuale, false se è un valore piatto
                 };

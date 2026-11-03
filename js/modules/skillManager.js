@@ -1,19 +1,32 @@
 import { equippedStore } from '../store/equippedStore.js';
 import { dataStore } from "../store/dataStore.js";
+import { SVG_NAMESPACE } from '../store/constants.js';
+
+/** @typedef {import('../store/constants.js').ClassKey} ClassKey */
+/** @typedef {import('../store/constants.js').SkillNode} SkillNode */
 
 export class SkillManager {
     constructor() {
+        /** @type {HTMLElement|null} */
         this.layer = document.getElementById('nodes');
-        this.svg = document.getElementById('wires');
+        /** @type {SVGSVGElement|null} */
+        this.svg = /** @type {SVGSVGElement|null} */ (document.getElementById('wires'));
+        /** @type {HTMLElement|null} */
         this.pointsEl = document.getElementById('points');
-        this.classBtns = document.querySelectorAll('.class-btn');
+        /** @type {NodeListOf<HTMLElement>} */
+        this.classBtns = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.class-btn'));
 
         // Creazione del tooltip per l'hover se non esiste già nel DOM
+        /** @type {HTMLElement} */
         this.tooltip = document.getElementById('skill-tooltip') || this.createTooltip();
 
         this.bindEvents();
     }
 
+    /**
+     * Crea il tooltip flottante usato al passaggio del mouse sui nodi.
+     * @returns {HTMLElement}
+     */
     createTooltip() {
         const tip = document.createElement('div');
         tip.id = 'skill-tooltip';
@@ -26,11 +39,12 @@ export class SkillManager {
         return tip;
     }
 
+    /** Collega gli eventi di selezione della classe. */
     bindEvents() {
         this.classBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const target = /** @type {HTMLElement} */ (e.target);
-                const selectedClass = /** @type {'warrior'|'archer'|'mage'} */ (target.dataset.class);
+                const selectedClass = /** @type {ClassKey} */ (target.dataset.class);
 
                 this.classBtns.forEach(b => b.classList.remove('active'));
                 target.classList.add('active');
@@ -40,8 +54,13 @@ export class SkillManager {
         });
     }
 
+    /** @returns {Record<string, SkillNode>} */
     getActiveNodes() { return dataStore.data.skillTrees[equippedStore.state.currentClass].nodes; }
+
+    /** @returns {Array<[string, string]>} */
     getActiveEdges() { return dataStore.data.skillTrees[equippedStore.state.currentClass].edges; }
+
+    /** @returns {Map<string, number>} */
     getActiveLevels() { return equippedStore.state.treeLevels[equippedStore.state.currentClass]; }
 
     /**
@@ -90,11 +109,11 @@ export class SkillManager {
         );
     }
 
-    /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità */
-    /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità */
+    /** Disegna i collegamenti SVG dinamici tra i vari nodi abilità. */
     drawWires() {
         if (!this.svg || !this.layer) return;
-        this.svg.innerHTML = '';
+        const svg = this.svg;
+        svg.innerHTML = '';
 
         // Otteniamo le dimensioni reali in pixel del contenitore dei nodi
         const rect = this.layer.getBoundingClientRect();
@@ -102,13 +121,13 @@ export class SkillManager {
         const height = rect.height || this.layer.clientHeight || 500;
 
         // Impostiamo viewBox ed dimensioni esplicite sul tag SVG per allinearlo perfettamente al layer dei nodi
-        this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        this.svg.style.width = '100%';
-        this.svg.style.height = '100%';
-        this.svg.style.position = 'absolute';
-        this.svg.style.top = '0';
-        this.svg.style.left = '0';
-        this.svg.style.pointerEvents = 'none';
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.pointerEvents = 'none';
 
         const currentNodes = this.getActiveNodes();
         const currentLevels = this.getActiveLevels();
@@ -123,7 +142,7 @@ export class SkillManager {
             const x2 = (q.x / 100) * width;
             const y2 = (q.y / 100) * height;
 
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const line = document.createElementNS(SVG_NAMESPACE, 'path');
 
             const d = Math.abs(x1 - x2) > Math.abs(y1 - y2)
                 ? `M${x1} ${y1} H${(x1 + x2) / 2} V${y2} H${x2}`
@@ -132,14 +151,15 @@ export class SkillManager {
             const isWireActive = (currentLevels.get(a) || 0) > 0 && (currentLevels.get(b) || 0) > 0;
             line.setAttribute('d', d);
             line.setAttribute('class', 'wire' + (isWireActive ? ' active' : ''));
-            this.svg.appendChild(line);
+            svg.appendChild(line);
         });
     }
 
-    /** Renderizza nuovamente i pulsanti dei nodi e i punti SP */
+    /** Renderizza nuovamente i pulsanti dei nodi, i punti SP e i collegamenti. */
     render() {
         if (!this.layer) return;
-        this.layer.innerHTML = '';
+        const layer = this.layer;
+        layer.innerHTML = '';
 
         const currentNodes = this.getActiveNodes();
         const currentLevels = this.getActiveLevels();
@@ -161,7 +181,7 @@ export class SkillManager {
             b.addEventListener('click', (e) => this.handleNodeClick(id, e));
 
             // Eventi Hover per il Tooltip
-            b.addEventListener('mouseenter', (e) => {
+            b.addEventListener('mouseenter', () => {
                 if (!this.tooltip) return;
 
                 let desc = n.description || "Nessuna descrizione disponibile.";
@@ -176,7 +196,7 @@ export class SkillManager {
 
                         // Sostituisce {key} nella stringa (es. {c}) con il valore calcolato
                         const formattedVal = Number(calculatedVal.toFixed(2));
-                        desc = desc.replace(new RegExp(`\\{${key}\\}`, 'g'), formattedVal);
+                        desc = desc.replace(new RegExp(`\\{${key}\\}`, 'g'), String(formattedVal));
                     });
                 }
 
@@ -198,7 +218,7 @@ export class SkillManager {
                 this.tooltip.style.display = 'none';
             });
 
-            this.layer.appendChild(b);
+            layer.appendChild(b);
         });
 
         if (this.pointsEl) this.pointsEl.textContent = String(equippedStore.state.sharedPoints);
