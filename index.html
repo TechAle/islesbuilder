@@ -14,6 +14,11 @@
 
         <!-- Equipment Grid Panel -->
         <section class="equip-panel">
+            <button type="button" class="section-toggle section-toggle--panel" data-collapse="equip-content" aria-expanded="true">
+                <span>⚔️ Equipment</span>
+                <span class="section-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="equip-content" class="section-content">
             <div class="equip-grid">
 
                 <!-- Weapon -->
@@ -198,22 +203,33 @@
                 </div>
 
             </div>
+            </div>
         </section>
 
         <!-- Elixirs Section -->
         <section class="elixirs-panel">
             <div class="section-title elixirs-title">
-                <span>🧪 Elixirs</span>
+                <button type="button" class="section-toggle section-toggle--inline" data-collapse="elixirs-content" aria-expanded="true">
+                    <span>🧪 Elixirs</span>
+                    <span class="section-chevron" aria-hidden="true">▾</span>
+                </button>
                 <div class="elixir-bulk-actions">
                     <button type="button" class="btn-elixir-bulk" id="btn-elixir-max">Set Max</button>
                     <button type="button" class="btn-elixir-bulk" id="btn-elixir-zero">Set 0</button>
                 </div>
             </div>
-            <div class="elixirs-grid" id="elixirs-container"></div>
+            <div id="elixirs-content" class="section-content">
+                <div class="elixirs-grid" id="elixirs-container"></div>
+            </div>
         </section>
 
         <!-- Skill Tree Section -->
         <section class="tree-panel">
+            <button type="button" class="section-toggle section-toggle--panel" data-collapse="tree-content" aria-expanded="true">
+                <span>🌳 Skill Tree</span>
+                <span class="section-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="tree-content" class="section-content tree-content">
             <nav class="class-selector">
                 <button class="class-btn" data-class="warrior">Warrior</button>
                 <button class="class-btn active" data-class="archer">Archer</button>
@@ -227,6 +243,7 @@
                 <span>SP Rimanenti: <strong id="points" style="color:var(--gold);">100</strong></span>
                 <span>Click: Potenzia | Shift+Click: Depotenzia</span>
             </div>
+            </div>
         </section>
 
     </div>
@@ -234,20 +251,54 @@
     <!-- RIGHT: DETAILED & DAMAGE (30%) -->
     <div class="right-panel">
         <div id="top" class="output-card full-height">
-            <div class="card-title">Damage Overview</div>
+            <div class="damage-header">
+                <div class="damage-settings-wrap">
+                    <button type="button" class="btn-damage-settings" id="btn-damage-settings" aria-expanded="false" title="Damage settings">⚙️</button>
+                    <div class="damage-settings" id="damage-settings" hidden>
+                        <div class="setting-row">
+                            <div class="setting-main">
+                                <label class="setting-check">
+                                    <input type="checkbox" id="setting-slow-attack"> Slow attack
+                                </label>
+                                <input type="number" id="setting-slow-attack-value" class="setting-number" step="0.01" min="0.01" value="0.6" hidden disabled>
+                            </div>
+                            <span class="setting-help" tabindex="0" data-tooltip="If you are slow at attacking, check this and it will override attack interval">?</span>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-main">
+                                <label class="setting-check">
+                                    <input type="checkbox" id="setting-use-burst"> Use burst
+                                </label>
+                            </div>
+                            <span class="setting-help" tabindex="0" data-tooltip="If enabled, you will use the burst as soon as possible">?</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="section-toggle section-toggle--card" data-collapse="damage-content" aria-expanded="true">
+                    <span>Damage Overview</span>
+                    <span class="section-chevron" aria-hidden="true">▾</span>
+                </button>
+            </div>
+            <div id="damage-content" class="section-content output-content">
             <div class="damage-highlight">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Average DPS</div>
                 <div class="damage-dps" id="damage-dps">—</div>
             </div>
             <div id="damage-steps-container"></div>
+            </div>
         </div>
 
         <div id="bottom" class="output-card">
-            <div class="card-title">Detailed Stats</div>
+            <button type="button" class="section-toggle section-toggle--card" data-collapse="stats-content" aria-expanded="true">
+                <span>Detailed Stats</span>
+                <span class="section-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="stats-content" class="section-content output-content">
             <div id="detailed-stats-container"></div>
             <div class="action-buttons-group">
                 <button class="btn-share" id="btn-share-build">🔗 Condividi Build</button>
                 <button class="btn-paste" id="btn-paste-build">📋 Incolla Build</button>
+            </div>
             </div>
         </div>
     </div>

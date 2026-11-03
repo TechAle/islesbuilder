@@ -32,5 +32,17 @@ export const ITEM_OVERRIDES = {
     "Royal Tiara": {
         "Nature Damage": "5%",
         "Elemental Power": "25.6%"
+    },
+    "Abyssal Blight Chestplate": {
+        "Void Damage": "5%",
+    },
+    "Abyssal Blight Helmet": {
+        "Void Damage": "5%",
+    },
+    "Abyssal Blight Leggings": {
+        "Void Damage": "5%",
+    },
+    "Abyssal Blight Boots": {
+        "Void Damage": "5%",
     }
 };

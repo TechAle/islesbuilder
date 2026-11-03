@@ -145,7 +145,7 @@
  * Risultato di un calcolo di danno/DPS.
  * @typedef {Object} DamageResult
  * @property {string} label - Nome della voce di danno
- * @property {number} value - Valore calcolato
+ * @property {number|string} value - Valore calcolato
  * @property {string} [unit] - Unità opzionale (es. "%", "DPS")
  */
 
@@ -173,12 +173,68 @@
  */
 
 /**
+ * Risultato dello step "Critical Damage".
+ * @typedef {Object} CriticalDamageStepResult
+ * @property {number} baseDamage - Danno non critico di partenza
+ * @property {number} critChance - Probabilità di critico (0-100)
+ * @property {number} critDamagePercent - Crit Damage totale (base + statistica)
+ * @property {number} criticalHit - Danno del colpo critico
+ * @property {number} averageDamage - Danno medio pesato sul crit rate
+ * @property {number} damage - Danno finale dello step
+ */
+
+/**
+ * Risultato dello step "Attack Speed & Energy".
+ * @typedef {Object} AttackSpeedStepResult
+ * @property {number} damage - Danno medio per colpo
+ * @property {number} attackInterval - Secondi per attacco
+ * @property {number} attacksPerSecond - Attacchi al secondo
+ * @property {number} dps - Danno al secondo
+ * @property {number} attackEnergyCost - Energia consumata per attacco
+ * @property {number} energyRegen - Energia rigenerata al secondo
+ * @property {number} energyPerSecond - Saldo energetico al secondo
+ * @property {number} maxEnergy - Energia massima
+ * @property {number} secondsToEmpty - Secondi prima di esaurire l'energia (Infinity se non si esaurisce)
+ * @property {boolean} sustain - True se l'energia rigenerata copre quella consumata
+ * @property {number} potionInterval - Secondi tra una pozione e l'altra per mantenere l'energia
+ * @property {boolean} potionSustainable - True se il cooldown delle pozioni basta
+ */
+
+/**
+ * Impostazioni del calcolo danni.
+ * @typedef {Object} DamageSettings
+ * @property {boolean} slowAttack - Se true, usa attackInterval al posto del calcolo
+ * @property {number|null} attackInterval - Intervallo attacco manuale in secondi
+ * @property {boolean} useBurst - Se true, aggiunge il burst ogni 30s
+ */
+
+/**
+ * Risultato dello step "Burst DPS".
+ * @typedef {Object} BurstStepResult
+ * @property {boolean} visible - Se la sezione va mostrata
+ * @property {boolean} available - Se il core Mage è equipaggiato
+ * @property {boolean} enabled - Se il burst è attivo
+ * @property {number} burstDps
+ * @property {number} burstDamagePerSecond
+ * @property {number} burstEnergyPerSecond
+ * @property {number} attackDps
+ * @property {number} totalDps
+ * @property {number} energyPerSecond
+ * @property {number} maxEnergy
+ * @property {number} secondsToEmpty
+ * @property {boolean} sustain
+ * @property {number} potionInterval
+ * @property {boolean} potionSustainable
+ */
+
+/**
  * Contesto condiviso dagli step di calcolo del danno.
  * @typedef {Object} DamageContext
  * @property {Record<string, StatTotals>} statsValues
  * @property {Record<ClassKey, Record<string, number>>} skillValues
  * @property {BuildState} build
  * @property {EquipSlotData|null} weapon
+ * @property {DamageSettings} settings
  * @property {Record<string, any>} results - Risultati accumulati dagli step
  */
 
@@ -189,6 +245,7 @@
  * @property {string} label - Nome leggibile
  * @property {(context: DamageContext) => Record<string, any>} run - Calcolo puro
  * @property {(result: any) => DamageResult[]} [toResults] - Converte il risultato in righe visualizzabili
+ * @property {(result: any) => boolean} [isVisible] - Se false, lo step non compare nel render
  */
 
 export {};

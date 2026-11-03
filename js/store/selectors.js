@@ -1,4 +1,4 @@
-import { CLASS_KEYS } from '../data/constants.js';
+import { BASE_CRIT_DAMAGE, BASE_ELEMENTAL_POWER, CLASS_KEYS } from '../data/constants.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
 /** @typedef {import('../data/types.js').ClassKey} ClassKey */
@@ -122,4 +122,31 @@ export function selectStats(catalog, build) {
     }
 
     return { statsValues, skillValues };
+}
+
+/**
+ * Aggiunge le statistiche di base del personaggio per la sola visualizzazione:
+ * - Elemental Power: 100 flat di base
+ * - Crit Damage: 50% di base
+ *
+ * Non va usata nel calcolo del danno, dove le basi sono applicate dagli step.
+ * @param {Record<string, StatTotals>} statsValues
+ * @returns {Record<string, StatTotals>}
+ */
+export function withBaseStats(statsValues) {
+    const displayStats = structuredClone(statsValues);
+
+    const elementalPower = displayStats['Elemental Power'] || { flat: 0, percent: 0 };
+    displayStats['Elemental Power'] = {
+        flat: elementalPower.flat + BASE_ELEMENTAL_POWER,
+        percent: elementalPower.percent
+    };
+
+    const critDamage = displayStats['Crit Damage'] || { flat: 0, percent: 0 };
+    displayStats['Crit Damage'] = {
+        flat: critDamage.flat,
+        percent: critDamage.percent + BASE_CRIT_DAMAGE
+    };
+
+    return displayStats;
 }

@@ -1,43 +1,9 @@
 import { BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
+import { findFlat, findPercent } from '../statLookup.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').DamageModifiersStepResult} DamageModifiersStepResult */
 /** @typedef {import('../../../data/types.js').EquipSlotData} EquipSlotData */
-/** @typedef {import('../../../data/types.js').StatTotals} StatTotals */
-
-/**
- * Cerca una statistica senza distinguere maiuscole/minuscole.
- * @param {Record<string, StatTotals>} statsValues
- * @param {string} statName
- * @returns {StatTotals|null}
- */
-function findStat(statsValues, statName) {
-    const target = statName.trim().toLowerCase();
-    if (!target) return null;
-
-    const key = Object.keys(statsValues).find(stat => stat.trim().toLowerCase() === target);
-    return key ? statsValues[key] : null;
-}
-
-/**
- * Legge un modificatore percentuale, ignorando flat e maiuscole/minuscole.
- * @param {Record<string, StatTotals>} statsValues
- * @param {string} statName
- * @returns {number}
- */
-function findPercent(statsValues, statName) {
-    return findStat(statsValues, statName)?.percent ?? 0;
-}
-
-/**
- * Legge un valore flat, ignorando maiuscole/minuscole.
- * @param {Record<string, StatTotals>} statsValues
- * @param {string} statName
- * @returns {number}
- */
-function findFlat(statsValues, statName) {
-    return findStat(statsValues, statName)?.flat ?? 0;
-}
 
 /**
  * Weapon Type dell'arma (es. "magic", "melee", "ranged").
@@ -173,11 +139,6 @@ export const damageModifiersStep = {
         const hasElementalDamage = result.elementalDamagePercent !== 0;
         if (hasElementalDamage) {
             rows.push({ label: 'Elemental Power', value: result.elementalPower });
-            rows.push({
-                label: 'Elemental Damage (EP)',
-                value: result.effectiveElementalPercent,
-                unit: '%'
-            });
         }
 
         rows.push({ label: 'Damage', value: result.damage });

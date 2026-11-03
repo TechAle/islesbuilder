@@ -1,6 +1,6 @@
 import { DataStore } from './store/dataStore.js';
 import { BuildStore } from './store/equippedStore.js';
-import { selectStats } from './store/selectors.js';
+import { selectStats, withBaseStats } from './store/selectors.js';
 
 import { ApiManager } from './modules/apiManager.js';
 import { ElixirManager } from './modules/elixirManager.js';
@@ -16,6 +16,8 @@ import { ShareRenderer } from './renderers/shareRenderer.js';
 import { SkillTreeRenderer } from './renderers/skillTreeRenderer.js';
 import { StatsRenderer } from './renderers/statsRenderer.js';
 import { DamageRenderer } from './renderers/damageRenderer.js';
+import { SectionRenderer } from './renderers/sectionRenderer.js';
+import { DamageSettingsRenderer } from './renderers/damageSettingsRenderer.js';
 
 import { ITEM_DATABASE } from './data/items.js';
 import { AUGMENT_DATABASE } from './data/augments.js';
@@ -86,6 +88,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         dpsValue: document.getElementById('damage-dps')
     });
 
+    /** @type {import('./data/types.js').DamageSettings} */
+    let damageSettings = { slowAttack: false, attackInterval: null, useBurst: false };
+
+    const damageSettingsRenderer = new DamageSettingsRenderer({
+        button: /** @type {HTMLButtonElement|null} */ (document.getElementById('btn-damage-settings')),
+        panel: document.getElementById('damage-settings'),
+        slowAttack: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-slow-attack')),
+        slowAttackValue: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-slow-attack-value')),
+        useBurst: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-use-burst')),
+        onChange: settings => {
+            damageSettings = settings;
+            renderCombat();
+        }
+    });
+
     const shareRenderer = new ShareRenderer({
         root: document,
         onShare: () => shareRenderer.copyLink(shareManager.createShareUrl()),
@@ -103,21 +120,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    const sectionRenderer = new SectionRenderer({ root: document });
+
     // --- Mount ---------------------------------------------------------
     equipRenderer.mount();
     itemModalRenderer.mount();
     elixirRenderer.mount();
     skillTreeRenderer.mount();
     shareRenderer.mount();
+    sectionRenderer.mount();
+    damageSettingsRenderer.mount();
 
     // --- Render helpers ------------------------------------------------
     // Le statistiche sono la base del calcolo danni: vengono calcolate una
     // volta sola e passate sia allo stats renderer sia a DpsManager.
     const renderCombat = () => {
         const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
-        statsRenderer.render(statsValues);
-        dpsManager.recalculate({ statsValues, skillValues, build: equippedStore.state });
-        damageRenderer.render(dpsManager.getResults());
+        statsRenderer.render(withBaseStats(statsValues));
+        dpsManager.recalculate({ statsValues, skillValues, build: equippedStore.state, settings: damageSettings });
+        damageRenderer.render(dpsManager.getStepGroups(), dpsManager.getDps());
     };
 
     const renderAll = () => {

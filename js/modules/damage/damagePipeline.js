@@ -1,5 +1,8 @@
 import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
+import { criticalDamageStep } from './steps/criticalDamage.js';
+import { attackSpeedStep } from './steps/attackSpeed.js';
+import { burstStep } from './steps/burst.js';
 
 /** @typedef {import('../../data/types.js').BuildState} BuildState */
 /** @typedef {import('../../data/types.js').ClassKey} ClassKey */
@@ -15,7 +18,10 @@ import { damageModifiersStep } from './steps/damageModifiers.js';
  */
 export const DAMAGE_STEPS = [
     baseDamageStep,
-    damageModifiersStep
+    damageModifiersStep,
+    criticalDamageStep,
+    attackSpeedStep,
+    burstStep
 ];
 
 /**
@@ -24,14 +30,16 @@ export const DAMAGE_STEPS = [
  * @param {Record<string, StatTotals>} options.statsValues
  * @param {Record<ClassKey, Record<string, number>>} options.skillValues
  * @param {BuildState} options.build
+ * @param {import('../../data/types.js').DamageSettings} [options.settings]
  * @returns {DamageContext}
  */
-export function createDamageContext({ statsValues, skillValues, build }) {
+export function createDamageContext({ statsValues, skillValues, build, settings }) {
     return {
         statsValues,
         skillValues,
         build,
         weapon: build.activeEquip.weapon ?? null,
+        settings: settings ?? { slowAttack: false, attackInterval: null, useBurst: false },
         results: {}
     };
 }

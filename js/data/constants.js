@@ -50,6 +50,36 @@ export const DEFAULT_SHARED_POINTS = 100;
  */
 export const BASE_ELEMENTAL_POWER = 100;
 
+/** Crit Damage di base: un colpo critico fa sempre +50% danno. */
+export const BASE_CRIT_DAMAGE = 50;
+
+/** Tempo base di un attacco, in secondi. */
+export const BASE_ATTACK_TIME = 0.6;
+
+/** Energy Regen di base al secondo. */
+export const BASE_ENERGY_REGEN = 10;
+
+/** Max Energy di base del personaggio. */
+export const BASE_MAX_ENERGY = 100;
+
+/** Cooldown tra una pozione e l'altra, in secondi. */
+export const POTION_COOLDOWN = 1.5;
+
+/** Energia ripristinata da una pozione. */
+export const POTION_ENERGY = 25;
+
+/** Burst: percentuale del danno (damage modifiers) inflitta ogni secondo. */
+export const BURST_DAMAGE_PERCENT = 75;
+
+/** Burst: durata dell'effetto attivo, in secondi. */
+export const BURST_ACTIVE_SECONDS = 10;
+
+/** Burst: ciclo completo attivo + cooldown, in secondi. */
+export const BURST_INTERVAL = 30;
+
+/** Burst: energia consumata da un burst. */
+export const BURST_ENERGY_COST = 50;
+
 /**
  * Mappa lo slot grezzo restituito dall'API alla categoria usata da ITEM_DATABASE.
  * @type {Record<string, string>}
