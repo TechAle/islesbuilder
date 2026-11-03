@@ -44,6 +44,13 @@ export const DEFAULT_ELIXIR_LEVEL = 0;
 export const DEFAULT_SHARED_POINTS = 100;
 
 /**
+ * Elemental Power di base di ogni personaggio.
+ * L'EP totale è `(base + flat) * (1 + percent / 100)` e scala i danni
+ * elementali con rapporto `EP / 100`.
+ */
+export const BASE_ELEMENTAL_POWER = 100;
+
+/**
  * Mappa lo slot grezzo restituito dall'API alla categoria usata da ITEM_DATABASE.
  * @type {Record<string, string>}
  */

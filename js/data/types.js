@@ -164,9 +164,12 @@
  * Risultato dello step "Damage Modifiers".
  * @typedef {Object} DamageModifiersStepResult
  * @property {number} baseDamage - Base Damage di partenza
- * @property {number} percent - Somma dei modificatori percentuali
- * @property {number} damage - Danno dopo i modificatori
+ * @property {number} percent - Somma dei modificatori percentuali (tipo + classe)
+ * @property {number} damage - Danno finale
  * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
+ * @property {number} elementalPower - Elemental Power totale
+ * @property {number} elementalDamagePercent - Percentuale elementale base
+ * @property {number} effectiveElementalPercent - Percentuale elementale scalata dall'EP
  */
 
 /**

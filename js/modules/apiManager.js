@@ -9,6 +9,7 @@ import {
     SLOT_TO_ITEM_CATEGORY,
     WEAPON_SLOT_TO_WEAPON_TYPE
 } from "../data/constants.js";
+import { applyItemOverride } from "./itemOverrides.js";
 
 /** @typedef {import('../data/types.js').ItemStats} ItemStats */
 
@@ -101,9 +102,10 @@ export class ApiManager {
      * @param {ApiGear} gear
      * @param {string} targetCategory
      * @param {ApiTooltip|null|undefined} toolTip
+     * @param {string} [name] - Nome dell'oggetto, usato per gli override manuali
      * @returns {ItemStats}
      */
-    formatGearStats(gear, targetCategory, toolTip) {
+    formatGearStats(gear, targetCategory, toolTip, name = '') {
         /** @type {ItemStats} */
         const statsObj = {};
 
@@ -166,7 +168,9 @@ export class ApiManager {
             });
         }
 
-        return statsObj;
+        // 6. Override manuali: i valori presenti in ITEM_OVERRIDES hanno la
+        // precedenza su quelli dell'API (es. Tempest -> element thunder).
+        return applyItemOverride(name, statsObj);
     }
 
     /** Recupera e normalizza gli oggetti dall'API. */
@@ -205,7 +209,7 @@ export class ApiManager {
                 const gear = item.gear || {};
 
                 // Chiamata alla funzione di appoggio per generare tutte le statistiche pulite
-                const statsObj = this.formatGearStats(gear, targetCategory, item.tooltipJson);
+                const statsObj = this.formatGearStats(gear, targetCategory, item.tooltipJson, name);
 
                 if (!itemsCopy[targetCategory]) {
                     itemsCopy[targetCategory] = [];
