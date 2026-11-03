@@ -183,6 +183,9 @@
  * @property {number} griefInflictionPercent - Valore del nodo Grief Infliction
  * @property {number} griefUptime - Uptime del Grief (1-100)
  * @property {number} griefDamagePercent - Aumento effettivo del Grief
+ * @property {number} lastSorrowPercent - Valore del nodo Last Sorrow
+ * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
+ * @property {number} lastSorrowDamagePercent - Aumento effettivo di Last Sorrow
  * @property {number} multiplierPercent - Aumento percentuale totale
  * @property {number} multiplier - Moltiplicatore applicato
  * @property {number} damage - Danno dopo il moltiplicatore
@@ -225,6 +228,7 @@
  * @property {number|null} attackInterval - Intervallo attacco manuale in secondi
  * @property {boolean} useBurst - Se true, aggiunge il burst ogni 30s
  * @property {number} griefUptime - Uptime di Grief Infliction (1-100)
+ * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
  */
 
 /**

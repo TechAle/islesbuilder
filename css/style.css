@@ -432,7 +432,7 @@ svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; }
 .damage-dps { font-size: 22px; font-weight: 900; color: #ff5252; }
 .damage-empty { font-size: 12px; color: var(--text-muted); padding: 8px 0; }
 
-.grief-uptime {
+.damage-uptime {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -440,26 +440,26 @@ svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; }
     color: var(--text-muted);
 }
 
-.grief-uptime[hidden] { display: none; }
+.damage-uptime[hidden] { display: none; }
 
-.damage-step-content .grief-uptime {
+.damage-step-content .damage-uptime {
     margin-bottom: 6px;
 }
 
-.grief-uptime-label {
+.damage-uptime-label {
     flex: 0 0 auto;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
-.grief-uptime-slider {
+.damage-uptime-slider {
     flex: 1;
     accent-color: var(--gold);
     cursor: pointer;
 }
 
-.grief-uptime-value {
+.damage-uptime-value {
     flex: 0 0 auto;
     min-width: 40px;
     text-align: right;

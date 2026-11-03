@@ -43,7 +43,13 @@ export function createDamageContext({ statsValues, skillValues, build, skillTree
         build,
         skillTrees: skillTrees ?? /** @type {Record<ClassKey, import('../../data/types.js').SkillTreeClass>} */ ({}),
         weapon: build.activeEquip.weapon ?? null,
-        settings: settings ?? { slowAttack: false, attackInterval: null, useBurst: false, griefUptime: 100 },
+        settings: settings ?? {
+            slowAttack: false,
+            attackInterval: null,
+            useBurst: false,
+            griefUptime: 100,
+            lastSorrowUptime: 100
+        },
         results: {}
     };
 }

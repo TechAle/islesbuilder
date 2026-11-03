@@ -3,12 +3,13 @@
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string}}
  */
 const MAGE_NODES = {
     elementalChanneling: 'DR',
     elementalKnowledge: 'DR1',
-    griefInfliction: 'L2'
+    griefInfliction: 'L2',
+    lastSorrow: 'L2b'
 };
 
 /**
@@ -83,4 +84,14 @@ export function getElementalKnowledge(context) {
  */
 export function getGriefInflictionPercent(context) {
     return getMageNodeValue(context, MAGE_NODES.griefInfliction);
+}
+
+/**
+ * Last Sorrow: danno extra sul colpo successivo quando Grief scade.
+ * Restituisce 0 se la classe attiva non è Mage.
+ * @param {DamageContext} context
+ * @returns {number}
+ */
+export function getLastSorrowPercent(context) {
+    return getMageNodeValue(context, MAGE_NODES.lastSorrow);
 }

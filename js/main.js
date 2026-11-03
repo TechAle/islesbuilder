@@ -89,7 +89,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /** @type {import('./data/types.js').DamageSettings} */
-    let damageSettings = { slowAttack: false, attackInterval: null, useBurst: false, griefUptime: 100 };
+    let damageSettings = {
+        slowAttack: false,
+        attackInterval: null,
+        useBurst: false,
+        griefUptime: 100,
+        lastSorrowUptime: 100
+    };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
         button: /** @type {HTMLButtonElement|null} */ (document.getElementById('btn-damage-settings')),
@@ -99,6 +105,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         useBurst: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-use-burst')),
         griefUptime: /** @type {HTMLInputElement|null} */ (document.getElementById('grief-uptime')),
         griefUptimeValue: document.getElementById('grief-uptime-value'),
+        lastSorrowUptime: /** @type {HTMLInputElement|null} */ (document.getElementById('last-sorrow-uptime')),
+        lastSorrowUptimeValue: document.getElementById('last-sorrow-uptime-value'),
         onChange: settings => {
             damageSettings = settings;
             renderCombat();
@@ -149,9 +157,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageRenderer.render(dpsManager.getStepGroups(), dpsManager.getDps());
 
         const griefPercent = dpsManager.getSteps().damageMultiplier?.griefInflictionPercent ?? 0;
-        damageSettingsRenderer.placeGriefUptime(
+        const lastSorrowPercent = dpsManager.getSteps().damageMultiplier?.lastSorrowPercent ?? 0;
+        damageSettingsRenderer.placeUptimeControls(
             damageRenderer.getStepContent('damageMultiplier'),
-            griefPercent > 0
+            { grief: griefPercent > 0, lastSorrow: lastSorrowPercent > 0 }
         );
     };
 

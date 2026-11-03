@@ -1,4 +1,4 @@
-import { getElementalKnowledge, getGriefInflictionPercent } from '../../classes/mage.js';
+import { getElementalKnowledge, getGriefInflictionPercent, getLastSorrowPercent } from '../../classes/mage.js';
 import { applyAdditiveMultipliers } from '../applyMultipliers.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -23,6 +23,7 @@ function clamp(value, min, max) {
  *
  * - Elemental Knowledge: 9% per ogni 1% del nodo.
  * - Grief Infliction: val% del nodo, scalato dal Grief uptime.
+ * - Last Sorrow: val% del nodo, scalato dal Last Sorrow uptime.
  *
  * Esempio: 9% + 15% → +24%, non 1.09 × 1.15.
  *
@@ -46,9 +47,14 @@ export const damageMultiplierStep = {
         const griefUptime = clamp(context.settings?.griefUptime ?? 100, 1, 100);
         const griefDamagePercent = griefInflictionPercent * (griefUptime / 100);
 
+        const lastSorrowPercent = getLastSorrowPercent(context);
+        const lastSorrowUptime = clamp(context.settings?.lastSorrowUptime ?? 100, 1, 100);
+        const lastSorrowDamagePercent = lastSorrowPercent * (lastSorrowUptime / 100);
+
         const applied = applyAdditiveMultipliers(previous, [
             knowledge.damageMultiplierPercent,
-            griefDamagePercent
+            griefDamagePercent,
+            lastSorrowDamagePercent
         ]);
 
         return {
@@ -58,6 +64,9 @@ export const damageMultiplierStep = {
             griefInflictionPercent,
             griefUptime,
             griefDamagePercent,
+            lastSorrowPercent,
+            lastSorrowUptime,
+            lastSorrowDamagePercent,
             multiplierPercent: applied.totalPercent,
             multiplier: applied.multiplier,
             damage: applied.damage
@@ -70,7 +79,8 @@ export const damageMultiplierStep = {
      */
     isVisible(result) {
         return (result?.elementalKnowledge ?? 0) > 0
-            || (result?.griefInflictionPercent ?? 0) > 0;
+            || (result?.griefInflictionPercent ?? 0) > 0
+            || (result?.lastSorrowPercent ?? 0) > 0;
     },
 
     /**
@@ -90,6 +100,11 @@ export const damageMultiplierStep = {
         if (result.griefInflictionPercent > 0) {
             rows.push({ label: 'Grief Infliction', value: result.griefInflictionPercent, unit: '%' });
             rows.push({ label: 'Grief Uptime', value: result.griefUptime, unit: '%' });
+        }
+
+        if (result.lastSorrowPercent > 0) {
+            rows.push({ label: 'Last Sorrow', value: result.lastSorrowPercent, unit: '%' });
+            rows.push({ label: 'Last Sorrow Uptime', value: result.lastSorrowUptime, unit: '%' });
         }
 
         rows.push({ label: 'Damage Multiplier', value: result.multiplierPercent, unit: '%' });

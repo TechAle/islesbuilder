@@ -9,6 +9,8 @@
  * @property {HTMLInputElement|null} useBurst
  * @property {HTMLInputElement|null} griefUptime
  * @property {HTMLElement|null} griefUptimeValue
+ * @property {HTMLInputElement|null} lastSorrowUptime
+ * @property {HTMLElement|null} lastSorrowUptimeValue
  * @property {(settings: DamageSettings) => void} onChange
  */
 
@@ -18,7 +20,18 @@
  */
 export class DamageSettingsRenderer {
     /** @param {DamageSettingsRendererOptions} options */
-    constructor({ button, panel, slowAttack, slowAttackValue, useBurst, griefUptime, griefUptimeValue, onChange }) {
+    constructor({
+        button,
+        panel,
+        slowAttack,
+        slowAttackValue,
+        useBurst,
+        griefUptime,
+        griefUptimeValue,
+        lastSorrowUptime,
+        lastSorrowUptimeValue,
+        onChange
+    }) {
         this.button = button;
         this.panel = panel;
         this.slowAttack = slowAttack;
@@ -26,7 +39,10 @@ export class DamageSettingsRenderer {
         this.useBurst = useBurst;
         this.griefUptime = griefUptime;
         this.griefUptimeValue = griefUptimeValue;
-        this.griefControl = /** @type {HTMLElement|null} */ (griefUptime?.closest('.grief-uptime') ?? null);
+        this.lastSorrowUptime = lastSorrowUptime;
+        this.lastSorrowUptimeValue = lastSorrowUptimeValue;
+        this.griefControl = /** @type {HTMLElement|null} */ (griefUptime?.closest('.damage-uptime') ?? null);
+        this.lastSorrowControl = /** @type {HTMLElement|null} */ (lastSorrowUptime?.closest('.damage-uptime') ?? null);
         this.onChange = onChange;
     }
 
@@ -41,8 +57,14 @@ export class DamageSettingsRenderer {
 
         this.slowAttackValue?.addEventListener('input', () => this.emit());
         this.useBurst?.addEventListener('change', () => this.emit());
+
         this.griefUptime?.addEventListener('input', () => {
-            this.updateGriefLabel();
+            this.updateUptimeLabel(this.griefUptime, this.griefUptimeValue);
+            this.emit();
+        });
+
+        this.lastSorrowUptime?.addEventListener('input', () => {
+            this.updateUptimeLabel(this.lastSorrowUptime, this.lastSorrowUptimeValue);
             this.emit();
         });
 
@@ -62,7 +84,8 @@ export class DamageSettingsRenderer {
         });
 
         this.updateSlowInput();
-        this.updateGriefLabel();
+        this.updateUptimeLabel(this.griefUptime, this.griefUptimeValue);
+        this.updateUptimeLabel(this.lastSorrowUptime, this.lastSorrowUptimeValue);
     }
 
     togglePanel() {
@@ -97,28 +120,43 @@ export class DamageSettingsRenderer {
         this.slowAttackValue.disabled = !enabled;
     }
 
-    updateGriefLabel() {
-        if (!this.griefUptimeValue) return;
+    /**
+     * @param {HTMLInputElement|null} input
+     * @param {HTMLElement|null} valueEl
+     */
+    updateUptimeLabel(input, valueEl) {
+        if (!valueEl) return;
 
-        const value = Number.parseFloat(this.griefUptime?.value ?? '100');
-        this.griefUptimeValue.textContent = `${Number.isFinite(value) ? value : 100}%`;
+        const value = Number.parseFloat(input?.value ?? '100');
+        valueEl.textContent = `${Number.isFinite(value) ? value : 100}%`;
     }
 
     /**
-     * Sposta lo slider Grief dentro la sezione Damage Multiplier.
+     * Sposta gli slider uptime dentro la sezione Damage Multiplier.
+     * @param {HTMLElement|null} container
+     * @param {{grief: boolean, lastSorrow: boolean}} visible
+     */
+    placeUptimeControls(container, visible) {
+        // Ordine finale: Grief, poi Last Sorrow.
+        this.placeUptimeControl(this.lastSorrowControl, container, visible.lastSorrow);
+        this.placeUptimeControl(this.griefControl, container, visible.grief);
+    }
+
+    /**
+     * @param {HTMLElement|null} control
      * @param {HTMLElement|null} container
      * @param {boolean} visible
      */
-    placeGriefUptime(container, visible) {
-        if (!this.griefControl) return;
+    placeUptimeControl(control, container, visible) {
+        if (!control) return;
 
         if (visible && container) {
-            if (this.griefControl.parentElement !== container) {
-                container.prepend(this.griefControl);
+            if (control.parentElement !== container) {
+                container.prepend(control);
             }
-            this.griefControl.hidden = false;
+            control.hidden = false;
         } else {
-            this.griefControl.hidden = true;
+            control.hidden = true;
         }
     }
 
@@ -127,12 +165,14 @@ export class DamageSettingsRenderer {
         const slowAttack = this.slowAttack?.checked ?? false;
         const parsed = Number.parseFloat(this.slowAttackValue?.value ?? '');
         const griefUptime = Number.parseFloat(this.griefUptime?.value ?? '100');
+        const lastSorrowUptime = Number.parseFloat(this.lastSorrowUptime?.value ?? '100');
 
         return {
             slowAttack,
             attackInterval: slowAttack && Number.isFinite(parsed) && parsed > 0 ? parsed : null,
             useBurst: this.useBurst?.checked ?? false,
-            griefUptime: Number.isFinite(griefUptime) ? griefUptime : 100
+            griefUptime: Number.isFinite(griefUptime) ? griefUptime : 100,
+            lastSorrowUptime: Number.isFinite(lastSorrowUptime) ? lastSorrowUptime : 100
         };
     }
 
