@@ -20,7 +20,7 @@ function hasMageCore(context) {
 }
 
 /**
- * Step 5 — Burst DPS.
+ * Step 6 — Burst DPS.
  *
  * Con il Mage Core equipaggiato, ogni secondo per 10 secondi infligge il 75%
  * del "Critical Damage → Average Damage". Poi ci sono 20 secondi di

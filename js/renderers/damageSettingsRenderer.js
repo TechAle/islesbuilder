@@ -7,6 +7,8 @@
  * @property {HTMLInputElement|null} slowAttack
  * @property {HTMLInputElement|null} slowAttackValue
  * @property {HTMLInputElement|null} useBurst
+ * @property {HTMLInputElement|null} griefUptime
+ * @property {HTMLElement|null} griefUptimeValue
  * @property {(settings: DamageSettings) => void} onChange
  */
 
@@ -16,12 +18,15 @@
  */
 export class DamageSettingsRenderer {
     /** @param {DamageSettingsRendererOptions} options */
-    constructor({ button, panel, slowAttack, slowAttackValue, useBurst, onChange }) {
+    constructor({ button, panel, slowAttack, slowAttackValue, useBurst, griefUptime, griefUptimeValue, onChange }) {
         this.button = button;
         this.panel = panel;
         this.slowAttack = slowAttack;
         this.slowAttackValue = slowAttackValue;
         this.useBurst = useBurst;
+        this.griefUptime = griefUptime;
+        this.griefUptimeValue = griefUptimeValue;
+        this.griefControl = /** @type {HTMLElement|null} */ (griefUptime?.closest('.grief-uptime') ?? null);
         this.onChange = onChange;
     }
 
@@ -36,6 +41,10 @@ export class DamageSettingsRenderer {
 
         this.slowAttackValue?.addEventListener('input', () => this.emit());
         this.useBurst?.addEventListener('change', () => this.emit());
+        this.griefUptime?.addEventListener('input', () => {
+            this.updateGriefLabel();
+            this.emit();
+        });
 
         // Overlay: chiude cliccando fuori o premendo Escape.
         document.addEventListener('click', event => {
@@ -53,6 +62,7 @@ export class DamageSettingsRenderer {
         });
 
         this.updateSlowInput();
+        this.updateGriefLabel();
     }
 
     togglePanel() {
@@ -87,15 +97,42 @@ export class DamageSettingsRenderer {
         this.slowAttackValue.disabled = !enabled;
     }
 
+    updateGriefLabel() {
+        if (!this.griefUptimeValue) return;
+
+        const value = Number.parseFloat(this.griefUptime?.value ?? '100');
+        this.griefUptimeValue.textContent = `${Number.isFinite(value) ? value : 100}%`;
+    }
+
+    /**
+     * Sposta lo slider Grief dentro la sezione Damage Multiplier.
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeGriefUptime(container, visible) {
+        if (!this.griefControl) return;
+
+        if (visible && container) {
+            if (this.griefControl.parentElement !== container) {
+                container.prepend(this.griefControl);
+            }
+            this.griefControl.hidden = false;
+        } else {
+            this.griefControl.hidden = true;
+        }
+    }
+
     /** @returns {DamageSettings} */
     getSettings() {
         const slowAttack = this.slowAttack?.checked ?? false;
         const parsed = Number.parseFloat(this.slowAttackValue?.value ?? '');
+        const griefUptime = Number.parseFloat(this.griefUptime?.value ?? '100');
 
         return {
             slowAttack,
             attackInterval: slowAttack && Number.isFinite(parsed) && parsed > 0 ? parsed : null,
-            useBurst: this.useBurst?.checked ?? false
+            useBurst: this.useBurst?.checked ?? false,
+            griefUptime: Number.isFinite(griefUptime) ? griefUptime : 100
         };
     }
 

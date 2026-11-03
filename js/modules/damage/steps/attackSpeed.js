@@ -4,19 +4,22 @@ import {
     BASE_MAX_ENERGY
 } from '../../../data/constants.js';
 import { computeEnergyState, getSustainLabel } from '../energy.js';
+import { getEnergyCostMultiplier } from '../energyCost.js';
 import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
+import { getWeaponClass } from '../weaponProps.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').AttackSpeedStepResult} AttackSpeedStepResult */
 
 /**
- * Step 4 — Attack Speed, DPS ed energia.
+ * Step 5 — Attack Speed, DPS ed energia.
  *
  * - Intervallo tra attacchi: 0.6s base, ridotto da `Attack Cooldown%`.
  *   Se l'opzione "Slow attack" è attiva, l'intervallo viene sovrascritto.
  * - DPS: danno medio per colpo / intervallo.
  * - Energy Regen: (10 base + flat) * (1 + percent / 100).
- * - Costo attacco: `Attack Energy` ridotto da `Attack Costs%`.
+ * - Costo attacco: `Attack Energy` ridotto da `Attack Costs%` e dal consumo
+ *   della classe arma (Melee/Ranged/Magic Energy Consumption).
  * - Max Energy: (100 base + flat) * (1 + percent / 100).
  *
  * @type {import('../../../data/types.js').DamageStep}
@@ -61,8 +64,12 @@ export const attackSpeedStep = {
         const dps = damage * attacksPerSecond;
 
         const baseAttackEnergy = findFlat(context.statsValues, 'Attack Energy');
-        const attackCostsPercent = findPercent(context.statsValues, 'Attack Costs');
-        const attackEnergyCost = Math.max(0, baseAttackEnergy * (1 + attackCostsPercent / 100));
+
+        // Attack Costs% e consumo della classe arma si sommano.
+        const weaponClass = getWeaponClass(context.weapon);
+        const attackEnergyCost = Math.max(0,
+            baseAttackEnergy * getEnergyCostMultiplier(context.statsValues, 'Attack Costs', weaponClass)
+        );
 
         const energyRegen = (BASE_ENERGY_REGEN + findFlat(context.statsValues, 'Energy Regen'))
             * (1 + findPercent(context.statsValues, 'Energy Regen') / 100);

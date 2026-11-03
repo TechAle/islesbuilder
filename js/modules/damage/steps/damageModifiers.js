@@ -1,19 +1,11 @@
 import { BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
-import { findFlat, findPercent } from '../statLookup.js';
+import { getElementalChannelingPercent } from '../../classes/mage.js';
+import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
+import { getWeaponClass } from '../weaponProps.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').DamageModifiersStepResult} DamageModifiersStepResult */
 /** @typedef {import('../../../data/types.js').EquipSlotData} EquipSlotData */
-
-/**
- * Weapon Type dell'arma (es. "magic", "melee", "ranged").
- * @param {EquipSlotData|null|undefined} weapon
- * @returns {string}
- */
-function getWeaponClass(weapon) {
-    const raw = weapon?.stats?.['Weapon Type'];
-    return typeof raw === 'string' ? raw.trim().toLowerCase() : '';
-}
 
 /**
  * Elemento dell'arma (es. "thunder", "nature", "void", "radiant").
@@ -38,10 +30,13 @@ function capitalize(value) {
 /**
  * Step 2 — Damage Modifiers.
  *
- * Il danno è il prodotto di due fattori moltiplicativi:
- *   1) `1 + (damageType% + weaponClass%)`  — danni dell'elemento principale
- *   2) `1 + elementalDamage% * (EP / 100)`  — danni elementali scalati dall'EP
+ * Il danno è:
+ *   1) `base × (1 + damageType%)` per il tipo danno
+ *   2) `× (1 + elementalDamage% × EP / 100)` per l'elemento
+ *   3) `+ flatDamage × mastery% / 100` per Melee/Ranged/Magic Mastery
  *
+ * Il mastery usa il danno flat dell'arma (prima del Default Attack) e viene
+ * aggiunto come valore piatto, non dentro i bracket moltiplicativi.
  * L'Elemental Power totale è `(BASE + flat) * (1 + percent / 100)` e scala
  * la percentuale del danno elementale del nostro elemento.
  *
@@ -63,6 +58,8 @@ export const damageModifiersStep = {
             return {
                 baseDamage: 0,
                 percent: 0,
+                masteryPercent: 0,
+                masteryBonus: 0,
                 elementalPower: BASE_ELEMENTAL_POWER,
                 elementalDamagePercent: 0,
                 effectiveElementalPercent: 0,
@@ -94,28 +91,39 @@ export const damageModifiersStep = {
         addModifier(`${damageType} Damage`, `${damageType} Damage`);
         if (weaponClass) addModifier(`${capitalize(weaponClass)} Damage`, `${capitalize(weaponClass)} Damage`);
 
-        const typePercent = modifiers.reduce((sum, modifier) => sum + modifier.percent, 0);
+        const typePercent = findPercent(context.statsValues, `${damageType} Damage`);
+        const masteryPercent = weaponClass
+            ? findPercent(context.statsValues, `${capitalize(weaponClass)} Damage`)
+            : 0;
 
-        // Danno elementale del nostro elemento (es. Nature Damage per nature).
+        // Elemental channeling (Mage) aggiunge il suo valore a qualsiasi elemento.
+        const elementalChanneling = getElementalChannelingPercent(context);
         const elementalDamagePercent = element
-            ? findPercent(context.statsValues, `${capitalize(element)} Damage`)
+            ? findPercent(context.statsValues, `${capitalize(element)} Damage`) + elementalChanneling
             : 0;
 
         // Elemental Power totale: (base + flat) * (1 + percent/100).
         const elementalPowerFlat = findFlat(context.statsValues, 'Elemental Power');
-        const elementalPowerPercent = findPercent(context.statsValues, 'Elemental Power');
-        const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat) * (1 + elementalPowerPercent / 100);
+        const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat)
+            * findPercentMultiplier(context.statsValues, 'Elemental Power');
 
         // Scaling: percent * (EP / 100).
         const effectiveElementalPercent = elementalDamagePercent * (elementalPower / 100);
 
+        // Il mastery (Melee/Ranged/Magic) aggiunge una percentuale del danno
+        // flat dell'arma (prima del Default Attack) come valore piatto.
+        const masteryBonus = (base.damageStat ?? 0) * (masteryPercent / 100);
+
         const damage = Math.max(0,
             baseDamage * (1 + typePercent / 100) * (1 + effectiveElementalPercent / 100)
+            + masteryBonus
         );
 
         return {
             baseDamage,
             percent: typePercent,
+            masteryPercent,
+            masteryBonus,
             elementalPower,
             elementalDamagePercent,
             effectiveElementalPercent,
@@ -139,6 +147,10 @@ export const damageModifiersStep = {
         const hasElementalDamage = result.elementalDamagePercent !== 0;
         if (hasElementalDamage) {
             rows.push({ label: 'Elemental Power', value: result.elementalPower });
+        }
+
+        if (result.masteryPercent !== 0) {
+            rows.push({ label: 'Mastery Damage', value: result.masteryBonus });
         }
 
         rows.push({ label: 'Damage', value: result.damage });

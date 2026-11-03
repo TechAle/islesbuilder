@@ -24,11 +24,12 @@ export class DpsManager {
      * @param {DamageContext['statsValues']} options.statsValues
      * @param {DamageContext['skillValues']} options.skillValues
      * @param {DamageContext['build']} options.build
+     * @param {DamageContext['skillTrees']} [options.skillTrees]
      * @param {DamageContext['settings']} [options.settings]
      * @returns {DamageContext['results']}
      */
-    recalculate({ statsValues, skillValues, build, settings }) {
-        const context = createDamageContext({ statsValues, skillValues, build, settings });
+    recalculate({ statsValues, skillValues, build, skillTrees, settings }) {
+        const context = createDamageContext({ statsValues, skillValues, build, skillTrees, settings });
         this.steps = runDamagePipeline(context);
         this.results = this.buildResults();
         return this.steps;

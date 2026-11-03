@@ -164,12 +164,28 @@
  * Risultato dello step "Damage Modifiers".
  * @typedef {Object} DamageModifiersStepResult
  * @property {number} baseDamage - Base Damage di partenza
- * @property {number} percent - Somma dei modificatori percentuali (tipo + classe)
+ * @property {number} percent - Modificatore percentuale del tipo di danno
+ * @property {number} masteryPercent - Modificatore del mastery della classe arma
+ * @property {number} masteryBonus - Danno piatto aggiunto dal mastery (flatDamage × mastery%)
  * @property {number} damage - Danno finale
  * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
  * @property {number} elementalPower - Elemental Power totale
  * @property {number} elementalDamagePercent - Percentuale elementale base
  * @property {number} effectiveElementalPercent - Percentuale elementale scalata dall'EP
+ */
+
+/**
+ * Risultato dello step "Damage Multiplier".
+ * @typedef {Object} DamageMultiplierStepResult
+ * @property {number} baseDamage - Danno prima del moltiplicatore
+ * @property {number} elementalKnowledge - Valore del nodo Elemental Knowledge
+ * @property {number} elementalKnowledgeDamagePercent - Aumento dato da Elemental Knowledge
+ * @property {number} griefInflictionPercent - Valore del nodo Grief Infliction
+ * @property {number} griefUptime - Uptime del Grief (1-100)
+ * @property {number} griefDamagePercent - Aumento effettivo del Grief
+ * @property {number} multiplierPercent - Aumento percentuale totale
+ * @property {number} multiplier - Moltiplicatore applicato
+ * @property {number} damage - Danno dopo il moltiplicatore
  */
 
 /**
@@ -208,6 +224,7 @@
  * @property {boolean} slowAttack - Se true, usa attackInterval al posto del calcolo
  * @property {number|null} attackInterval - Intervallo attacco manuale in secondi
  * @property {boolean} useBurst - Se true, aggiunge il burst ogni 30s
+ * @property {number} griefUptime - Uptime di Grief Infliction (1-100)
  */
 
 /**
@@ -230,11 +247,20 @@
  */
 
 /**
+ * Risultato degli effetti di Elemental Knowledge.
+ * @typedef {Object} ElementalKnowledgeEffect
+ * @property {number} elementalKnowledgePercent
+ * @property {number} damageMultiplierPercent
+ * @property {number} damageMultiplier
+ */
+
+/**
  * Contesto condiviso dagli step di calcolo del danno.
  * @typedef {Object} DamageContext
  * @property {Record<string, StatTotals>} statsValues
  * @property {Record<ClassKey, Record<string, number>>} skillValues
  * @property {BuildState} build
+ * @property {Record<ClassKey, SkillTreeClass>} [skillTrees]
  * @property {EquipSlotData|null} weapon
  * @property {DamageSettings} settings
  * @property {Record<string, any>} results - Risultati accumulati dagli step

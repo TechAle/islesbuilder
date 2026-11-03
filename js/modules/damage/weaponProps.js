@@ -16,6 +16,16 @@ export function getWeaponDamageType(weapon) {
 }
 
 /**
+ * Weapon Type dell'arma (es. "magic", "melee", "ranged").
+ * @param {EquipSlotData|null|undefined} weapon
+ * @returns {string}
+ */
+export function getWeaponClass(weapon) {
+    const raw = weapon?.stats?.['Weapon Type'];
+    return typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+}
+
+/**
  * Default Attack dell'arma, espresso in percentuale (85 => 85%).
  * @param {EquipSlotData|null|undefined} weapon
  * @returns {number}

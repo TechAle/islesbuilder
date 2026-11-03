@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /** @type {import('./data/types.js').DamageSettings} */
-    let damageSettings = { slowAttack: false, attackInterval: null, useBurst: false };
+    let damageSettings = { slowAttack: false, attackInterval: null, useBurst: false, griefUptime: 100 };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
         button: /** @type {HTMLButtonElement|null} */ (document.getElementById('btn-damage-settings')),
@@ -97,6 +97,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         slowAttack: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-slow-attack')),
         slowAttackValue: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-slow-attack-value')),
         useBurst: /** @type {HTMLInputElement|null} */ (document.getElementById('setting-use-burst')),
+        griefUptime: /** @type {HTMLInputElement|null} */ (document.getElementById('grief-uptime')),
+        griefUptimeValue: document.getElementById('grief-uptime-value'),
         onChange: settings => {
             damageSettings = settings;
             renderCombat();
@@ -137,8 +139,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderCombat = () => {
         const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
         statsRenderer.render(withBaseStats(statsValues));
-        dpsManager.recalculate({ statsValues, skillValues, build: equippedStore.state, settings: damageSettings });
+        dpsManager.recalculate({
+            statsValues,
+            skillValues,
+            build: equippedStore.state,
+            skillTrees: dataStore.data.skillTrees,
+            settings: damageSettings
+        });
         damageRenderer.render(dpsManager.getStepGroups(), dpsManager.getDps());
+
+        const griefPercent = dpsManager.getSteps().damageMultiplier?.griefInflictionPercent ?? 0;
+        damageSettingsRenderer.placeGriefUptime(
+            damageRenderer.getStepContent('damageMultiplier'),
+            griefPercent > 0
+        );
     };
 
     const renderAll = () => {

@@ -297,7 +297,7 @@ export const CLASS_SKILL_TREES = {
                 name: "Elemental Burst",
                 statKey: "{level} Elemental Burst",
                 isDirect: false,
-                description: "Gain {val} Crit Damage for every unique Elemental Defense active.",
+                description: "Gain {val} Crit Damage for every unique Elemental Damage.",
                 parameters: { val: { base: 1.5, increase: 1.5 } }
             },
             'UR1': {
@@ -579,7 +579,7 @@ export const CLASS_SKILL_TREES = {
             'DR': {
                 x: 58, y: 68, max: 5, costBase: 2,
                 name: "Elemental channeling",
-                statKey: "{level} Elemental channeling",
+                statKey: "{val}% Elemental channeling",
                 isDirect: false,
                 description: "Gain {val} Elemental Damage of every type",
                 parameters: { val: { base: 2.5, increase: 2.5 } }
@@ -587,9 +587,9 @@ export const CLASS_SKILL_TREES = {
             'DR1': {
                 x: 57, y: 84, max: 5, costBase: 1,
                 name: "Elemental Knowledge",
-                statKey: "{level} Elemental Knowledge",
+                statKey: "{val}% Elemental Knowledge",
                 isDirect: false,
-                description: "Gain {val}% damage for every unique elemental defense.",
+                description: "Gain {val}% damage for every unique elemental damage.",
                 parameters: { val: { base: 1.0, increase: 1.0 } }
             },
             'DR2': {

@@ -5,7 +5,7 @@ import { findPercent } from '../statLookup.js';
 /** @typedef {import('../../../data/types.js').CriticalDamageStepResult} CriticalDamageStepResult */
 
 /**
- * Step 3 — Critical Damage.
+ * Step 4 — Critical Damage.
  *
  * - Crit Damage totale = 50% base + `Crit Damage%` dalle statistiche.
  * - Colpo critico = danno × (1 + critDamage / 100).
@@ -26,7 +26,7 @@ export const criticalDamageStep = {
      * @returns {CriticalDamageStepResult}
      */
     run(context) {
-        const previous = context.results.damageModifiers;
+        const previous = context.results.damageMultiplier ?? context.results.damageModifiers;
         const baseDamage = previous?.damage ?? 0;
 
         if (baseDamage <= 0) {

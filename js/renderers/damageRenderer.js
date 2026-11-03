@@ -22,6 +22,9 @@ export class DamageRenderer {
     constructor({ root, dpsValue = null }) {
         this.root = root;
         this.dpsValue = dpsValue;
+        /** @type {Map<string, HTMLElement>} */
+        this.stepContents = new Map();
+        this.signature = '';
     }
 
     /**
@@ -36,7 +39,18 @@ export class DamageRenderer {
             this.dpsValue.textContent = dps === null ? '—' : formatNumber(dps);
         }
 
+        const signature = buildSignature(groups);
+
+        // Se la struttura non è cambiata, aggiorna solo i valori.
+        // Questo evita di staccare lo slider Grief durante il drag.
+        if (signature === this.signature && this.stepContents.size > 0) {
+            this.updateValues(groups);
+            return;
+        }
+
+        this.signature = signature;
         root.innerHTML = '';
+        this.stepContents.clear();
 
         if (groups.every(group => group.results.length === 0)) {
             const empty = document.createElement('div');
@@ -82,8 +96,46 @@ export class DamageRenderer {
             step.appendChild(toggle);
             step.appendChild(content);
             root.appendChild(step);
+            this.stepContents.set(group.id, content);
         });
     }
+
+    /**
+     * Contenuto renderizzato di uno step.
+     * @param {string} id
+     * @returns {HTMLElement|null}
+     */
+    getStepContent(id) {
+        return this.stepContents.get(id) ?? null;
+    }
+
+    /**
+     * Aggiorna solo i valori delle righe, senza ricreare il DOM.
+     * @param {DamageStepGroup[]} groups
+     */
+    updateValues(groups) {
+        groups.forEach(group => {
+            const content = this.stepContents.get(group.id);
+            if (!content) return;
+
+            const valueEls = content.querySelectorAll('.stat-row .stat-val');
+            group.results.forEach((result, index) => {
+                const el = valueEls[index];
+                if (el) el.textContent = formatResult(result);
+            });
+        });
+    }
+}
+
+/**
+ * Firma della struttura: cambia solo se cambiano step o etichette.
+ * @param {DamageStepGroup[]} groups
+ * @returns {string}
+ */
+function buildSignature(groups) {
+    return groups
+        .map(group => `${group.id}:${group.results.map(result => result.label).join('|')}`)
+        .join('||');
 }
 
 /**

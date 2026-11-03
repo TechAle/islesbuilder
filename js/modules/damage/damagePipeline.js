@@ -1,5 +1,6 @@
 import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
+import { damageMultiplierStep } from './steps/damageMultiplier.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
 import { burstStep } from './steps/burst.js';
@@ -19,6 +20,7 @@ import { burstStep } from './steps/burst.js';
 export const DAMAGE_STEPS = [
     baseDamageStep,
     damageModifiersStep,
+    damageMultiplierStep,
     criticalDamageStep,
     attackSpeedStep,
     burstStep
@@ -30,16 +32,18 @@ export const DAMAGE_STEPS = [
  * @param {Record<string, StatTotals>} options.statsValues
  * @param {Record<ClassKey, Record<string, number>>} options.skillValues
  * @param {BuildState} options.build
+ * @param {Record<ClassKey, import('../../data/types.js').SkillTreeClass>} [options.skillTrees]
  * @param {import('../../data/types.js').DamageSettings} [options.settings]
  * @returns {DamageContext}
  */
-export function createDamageContext({ statsValues, skillValues, build, settings }) {
+export function createDamageContext({ statsValues, skillValues, build, skillTrees, settings }) {
     return {
         statsValues,
         skillValues,
         build,
+        skillTrees: skillTrees ?? /** @type {Record<ClassKey, import('../../data/types.js').SkillTreeClass>} */ ({}),
         weapon: build.activeEquip.weapon ?? null,
-        settings: settings ?? { slowAttack: false, attackInterval: null, useBurst: false },
+        settings: settings ?? { slowAttack: false, attackInterval: null, useBurst: false, griefUptime: 100 },
         results: {}
     };
 }
