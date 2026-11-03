@@ -3,12 +3,13 @@ import { dataStore } from '../store/dataStore.js';
 import { CLASS_KEYS } from '../store/constants.js';
 
 /** @typedef {import('../store/constants.js').ClassKey} ClassKey */
+/** @typedef {import('../store/constants.js').StatTotals} StatTotals */
 
 export class StatsManager {
     constructor() {
         /** @type {HTMLElement|null} */
         this.container = document.getElementById('detailed-stats-container');
-        /** @type {Record<string, number>} */
+        /** @type {Record<string, StatTotals>} */
         this.statsValues = {}
         /** @type {Record<ClassKey, Record<string, number>>} */
         this.skillValues = this.createSkillValues();
@@ -25,6 +26,23 @@ export class StatsManager {
             values[classKey] = {};
         });
         return values;
+    }
+
+    /**
+     * Aggiunge un contributo a una statistica, separando flat e percentuale.
+     * @param {string} stat
+     * @param {number} value
+     * @param {boolean} percent
+     */
+    addStat(stat, value, percent) {
+        if (!Number.isFinite(value) || value === 0) return;
+
+        const statKey = stat.replace(/%$/, '').trim();
+        if (!statKey) return;
+
+        const totals = this.statsValues[statKey] || (this.statsValues[statKey] = { flat: 0, percent: 0 });
+        if (percent) totals.percent += value;
+        else totals.flat += value;
     }
 
     /** Ricalcola i valori aggregati di tutte le statistiche. */
@@ -53,8 +71,7 @@ export class StatsManager {
                     }
                 }
                 if (!isNaN(numericVal)) {
-                    const statKey = (isPercent && !stat.endsWith('%')) ? stat + "%" : stat;
-                    this.statsValues[statKey] = (this.statsValues[statKey] || 0) + numericVal;
+                    this.addStat(stat, numericVal, isPercent || stat.endsWith('%'));
                 }
             });
         });
@@ -62,9 +79,7 @@ export class StatsManager {
         elixirs.forEach(el => {
             if (el.val > 0) {
                 const bonus = el.val * el.perLevel;
-                const statKey = el.percent ? el.stat + "%" : el.stat;
-
-                this.statsValues[statKey] = (this.statsValues[statKey] || 0) + bonus;
+                this.addStat(el.stat, bonus, el.percent);
             }
         });
 
@@ -101,15 +116,14 @@ export class StatsManager {
                     const isPercent = numberMatch[0].includes('%');
                     const isNegative = rawStat.startsWith('-');
 
-                    let finalStatKey = rawStat.slice(numberMatch[0].length).trim();
-                    if (isPercent && !finalStatKey.endsWith('%')) finalStatKey += '%';
+                    const finalStatKey = rawStat.slice(numberMatch[0].length).trim();
 
 // Salvataggio del valore calcolato
                     if (!isNaN(numericVal) && numericVal !== 0 && finalStatKey) {
                         const value = isNegative ? -Math.abs(numericVal) : numericVal;
 
                         if (isDirect)
-                            this.statsValues[finalStatKey] = (this.statsValues[finalStatKey] || 0) + value;
+                            this.addStat(finalStatKey, value, isPercent);
                         else
                             this.skillValues[classCheck][finalStatKey] = value;
                     }
@@ -131,20 +145,24 @@ export class StatsManager {
             return;
         }
 
-        Object.entries(this.statsValues).forEach(([stat, val]) => {
+        Object.entries(this.statsValues).forEach(([stat, totals]) => {
+            const parts = [];
+            if (totals.flat !== 0) {
+                parts.push(`${totals.flat > 0 ? '+' : ''}${totals.flat.toFixed(2)}`);
+            }
+            if (totals.percent !== 0) {
+                parts.push(`${totals.percent > 0 ? '+' : ''}${totals.percent.toFixed(2)}%`);
+            }
+            if (parts.length === 0) return;
+
             const row = document.createElement('div');
             row.className = 'stat-row';
-
-            // Controlliamo direttamente se la chiave termina con '%' o include parole chiave
-            const isPercent = stat.endsWith('%') || stat.toLowerCase().includes('crit') || stat.toLowerCase().includes('chance');
-            let displayVal = isPercent ? `${val.toFixed(2)}%` : `${val.toFixed(2)}`;
-            if (val > 0) displayVal = '+' + displayVal
-
-            row.innerHTML = `<span class="stat-label">${stat}:</span><span class="stat-val">${displayVal}</span>`;
+            row.innerHTML = `<span class="stat-label">${stat}:</span><span class="stat-val">${parts.join(' / ')}</span>`;
             container.appendChild(row);
         });
     }
 }
 
 export const statsMgr = new StatsManager();
-/** @type {any} */ (window).statsMgr = statsMgr;
+/** @type {any} */
+window.statsMgr = statsMgr;

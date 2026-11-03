@@ -117,10 +117,12 @@ export class ApiManager {
         if (targetCategory === "weapon") {
             if (gear.attackEnergy !== undefined) statsObj["Attack Energy"] = gear.attackEnergy;
             if (gear.defaultAttack !== undefined) statsObj["Default Attack"] = gear.defaultAttack;
-            if (gear.normalAttack !== undefined && gear.normalAttack !== null) {
+            if (typeof gear.normalAttack === 'object' && gear.normalAttack !== null) {
                 if (gear.normalAttack.max !== undefined) {
                     statsObj["Normal Attack"] = gear.normalAttack.max;
                 }
+            } else if (gear.normalAttack !== undefined) {
+                statsObj["Normal Attack"] = gear.normalAttack;
             }
             if (gear.damageType !== undefined) statsObj["Damage Type"] = gear.damageType;
             if (gear.slot !== undefined) {

@@ -75,7 +75,62 @@ export class SkillManager {
     }
 
     /**
-     * Gestisce l'incremento/decremento di livello di un nodo
+     * Calcola il costo totale investito in un nodo a un dato livello.
+     * Il costo del livello L è `costBase * L`, quindi il totale è
+     * `costBase * L * (L + 1) / 2`.
+     * @param {string} nodeId
+     * @param {number} level
+     * @returns {number}
+     */
+    getInvestedCost(nodeId, level) {
+        const node = this.getActiveNodes()[nodeId];
+        if (!node || level <= 0) return 0;
+        return node.costBase * level * (level + 1) / 2;
+    }
+
+    /**
+     * Trova i nodi con livello maggiore di zero non più raggiungibili dal
+     * nodo centrale passando solo per nodi attivi. Questi nodi sono orfani e
+     * vanno rifondati integralmente.
+     * @param {Map<string, number>} levels
+     * @returns {string[]}
+     */
+    findOrphanedNodes(levels) {
+        const nodes = this.getActiveNodes();
+        const centerId = Object.keys(nodes).find(id => nodes[id].center);
+        /** @type {Set<string>} */
+        const reachable = new Set();
+
+        if (centerId && (levels.get(centerId) || 0) > 0) {
+            /** @type {Map<string, string[]>} */
+            const childrenByParent = new Map();
+            this.getActiveEdges().forEach(([parent, child]) => {
+                const children = childrenByParent.get(parent) || [];
+                children.push(child);
+                childrenByParent.set(parent, children);
+            });
+
+            /** @type {string[]} */
+            const queue = [centerId];
+            reachable.add(centerId);
+
+            while (queue.length > 0) {
+                const current = /** @type {string} */ (queue.shift());
+                (childrenByParent.get(current) || []).forEach(child => {
+                    if (reachable.has(child) || (levels.get(child) || 0) <= 0) return;
+                    reachable.add(child);
+                    queue.push(child);
+                });
+            }
+        }
+
+        return Object.keys(nodes).filter(id => (levels.get(id) || 0) > 0 && !reachable.has(id));
+    }
+
+    /**
+     * Gestisce l'incremento/decremento di livello di un nodo.
+     * Con Shift il livello viene decrementato e, se il nodo si azzera, i
+     * discendenti rimasti orfani vengono rifondati a cascata.
      * @param {string} id
      * @param {MouseEvent} event
      */
@@ -87,11 +142,24 @@ export class SkillManager {
 
         if (event.shiftKey) {
             if (curLvl === 0) return;
-            const refund = curLvl * node.costBase;
-            equippedStore.applySkillChange(
+
+            const newLevels = new Map(currentLevels);
+            newLevels.set(id, curLvl - 1);
+
+            // Rifondo il livello appena rimosso dal nodo cliccato.
+            let refund = curLvl * node.costBase;
+
+            // I discendenti non più raggiungibili dal centro vengono azzerati
+            // e rifondati per l'intero investimento.
+            this.findOrphanedNodes(newLevels).forEach(orphanId => {
+                const orphanLevel = newLevels.get(orphanId) || 0;
+                refund += this.getInvestedCost(orphanId, orphanLevel);
+                newLevels.set(orphanId, 0);
+            });
+
+            equippedStore.applySkillLevels(
                 className,
-                id,
-                curLvl - 1,
+                newLevels,
                 equippedStore.state.sharedPoints + refund
             );
             return;
@@ -101,10 +169,12 @@ export class SkillManager {
         const cost = (curLvl + 1) * node.costBase;
         if (equippedStore.state.sharedPoints < cost) return;
 
-        equippedStore.applySkillChange(
+        const newLevels = new Map(currentLevels);
+        newLevels.set(id, curLvl + 1);
+
+        equippedStore.applySkillLevels(
             className,
-            id,
-            curLvl + 1,
+            newLevels,
             equippedStore.state.sharedPoints - cost
         );
     }

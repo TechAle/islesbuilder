@@ -13,6 +13,13 @@
  */
 
 /**
+ * Somma dei contributi flat e percentuali di una statistica.
+ * @typedef {Object} StatTotals
+ * @property {number} flat - Somma dei contributi espressi in valore assoluto
+ * @property {number} percent - Somma dei contributi espressi in percentuale
+ */
+
+/**
  * @typedef {Object} Augment
  * @property {string} name
  * @property {ItemStats} [stats]

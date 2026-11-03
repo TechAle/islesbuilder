@@ -149,21 +149,21 @@ export class BuildStore {
     }
 
     /**
-     * Aggiorna atomicamente livello di un nodo abilità e punti condivisi.
+     * Sostituisce atomicamente l'intero albero dei livelli di una classe
+     * e aggiorna i punti condivisi.
      * @param {ClassKey} className
-     * @param {string} nodeId
-     * @param {number} level
+     * @param {Map<string, number>} levels
      * @param {number} sharedPoints
      */
-    applySkillChange(className, nodeId, level, sharedPoints) {
+    applySkillLevels(className, levels, sharedPoints) {
         this.update(state => {
-            const levels = state.treeLevels[className];
-            if (!levels) return;
-            levels.set(nodeId, level);
+            if (!state.treeLevels[className]) return;
+            state.treeLevels[className] = new Map(levels);
             state.sharedPoints = sharedPoints;
         });
     }
 }
 
 export const equippedStore = new BuildStore();
-/** @type {any} */ (window).equippedStore = equippedStore;
+/** @type {any} */
+window.equippedStore = equippedStore;
