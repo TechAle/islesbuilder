@@ -1,65 +1,64 @@
-import { equippedStore } from '../store/equippedStore.js';
-import { dataStore } from "../store/dataStore.js";
 import {
     AUGMENT_SLOTS_PER_ITEM,
-    EQUIP_SLOTS,
     RING_ITEM_CATEGORY,
     RING_SLOTS,
     getItemCategoryForSlot
-} from '../store/constants.js';
+} from '../data/constants.js';
 
-/** @typedef {import('../store/constants.js').EquipSlot} EquipSlot */
+/** @typedef {import('../data/types.js').EquipSlot} EquipSlot */
+/** @typedef {import('../data/types.js').ItemStats} ItemStats */
 
+/**
+ * Logica degli oggetti: risoluzione preset, normalizzazione statistiche e
+ * aggiornamento dello store. Non tocca il DOM.
+ */
 export class ItemManager {
-    constructor() {
-        /** @type {EquipSlot|null} Slot attualmente in fase di modifica nel modale */
-        this.editingSlot = null;
-        this.initDatalists();
-        this.bindEvents();
+    /**
+     * @param {Object} options
+     * @param {import('../store/dataStore.js').DataStore} options.dataStore
+     * @param {import('../store/equippedStore.js').BuildStore} options.equippedStore
+     */
+    constructor({ dataStore, equippedStore }) {
+        this.dataStore = dataStore;
+        this.equippedStore = equippedStore;
     }
 
-    /** Inizializza le datalist HTML per i suggerimenti degli oggetti */
-    initDatalists() {
-        const uniqueStats = new Set();
+    /**
+     * Restituisce i nomi degli oggetti disponibili, raggruppati per slot.
+     * @returns {Record<string, string[]>}
+     */
+    getItemNamesBySlot() {
+        /** @type {Record<string, string[]>} */
+        const namesBySlot = {};
 
-        Object.keys(dataStore.data.items).forEach(itemCategory => {
-            const slotList = itemCategory === RING_ITEM_CATEGORY ? RING_SLOTS : [itemCategory];
+        Object.keys(this.dataStore.data.items).forEach(itemCategory => {
+            const slots = itemCategory === RING_ITEM_CATEGORY ? RING_SLOTS : [itemCategory];
+            const names = (this.dataStore.data.items[itemCategory] || []).map(item => item.name);
 
-            slotList.forEach(slot => {
-                const datalist = document.getElementById(`list-${slot}`);
-                if (!datalist) return;
-                datalist.innerHTML = '';
-
-                const itemCategoryForSlot = getItemCategoryForSlot(slot);
-
-                if (dataStore.data.items[itemCategoryForSlot]) {
-                    dataStore.data.items[itemCategoryForSlot].forEach(item => {
-                        // Popola il datalist dell'oggetto
-                        const opt = document.createElement('option');
-                        opt.value = item.name;
-                        datalist.appendChild(opt);
-
-                        // Raccoglie tutte le statistiche uniche da item.stats
-                        if (item.stats) {
-                            Object.keys(item.stats).forEach(statKey => {
-                                uniqueStats.add(statKey);
-                            });
-                        }
-                    });
-                }
+            slots.forEach(slot => {
+                namesBySlot[slot] = names;
             });
         });
 
-        // Popola dinamicamente il datalist dei suggerimenti per le statistiche (stat-suggestions)
-        const statDatalist = document.getElementById('stat-suggestions');
-        if (statDatalist) {
-            statDatalist.innerHTML = '';
-            uniqueStats.forEach(statName => {
-                const opt = document.createElement('option');
-                opt.value = statName;
-                statDatalist.appendChild(opt);
+        return namesBySlot;
+    }
+
+    /**
+     * Restituisce tutte le statistiche presenti nel catalogo, per i suggerimenti.
+     * @returns {string[]}
+     */
+    getStatSuggestions() {
+        const uniqueStats = new Set();
+
+        Object.values(this.dataStore.data.items).forEach(items => {
+            items.forEach(item => {
+                Object.keys(item.stats || {}).forEach(statKey => {
+                    uniqueStats.add(statKey);
+                });
             });
-        }
+        });
+
+        return Array.from(uniqueStats);
     }
 
     /**
@@ -71,7 +70,7 @@ export class ItemManager {
         const trimmed = value.trim();
 
         if (!trimmed) {
-            equippedStore.setEquipSlot(slot, {
+            this.equippedStore.setEquipSlot(slot, {
                 name: '',
                 stats: {},
                 augments: Array(AUGMENT_SLOTS_PER_ITEM).fill('')
@@ -79,20 +78,31 @@ export class ItemManager {
             return;
         }
 
-        const storeSlot = getItemCategoryForSlot(slot);
-        const preset = dataStore.data.items[storeSlot]?.find(i => i.name.toLowerCase() === trimmed.toLowerCase());
+        const preset = this.findPreset(slot, trimmed);
         if (preset) {
-            equippedStore.setEquipSlot(slot, {
+            this.equippedStore.setEquipSlot(slot, {
                 name: preset.name,
                 stats: { ...preset.stats }
             });
         } else {
             // Nome personalizzato: non possiamo mantenere le statistiche del vecchio oggetto
-            equippedStore.setEquipSlot(slot, {
+            this.equippedStore.setEquipSlot(slot, {
                 name: trimmed,
                 stats: {}
             });
         }
+    }
+
+    /**
+     * Cerca un preset per nome nella categoria corretta.
+     * @param {EquipSlot} slot
+     * @param {string} name
+     * @returns {import('../data/types.js').ItemPreset|null}
+     */
+    findPreset(slot, name) {
+        const category = getItemCategoryForSlot(slot);
+        const items = this.dataStore.data.items[category] || [];
+        return items.find(item => item.name.toLowerCase() === name.toLowerCase()) || null;
     }
 
     /**
@@ -102,143 +112,44 @@ export class ItemManager {
      * @param {string} value
      */
     handleAugmentInput(slot, index, value) {
-        equippedStore.setAugment(slot, index, value.trim());
+        this.equippedStore.setAugment(slot, index, value.trim());
     }
 
     /**
-     * Apre la finestra modale per inserire statistiche personalizzate.
+     * Salva un oggetto personalizzato, normalizzando le righe provenienti dal modale.
      * @param {EquipSlot} slot
+     * @param {string} name
+     * @param {Array<{name: string, value: string}>} rows
      */
-    openModal(slot) {
-        this.editingSlot = slot;
-        const current = equippedStore.state.activeEquip[slot];
-
-        const titleEl = document.getElementById('modal-slot-title');
-        const nameEl = /** @type {HTMLInputElement} */ (document.getElementById('modal-item-name'));
-
-        if (titleEl) titleEl.textContent = `Modifica Slot: ${slot.toUpperCase()}`;
-        if (nameEl) nameEl.value = current.name || '';
-
-        const container = document.getElementById('modal-stat-list');
-        if (!container) return;
-        container.innerHTML = '';
-
-        Object.entries(current.stats).forEach(([name, val]) => this.addModalStatRow(name, val));
-        if (Object.keys(current.stats).length === 0) this.addModalStatRow('', '');
-
-        document.getElementById('modal-editor')?.classList.add('active');
-    }
-
-    /** Chiude la finestra modale delle statistiche personalizzate. */
-    closeModal() {
-        document.getElementById('modal-editor')?.classList.remove('active');
-        this.editingSlot = null;
+    saveCustomItem(slot, name, rows) {
+        this.equippedStore.setEquipSlot(slot, {
+            name: name.trim(),
+            stats: this.normalizeStats(rows)
+        });
     }
 
     /**
-     * Aggiunge una riga di attributo alla finestra modale.
-     * @param {string} [statName='']
-     * @param {number|string} [statVal='']
+     * Converte le righe del modale in statistiche numeriche o percentuali.
+     * @param {Array<{name: string, value: string}>} rows
+     * @returns {ItemStats}
      */
-    addModalStatRow(statName = '', statVal = '') {
-        const container = document.getElementById('modal-stat-list');
-        if (!container) return;
+    normalizeStats(rows) {
+        /** @type {ItemStats} */
+        const stats = {};
 
-        const row = document.createElement('div');
-        row.className = 'stat-edit-row';
-        row.innerHTML = `
-      <input type="text" class="stat-name-input" list="stat-suggestions" placeholder="Statistica" value="${statName}">
-      <input type="text" class="stat-val-input" placeholder="Valore (es. 10 o 35%)" value="${statVal}">
-      <button class="btn-delete" type="button">🗑️</button>
-    `;
+        rows.forEach(({ name, value }) => {
+            const statName = name.trim();
+            const rawVal = value.trim();
 
-        row.querySelector('.btn-delete')?.addEventListener('click', () => row.remove());
-        container.appendChild(row);
-    }
+            if (!statName || rawVal === '') return;
 
-    /** Salva le statistiche inserite nel modale nello store. */
-    saveModalChanges() {
-        if (!this.editingSlot) return;
-
-        const nameEl = /** @type {HTMLInputElement} */ (document.getElementById('modal-item-name'));
-        const name = nameEl.value.trim();
-        const rows = document.querySelectorAll('#modal-stat-list .stat-edit-row');
-
-        /** @type {import('../store/constants.js').ItemStats} */
-        const newStats = {};
-
-        rows.forEach(row => {
-            const nameInput = /** @type {HTMLInputElement} */ (row.querySelector('.stat-name-input'));
-            const valInput = /** @type {HTMLInputElement} */ (row.querySelector('.stat-val-input'));
-
-            const sName = nameInput.value.trim();
-            const rawVal = valInput.value.trim();
-
-            if (sName && rawVal !== '') {
-                if (rawVal.includes('%') || isNaN(Number(rawVal.replace(',', '.')))) {
-                    newStats[sName] = rawVal;
-                } else {
-                    newStats[sName] = Number(rawVal.replace(',', '.'));
-                }
+            if (rawVal.includes('%') || isNaN(Number(rawVal.replace(',', '.')))) {
+                stats[statName] = rawVal;
+            } else {
+                stats[statName] = Number(rawVal.replace(',', '.'));
             }
         });
 
-        equippedStore.setEquipSlot(this.editingSlot, {
-            name: name,
-            stats: newStats
-        });
-
-        this.closeModal();
-    }
-
-    /** Sincronizza i valori degli input con lo stato corrente dello Store */
-    updateInputsFromStore() {
-        EQUIP_SLOTS.forEach(slot => {
-            const item = equippedStore.state.activeEquip[slot];
-            const input = /** @type {HTMLInputElement} */ (document.querySelector(`input[data-slot="${slot}"]`));
-            if (input) input.value = item.name || '';
-
-            if (item.augments) {
-                item.augments.forEach((augVal, idx) => {
-                    const augInput = /** @type {HTMLInputElement} */ (document.querySelector(`input[data-augment-slot="${slot}"][data-aug-index="${idx}"]`));
-                    if (augInput) augInput.value = augVal || '';
-                });
-            }
-        });
-    }
-
-    /** Collega gli eventi DOM del pannello oggetti e del modale. */
-    bindEvents() {
-        // Catturiamo l'istanza di ItemManager in una costante sicura
-        const self = this;
-
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const target = /** @type {HTMLElement} */ (e.currentTarget);
-                const slot = /** @type {EquipSlot|undefined} */ (target.dataset.slot);
-                if (slot) self.openModal(slot); // Usiamo self anziché this
-            });
-        });
-
-        document.querySelectorAll('.item-input').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const target = /** @type {HTMLInputElement} */ (e.target);
-                const slot = /** @type {EquipSlot|undefined} */ (target.dataset.slot);
-                if (slot) self.handleItemInput(slot, target.value);
-            });
-        });
-
-        document.querySelectorAll('.augment-input').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const target = /** @type {HTMLInputElement} */ (e.target);
-                const slot = /** @type {EquipSlot|undefined} */ (target.dataset.augmentSlot);
-                const index = parseInt(target.dataset.augIndex || '0', 10);
-                if (slot) self.handleAugmentInput(slot, index, target.value);
-            });
-        });
-
-        document.getElementById('btn-add-stat')?.addEventListener('click', () => self.addModalStatRow());
-        document.getElementById('btn-save-modal')?.addEventListener('click', () => self.saveModalChanges());
-        document.querySelectorAll('.btn-close-modal').forEach(btn => btn.addEventListener('click', () => self.closeModal()));
+        return stats;
     }
 }

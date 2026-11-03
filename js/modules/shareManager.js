@@ -1,136 +1,164 @@
-import { equippedStore } from '../store/equippedStore.js';
-import { dataStore } from '../store/dataStore.js';
-import { CLASS_KEYS, getItemCategoryForSlot } from '../store/constants.js';
+import { CLASS_KEYS, getItemCategoryForSlot } from '../data/constants.js';
 
-/** @typedef {import('../store/constants.js').ClassKey} ClassKey */
-/** @typedef {import('../store/constants.js').EquipSlotData} EquipSlotData */
+/** @typedef {import('../data/types.js').BuildState} BuildState */
+/** @typedef {import('../data/types.js').ClassKey} ClassKey */
+/** @typedef {import('../data/types.js').EquipSlotData} EquipSlotData */
+/** @typedef {import('../data/types.js').EquipSlot} EquipSlot */
+/** @typedef {import('../data/types.js').SerializedState} SerializedState */
 
 /**
- * @typedef {Object} SerializedState
- * @property {Record<string, EquipSlotData>} equip
- * @property {Array<{id: string, val: number}>} elixirs
- * @property {Record<ClassKey, Array<[string, number]>>} treeLevels
- * @property {ClassKey} currentClass
- * @property {number} sharedPoints
+ * Codec della build per la condivisione via URL.
+ * Non tocca il DOM: clipboard, prompt e alert restano nel renderer.
  */
-
 export class ShareManager {
-    constructor() {
-        this.bindEvents();
+    /**
+     * @param {Object} options
+     * @param {import('../store/dataStore.js').DataStore} options.dataStore
+     * @param {import('../store/equippedStore.js').BuildStore} options.equippedStore
+     * @param {Location} options.location
+     */
+    constructor({ dataStore, equippedStore, location }) {
+        this.dataStore = dataStore;
+        this.equippedStore = equippedStore;
+        this.location = location;
     }
 
-    /** Collega gli eventi di condivisione della build. */
-    bindEvents() {
-        document.getElementById('btn-share-build')?.addEventListener('click', () => this.generateShareLink());
-        document.getElementById('btn-paste-build')?.addEventListener('click', () => this.pasteBuildLink());
-    }
-
-    /** Genera un link condivisibile con lo stato corrente e lo copia negli appunti. */
-    generateShareLink() {
+    /**
+     * Serializza lo stato corrente della build.
+     * @returns {SerializedState}
+     */
+    serialize() {
         /** @type {Record<ClassKey, Array<[string, number]>>} */
         const treeLevels = /** @type {Record<ClassKey, Array<[string, number]>>} */ ({});
+
         CLASS_KEYS.forEach(classKey => {
-            treeLevels[classKey] = Array.from(equippedStore.state.treeLevels[classKey].entries());
+            treeLevels[classKey] = Array.from(this.equippedStore.state.treeLevels[classKey].entries());
         });
 
-        /** @type {SerializedState} */
-        const state = {
-            equip: equippedStore.state.activeEquip,
-            elixirs: equippedStore.state.elixirs.map(e => ({ id: e.id, val: e.val })),
+        return {
+            equip: this.equippedStore.state.activeEquip,
+            elixirs: this.equippedStore.state.elixirs.map(elixir => ({
+                id: elixir.id,
+                val: elixir.val
+            })),
             treeLevels,
-            currentClass: equippedStore.state.currentClass,
-            sharedPoints: equippedStore.state.sharedPoints
+            currentClass: this.equippedStore.state.currentClass,
+            sharedPoints: this.equippedStore.state.sharedPoints
         };
+    }
 
-        const jsonString = JSON.stringify(state);
+    /**
+     * Crea l'URL condivisibile con lo stato corrente.
+     * @returns {string}
+     */
+    createShareUrl() {
+        const jsonString = JSON.stringify(this.serialize());
         const encoded = btoa(encodeURIComponent(jsonString));
-        const url = `${window.location.origin}${window.location.pathname}#${encoded}`;
-
-        navigator.clipboard.writeText(url).then(() => {
-            alert('Link di condivisione copiato negli appunti!');
-        });
+        return `${this.location.origin}${this.location.pathname}#${encoded}`;
     }
 
-    /** Chiede un link/codice all'utente e prova a caricarlo. */
-    async pasteBuildLink() {
-        let inputVal = prompt("Incolla qui il link della build oppure direttamente il codice hash (valore):");
-        if (!inputVal) return;
+    /**
+     * Estrae il codice hash da un URL o da un input diretto.
+     * @param {string} input
+     * @returns {string|null}
+     */
+    extractHash(input) {
+        const trimmed = input.trim();
+        if (!trimmed) return null;
 
-        inputVal = inputVal.trim();
-        let hashVal = inputVal.includes('#') ? inputVal.split('#')[1] : inputVal;
-
-        if (!hashVal) {
-            alert("Codice o link non valido.");
-            return;
-        }
-
-        window.location.hash = hashVal;
-        this.loadStateFromUrl();
+        const hash = trimmed.includes('#') ? trimmed.split('#')[1] : trimmed;
+        return hash || null;
     }
 
-    /** Carica la build codificata nell'hash dell'URL, se presente. */
-    loadStateFromUrl() {
-        if (!window.location.hash) return;
+    /**
+     * Decodifica e applica una build dall'hash.
+     * @param {string} hash
+     * @returns {boolean} True se il caricamento è riuscito
+     */
+    loadFromHash(hash) {
+        const cleanHash = hash.startsWith('#') ? hash.slice(1) : hash;
+        if (!cleanHash) return false;
+
         try {
-            const hash = window.location.hash.substring(1);
-            const jsonString = decodeURIComponent(atob(hash));
+            const jsonString = decodeURIComponent(atob(cleanHash));
             /** @type {SerializedState} */
             const state = JSON.parse(jsonString);
 
-            /** @type {Partial<import('../store/constants.js').BuildState>} */
+            /** @type {Partial<BuildState>} */
             const newState = {};
 
             if (state.equip) {
-                const reconstructedEquip = structuredClone(state.equip);
+                // Mantiene tutti gli slot esistenti e sovrascrive solo quelli
+                // presenti nel link: un link parziale non deve corrompere lo stato.
+                const reconstructedEquip = structuredClone(this.equippedStore.state.activeEquip);
 
-                Object.keys(reconstructedEquip).forEach(slot => {
-                    const item = reconstructedEquip[slot];
-                    if (!item || !item.name) return;
+                Object.entries(state.equip).forEach(([slot, savedItem]) => {
+                    const equipSlot = /** @type {EquipSlot} */ (slot);
+                    const currentSlot = reconstructedEquip[equipSlot];
+                    if (!currentSlot || !savedItem || typeof savedItem !== 'object') return;
 
-                    // Cerca l'oggetto corrispondente nel database globale
-                    // (ring1 e ring2 usano la categoria "ring")
-                    const dataCategory = getItemCategoryForSlot(slot);
-                    const dbItems = dataStore.data.items[dataCategory] || [];
-                    const matchedPreset = dbItems.find(i => i.name.toLowerCase() === item.name.toLowerCase());
+                    const item = {
+                        ...currentSlot,
+                        ...savedItem,
+                        stats: { ...(savedItem.stats || {}) },
+                        augments: Array.isArray(savedItem.augments)
+                            ? savedItem.augments
+                            : currentSlot.augments
+                    };
 
-                    if (matchedPreset) {
-                        // Unisce le statistiche: se l'oggetto salvato non ha una stat che il preset ha, la aggiunge
-                        item.stats = {
-                            ...matchedPreset.stats,
-                            ...item.stats // Le stats salvate mantengono la precedenza se l'utente le aveva personalizzate
-                        };
+                    if (item.name) {
+                        // Cerca l'oggetto corrispondente nel database globale
+                        // (ring1 e ring2 usano la categoria "ring")
+                        const dataCategory = getItemCategoryForSlot(equipSlot);
+                        const dbItems = this.dataStore.data.items[dataCategory] || [];
+                        const matchedPreset = dbItems.find(
+                            preset => preset.name.toLowerCase() === item.name.toLowerCase()
+                        );
+
+                        if (matchedPreset) {
+                            // Le stats salvate mantengono la precedenza se personalizzate
+                            item.stats = {
+                                ...matchedPreset.stats,
+                                ...item.stats
+                            };
+                        }
                     }
+
+                    reconstructedEquip[equipSlot] = item;
                 });
 
                 newState.activeEquip = reconstructedEquip;
             }
 
             if (state.elixirs) {
-                newState.elixirs = equippedStore.state.elixirs.map(e => {
-                    const match = state.elixirs.find(s => s.id === e.id);
-                    return match ? { ...e, val: match.val } : e;
+                newState.elixirs = this.equippedStore.state.elixirs.map(elixir => {
+                    const match = state.elixirs.find(saved => saved.id === elixir.id);
+                    return match ? { ...elixir, val: match.val } : elixir;
                 });
             }
 
             if (state.treeLevels) {
                 /** @type {Record<ClassKey, Map<string, number>>} */
                 const treeLevels = /** @type {Record<ClassKey, Map<string, number>>} */ ({});
+
                 CLASS_KEYS.forEach(classKey => {
                     const savedLevels = state.treeLevels[classKey];
                     treeLevels[classKey] = savedLevels
                         ? new Map(savedLevels)
-                        : equippedStore.state.treeLevels[classKey];
+                        : this.equippedStore.state.treeLevels[classKey];
                 });
+
                 newState.treeLevels = treeLevels;
             }
 
             if (state.currentClass) newState.currentClass = state.currentClass;
             if (typeof state.sharedPoints === 'number') newState.sharedPoints = state.sharedPoints;
 
-            equippedStore.setState(newState);
-        } catch (e) {
-            console.error('Errore nel caricamento dello stato:', e);
-            alert('Impossibile decodificare la build incollata. Assicurati che il codice o l\'URL sia corretto.');
+            this.equippedStore.setState(newState, 'all');
+            return true;
+        } catch (error) {
+            console.error('Errore nel caricamento dello stato:', error);
+            return false;
         }
     }
 }

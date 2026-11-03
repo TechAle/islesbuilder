@@ -1,21 +1,18 @@
+import { ObservableStore } from './observableStore.js';
 import {
     AUGMENT_SLOTS_PER_ITEM,
     CLASS_KEYS,
     DEFAULT_CLASS,
     DEFAULT_SHARED_POINTS,
     EQUIP_SLOTS
-} from './constants.js';
-import { dataStore } from "./dataStore.js";
+} from '../data/constants.js';
 
-/** @typedef {import('./constants.js').BuildState} BuildState */
-/** @typedef {import('./constants.js').ClassKey} ClassKey */
-/** @typedef {import('./constants.js').EquipSlot} EquipSlot */
-/** @typedef {import('./constants.js').EquipSlotData} EquipSlotData */
-
-/**
- * @callback StoreSubscriber
- * @param {BuildState} state
- */
+/** @typedef {import('../data/types.js').BuildState} BuildState */
+/** @typedef {import('../data/types.js').ClassKey} ClassKey */
+/** @typedef {import('../data/types.js').Elixir} Elixir */
+/** @typedef {import('../data/types.js').EquipSlot} EquipSlot */
+/** @typedef {import('../data/types.js').EquipSlotData} EquipSlotData */
+/** @typedef {import('../data/types.js').SkillTreeClass} SkillTreeClass */
 
 /**
  * Crea un nuovo slot equipaggiamento vuoto.
@@ -29,10 +26,22 @@ function createEmptyEquipSlot() {
     };
 }
 
-export class BuildStore {
-    constructor() {
-        /** @type {Set<StoreSubscriber>} */
-        this.listeners = new Set();
+/**
+ * Store dello stato della build (equip, elisir, talenti, punti).
+ * Emette eventi distinti: `equip`, `elixirs`, `skills`, `class`, `all`.
+ */
+export class BuildStore extends ObservableStore {
+    /**
+     * @param {Object} options
+     * @param {Record<ClassKey, SkillTreeClass>} options.skillTrees
+     * @param {Elixir[]} options.elixirsConfig
+     */
+    constructor({ skillTrees, elixirsConfig }) {
+        super();
+        /** @type {Record<ClassKey, SkillTreeClass>} */
+        this.skillTrees = skillTrees;
+        /** @type {Elixir[]} */
+        this.initialElixirs = elixirsConfig;
         this.resetState();
     }
 
@@ -48,53 +57,38 @@ export class BuildStore {
         const treeLevels = /** @type {Record<ClassKey, Map<string, number>>} */ ({});
         CLASS_KEYS.forEach(classKey => {
             treeLevels[classKey] = new Map(
-                Object.keys(dataStore.data.skillTrees[classKey].nodes).map(id => [id, 0])
+                Object.keys(this.skillTrees[classKey].nodes).map(id => [id, 0])
             );
         });
 
         /** @type {BuildState} */
         this.state = {
             sharedPoints: DEFAULT_SHARED_POINTS,
-            // Used for the active skill tree
             currentClass: DEFAULT_CLASS,
             activeEquip,
-            elixirs: structuredClone(dataStore.data.elixirsConfig),
+            elixirs: structuredClone(this.initialElixirs),
             treeLevels
         };
     }
 
     /**
-     * Registra una funzione callback per ricevere notifiche di aggiornamento dello stato
-     * @param {StoreSubscriber} callback
-     * @returns {() => boolean} Funzione per rimuovere la sottoscrizione
-     */
-    subscribe(callback) {
-        this.listeners.add(callback);
-        return () => this.listeners.delete(callback);
-    }
-
-    /** Notifica tutti i subscriber con lo stato corrente. */
-    notify() {
-        this.listeners.forEach(callback => callback(this.state));
-    }
-
-    /**
-     * Aggiorna parzialmente lo stato e notifica i moduli sottoscritti
-     * @param {Partial<BuildState>} newState
-     */
-    setState(newState) {
-        Object.assign(this.state, newState);
-        this.notify();
-    }
-
-    /**
-     * Applica una mutazione atomica allo stato e notifica una sola volta.
-     * Da preferire alle modifiche dirette di `equippedStore.state`.
+     * Applica una mutazione atomica allo stato e notifica l'evento indicato.
      * @param {(state: BuildState) => void} mutator
+     * @param {string} event
      */
-    update(mutator) {
+    update(mutator, event) {
         mutator(this.state);
-        this.notify();
+        this.notify(event);
+    }
+
+    /**
+     * Sostituisce parzialmente lo stato e notifica un evento.
+     * @param {Partial<BuildState>} newState
+     * @param {string} [event='all']
+     */
+    setState(newState, event = 'all') {
+        Object.assign(this.state, newState);
+        this.notify(event);
     }
 
     /**
@@ -107,7 +101,7 @@ export class BuildStore {
             const slotData = state.activeEquip[slot];
             if (!slotData) return;
             Object.assign(slotData, patch);
-        });
+        }, 'equip');
     }
 
     /**
@@ -121,7 +115,7 @@ export class BuildStore {
             const augments = state.activeEquip[slot]?.augments;
             if (!augments || index < 0 || index >= augments.length) return;
             augments[index] = value;
-        });
+        }, 'equip');
     }
 
     /**
@@ -134,7 +128,37 @@ export class BuildStore {
             const elixir = state.elixirs[index];
             if (!elixir) return;
             elixir.val = value;
-        });
+        }, 'elixirs');
+    }
+
+    /**
+     * Imposta il livello di tutti gli elisir con una sola notifica.
+     * @param {number} value
+     */
+    setAllElixirValues(value) {
+        this.update(state => {
+            state.elixirs.forEach(elixir => {
+                elixir.val = value;
+            });
+        }, 'elixirs');
+    }
+
+    /**
+     * Sincronizza le definizioni degli elisir dal catalogo, preservando i
+     * livelli già scelti dall'utente per id.
+     * @param {Elixir[]} config
+     */
+    syncElixirs(config) {
+        this.update(state => {
+            const selectedById = new Map(state.elixirs.map(elixir => [elixir.id, elixir]));
+            state.elixirs = config.map(elixir => {
+                const selected = selectedById.get(elixir.id);
+                return {
+                    ...structuredClone(elixir),
+                    val: selected ? selected.val : elixir.val
+                };
+            });
+        }, 'elixirs');
     }
 
     /**
@@ -145,7 +169,7 @@ export class BuildStore {
         if (!CLASS_KEYS.includes(className)) return;
         this.update(state => {
             state.currentClass = className;
-        });
+        }, 'class');
     }
 
     /**
@@ -160,10 +184,6 @@ export class BuildStore {
             if (!state.treeLevels[className]) return;
             state.treeLevels[className] = new Map(levels);
             state.sharedPoints = sharedPoints;
-        });
+        }, 'skills');
     }
 }
-
-export const equippedStore = new BuildStore();
-/** @type {any} */
-window.equippedStore = equippedStore;

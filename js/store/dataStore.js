@@ -1,51 +1,26 @@
-import { AUGMENT_DATABASE, ITEM_DATABASE, INITIAL_ELIXIRS, CLASS_SKILL_TREES } from './constants.js';
+import { ObservableStore } from './observableStore.js';
 
-/** @typedef {import('./constants.js').DomainData} DomainData */
+/** @typedef {import('../data/types.js').DomainData} DomainData */
 
 /**
- * @callback DataStoreSubscriber
- * @param {DomainData} data
+ * Store del catalogo globale (oggetti, augment, elisir, alberi skill).
+ * Il contenuto iniziale viene passato dal composition root.
  */
-
-class DataStore {
-    constructor() {
-        /** @type {Set<DataStoreSubscriber>} */
-        this.listeners = new Set();
-
-        // Dati globali di riferimento (modificabili via API)
+export class DataStore extends ObservableStore {
+    /** @param {DomainData} initialData */
+    constructor(initialData) {
+        super();
         /** @type {DomainData} */
-        this.data = {
-            items: ITEM_DATABASE,
-            augments: AUGMENT_DATABASE,
-            elixirsConfig: INITIAL_ELIXIRS,
-            skillTrees: CLASS_SKILL_TREES
-        };
+        this.data = /** @type {DomainData} */ (structuredClone(initialData));
     }
 
     /**
-     * Registra una callback di aggiornamento dei dati globali.
-     * @param {DataStoreSubscriber} callback
-     * @returns {() => boolean} Funzione per rimuovere la sottoscrizione
-     */
-    subscribe(callback) {
-        this.listeners.add(callback);
-        return () => this.listeners.delete(callback);
-    }
-
-    /** Notifica tutti i subscriber con i dati correnti. */
-    notify() {
-        this.listeners.forEach(callback => callback(this.data));
-    }
-
-    /**
-     * Aggiorna i dati globali (es. chiamato dall'ApiManager) e avvisa tutti i subscriber.
+     * Aggiorna parzialmente il catalogo e notifica il tipo di dato cambiato.
      * @param {Partial<DomainData>} newDomainData
+     * @param {string} event
      */
-    updateData(newDomainData) {
+    updateData(newDomainData, event) {
         Object.assign(this.data, newDomainData);
-        this.notify();
+        this.notify(event);
     }
 }
-
-export const dataStore = new DataStore();
-/** @type {any} */ (window).dataStore = dataStore;

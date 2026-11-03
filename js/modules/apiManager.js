@@ -4,15 +4,13 @@ import {
     API_ELIXIRS_ENDPOINT,
     API_MAX_ATTEMPTS,
     API_REQUEST_TIMEOUT_MS,
-    MAX_ELIXIR_LEVEL,
+    DEFAULT_ELIXIR_LEVEL,
     ELEMENT_CHAR_TO_NAME,
     SLOT_TO_ITEM_CATEGORY,
     WEAPON_SLOT_TO_WEAPON_TYPE
-} from "../store/constants.js";
-import { dataStore } from "../store/dataStore.js";
-import { equippedStore } from "../store/equippedStore.js";
+} from "../data/constants.js";
 
-/** @typedef {import('../store/constants.js').ItemStats} ItemStats */
+/** @typedef {import('../data/types.js').ItemStats} ItemStats */
 
 /**
  * @typedef {Object} ApiGearStat
@@ -54,10 +52,15 @@ import { equippedStore } from "../store/equippedStore.js";
  * @property {ApiElixirLevel[]} [perLevel]
  */
 
+/**
+ * Adapter API: scarica e normalizza il catalogo, poi aggiorna il DataStore.
+ */
 export class ApiManager {
-    constructor() {
+    /** @param {{dataStore: import('../store/dataStore.js').DataStore}} options */
+    constructor({ dataStore }) {
         /** @type {string} */
         this.url = API_URL;
+        this.dataStore = dataStore;
     }
 
     /** Aggiorna in parallelo oggetti ed elisir dall'API. */
@@ -94,7 +97,7 @@ export class ApiManager {
     }
 
     /**
-     * Funzione di appoggio per estrarre e formattare tutte le statistiche e proprietà dell'item.
+     * Estrae e formatta tutte le statistiche e proprietà dell'item.
      * @param {ApiGear} gear
      * @param {string} targetCategory
      * @param {ApiTooltip|null|undefined} toolTip
@@ -176,7 +179,7 @@ export class ApiManager {
             const allFetchedItems = results.flat();
 
             // 2. Cloniamo la struttura attuale con structuredClone
-            const itemsCopy = structuredClone(dataStore.data.items);
+            const itemsCopy = structuredClone(this.dataStore.data.items);
 
             // 3. Svuotiamo preventivamente solo le categorie coinvolte
             const targetCategories = new Set(Object.values(SLOT_TO_ITEM_CATEGORY));
@@ -195,8 +198,7 @@ export class ApiManager {
                 const targetCategory = SLOT_TO_ITEM_CATEGORY[normalizedSlot];
 
                 if (!targetCategory) {
-                    //console.log(normalizedSlot)
-                    return
+                    return;
                 }
 
                 const name = item.name || item.gear?.name;
@@ -216,9 +218,7 @@ export class ApiManager {
             });
 
             // 5. Aggiornamento dello store e notifica automatica
-            dataStore.updateData({
-                items: itemsCopy
-            });
+            this.dataStore.updateData({ items: itemsCopy }, 'items');
 
             console.log("Oggetti, armi, abilità e statistiche sincronizzati con successo!");
 
@@ -247,20 +247,13 @@ export class ApiManager {
                     id: elixir.id || name,
                     name: name,
                     stat: stat,
-                    val: MAX_ELIXIR_LEVEL,
-                    perLevel: perLevelValue, // Rimane un numero (es. 5)
-                    percent: isPercent       // True se è percentuale, false se è un valore piatto
+                    val: DEFAULT_ELIXIR_LEVEL,
+                    perLevel: perLevelValue,
+                    percent: isPercent
                 };
             });
 
-            // Aggiorniamo entrambi gli store
-            dataStore.updateData({
-                elixirsConfig: mappedElixirs
-            });
-
-            equippedStore.setState({
-                elixirs: structuredClone(mappedElixirs)
-            });
+            this.dataStore.updateData({ elixirsConfig: mappedElixirs }, 'elixirs');
 
             console.log("Elisir sincronizzati con distinzione percentuale!");
 
