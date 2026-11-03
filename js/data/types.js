@@ -149,4 +149,43 @@
  * @property {string} [unit] - Unità opzionale (es. "%", "DPS")
  */
 
+/**
+ * Risultato dello step "Base Damage".
+ * @typedef {Object} BaseDamageStepResult
+ * @property {string|null} damageType - Damage Type dell'arma (es. "Arcane")
+ * @property {string|null} statName - Statistica usata (es. "Arcane Damage")
+ * @property {number} damageStat - Valore flat della statistica (le % sono applicate dopo)
+ * @property {number} defaultAttackPercent - Default Attack dell'arma in percentuale
+ * @property {number} baseDamage - Danno base calcolato
+ * @property {string} [missing] - Dato mancante che ha impedito il calcolo
+ */
+
+/**
+ * Risultato dello step "Damage Modifiers".
+ * @typedef {Object} DamageModifiersStepResult
+ * @property {number} baseDamage - Base Damage di partenza
+ * @property {number} percent - Somma dei modificatori percentuali
+ * @property {number} damage - Danno dopo i modificatori
+ * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
+ */
+
+/**
+ * Contesto condiviso dagli step di calcolo del danno.
+ * @typedef {Object} DamageContext
+ * @property {Record<string, StatTotals>} statsValues
+ * @property {Record<ClassKey, Record<string, number>>} skillValues
+ * @property {BuildState} build
+ * @property {EquipSlotData|null} weapon
+ * @property {Record<string, any>} results - Risultati accumulati dagli step
+ */
+
+/**
+ * Singolo step della pipeline di danno.
+ * @typedef {Object} DamageStep
+ * @property {string} id - Identificativo univoco dello step
+ * @property {string} label - Nome leggibile
+ * @property {(context: DamageContext) => Record<string, any>} run - Calcolo puro
+ * @property {(result: any) => DamageResult[]} [toResults] - Converte il risultato in righe visualizzabili
+ */
+
 export {};

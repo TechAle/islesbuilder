@@ -15,6 +15,7 @@ import { ItemModalRenderer } from './renderers/itemModalRenderer.js';
 import { ShareRenderer } from './renderers/shareRenderer.js';
 import { SkillTreeRenderer } from './renderers/skillTreeRenderer.js';
 import { StatsRenderer } from './renderers/statsRenderer.js';
+import { DamageRenderer } from './renderers/damageRenderer.js';
 
 import { ITEM_DATABASE } from './data/items.js';
 import { AUGMENT_DATABASE } from './data/augments.js';
@@ -29,11 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         elixirsConfig: INITIAL_ELIXIRS,
         skillTrees: CLASS_SKILL_TREES
     });
+    window.dataStore = dataStore;
 
     const equippedStore = new BuildStore({
         skillTrees: dataStore.data.skillTrees,
         elixirsConfig: dataStore.data.elixirsConfig
     });
+    window.equippedStore = equippedStore;
 
     // --- Logica / servizi ----------------------------------------------
     const itemManager = new ItemManager({ dataStore, equippedStore });
@@ -78,6 +81,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         root: document.getElementById('detailed-stats-container')
     });
 
+    const damageRenderer = new DamageRenderer({
+        root: document.getElementById('damage-steps-container'),
+        dpsValue: document.getElementById('damage-dps')
+    });
+
     const shareRenderer = new ShareRenderer({
         root: document,
         onShare: () => shareRenderer.copyLink(shareManager.createShareUrl()),
@@ -103,17 +111,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     shareRenderer.mount();
 
     // --- Render helpers ------------------------------------------------
-    const renderStats = () => {
-        const { statsValues } = selectStats(dataStore.data, equippedStore.state);
+    // Le statistiche sono la base del calcolo danni: vengono calcolate una
+    // volta sola e passate sia allo stats renderer sia a DpsManager.
+    const renderCombat = () => {
+        const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
         statsRenderer.render(statsValues);
+        dpsManager.recalculate({ statsValues, skillValues, build: equippedStore.state });
+        damageRenderer.render(dpsManager.getResults());
     };
 
     const renderAll = () => {
         equipRenderer.render(equippedStore.state);
         elixirRenderer.render(equippedStore.state.elixirs);
         skillTreeRenderer.render(skillTreeManager.getViewState());
-        renderStats();
-        dpsManager.recalculate();
+        renderCombat();
     };
 
     // --- Wiring store -> renderer -------------------------------------
@@ -128,20 +139,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     equippedStore.subscribe('equip', () => {
         equipRenderer.render(equippedStore.state);
-        renderStats();
-        dpsManager.recalculate();
+        renderCombat();
     });
 
     equippedStore.subscribe('elixirs', () => {
         elixirRenderer.render(equippedStore.state.elixirs);
-        renderStats();
-        dpsManager.recalculate();
+        renderCombat();
     });
 
     equippedStore.subscribe(['skills', 'class'], () => {
         skillTreeRenderer.render(skillTreeManager.getViewState());
-        renderStats();
-        dpsManager.recalculate();
+        renderCombat();
     });
 
     // `all` è un evento wildcard: viene notificato anche per gli altri eventi.
