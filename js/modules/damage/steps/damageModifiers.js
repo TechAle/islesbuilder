@@ -1,6 +1,7 @@
 import { BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
-import { getElementalChannelingPercent } from '../../classes/mage.js';
-import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
+import { getCrystalInsightsElementalPowerPercent, getElementalChannelingPercent } from '../../classes/mage.js';
+import { getAttackInterval } from '../attackTiming.js';
+import { findFlat, findPercent } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -61,6 +62,7 @@ export const damageModifiersStep = {
                 masteryPercent: 0,
                 masteryBonus: 0,
                 elementalPower: BASE_ELEMENTAL_POWER,
+                crystalInsightsPercent: 0,
                 elementalDamagePercent: 0,
                 effectiveElementalPercent: 0,
                 damage: 0,
@@ -103,9 +105,20 @@ export const damageModifiersStep = {
             : 0;
 
         // Elemental Power totale: (base + flat) * (1 + percent/100).
+        // Crystal Insights aggiunge una stima media di EP%.
+        const critChancePercent = findPercent(context.statsValues, 'Crit Chance');
+        const attackInterval = getAttackInterval(context);
+        const crystalInsightsPercent = getCrystalInsightsElementalPowerPercent(
+            context,
+            critChancePercent,
+            attackInterval
+        );
+
         const elementalPowerFlat = findFlat(context.statsValues, 'Elemental Power');
+        const elementalPowerPercent = findPercent(context.statsValues, 'Elemental Power')
+            + crystalInsightsPercent;
         const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat)
-            * findPercentMultiplier(context.statsValues, 'Elemental Power');
+            * (1 + elementalPowerPercent / 100);
 
         // Scaling: percent * (EP / 100).
         const effectiveElementalPercent = elementalDamagePercent * (elementalPower / 100);
@@ -125,6 +138,7 @@ export const damageModifiersStep = {
             masteryPercent,
             masteryBonus,
             elementalPower,
+            crystalInsightsPercent,
             elementalDamagePercent,
             effectiveElementalPercent,
             damage,
@@ -146,6 +160,9 @@ export const damageModifiersStep = {
 
         const hasElementalDamage = result.elementalDamagePercent !== 0;
         if (hasElementalDamage) {
+            if (result.crystalInsightsPercent > 0) {
+                rows.push({ label: 'Crystal Insights EP', value: result.crystalInsightsPercent, unit: '%' });
+            }
             rows.push({ label: 'Elemental Power', value: result.elementalPower });
         }
 

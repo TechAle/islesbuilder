@@ -170,6 +170,7 @@
  * @property {number} damage - Danno finale
  * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
  * @property {number} elementalPower - Elemental Power totale
+ * @property {number} crystalInsightsPercent - EP% medio stimato da Crystal Insights
  * @property {number} elementalDamagePercent - Percentuale elementale base
  * @property {number} effectiveElementalPercent - Percentuale elementale scalata dall'EP
  */

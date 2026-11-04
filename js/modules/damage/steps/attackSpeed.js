@@ -5,6 +5,7 @@ import {
 } from '../../../data/constants.js';
 import { computeEnergyState, getSustainLabel } from '../energy.js';
 import { getEnergyCostMultiplier } from '../energyCost.js';
+import { getAttackInterval } from '../attackTiming.js';
 import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -53,12 +54,7 @@ export const attackSpeedStep = {
             };
         }
 
-        const cooldownPercent = findPercent(context.statsValues, 'Attack Cooldown');
-        const computedInterval = BASE_ATTACK_TIME * (1 + cooldownPercent / 100);
-
-        const override = context.settings?.slowAttack ? context.settings.attackInterval : null;
-        const validOverride = typeof override === 'number' && Number.isFinite(override) && override > 0;
-        const attackInterval = Math.max(0.05, validOverride ? override : computedInterval);
+        const attackInterval = getAttackInterval(context);
 
         const attacksPerSecond = 1 / attackInterval;
         const dps = damage * attacksPerSecond;
