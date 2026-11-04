@@ -70,6 +70,7 @@ export class DpsManager {
 
     /** @returns {number|null} */
     getDps() {
+        if (this.steps.supportOrbs?.enabled) return this.steps.supportOrbs.totalDps;
         if (this.steps.crystalCombustion?.enabled) return this.steps.crystalCombustion.totalDps;
         if (this.steps.burst?.enabled) return this.steps.burst.totalDps;
         return this.steps.attackSpeed?.dps ?? null;

@@ -3,7 +3,8 @@ import {
     getCrystalInsightsElementalPowerPercent,
     getElementalChannelingPercent,
     getElementalSynergyEffects,
-    getNaturalDistillationEffects
+    getNaturalDistillationEffects,
+    getSupportOrbEffects
 } from '../../classes/mage.js';
 import { getAttackInterval } from '../attackTiming.js';
 import { getEnergyRegen } from '../energy.js';
@@ -75,6 +76,9 @@ export const damageModifiersStep = {
                 elementalSynergyFlat: 0,
                 elementalDamagePercent: 0,
                 effectiveElementalPercent: 0,
+                blueOrbs: 0,
+                blueDamageMultiplier: 1,
+                blueDamagePercent: 0,
                 damage: 0,
                 modifiers: []
             };
@@ -149,9 +153,14 @@ export const damageModifiersStep = {
         // flat dell'arma (prima del Default Attack) come valore piatto.
         const masteryBonus = (base.damageStat ?? 0) * (masteryPercent / 100);
 
+        // Le BLUE orb aumentano il danno subito dal nemico.
+        const supportOrbs = getSupportOrbEffects(context);
+        const blueDamageMultiplier = supportOrbs.blueDamageMultiplier;
+
         const damage = Math.max(0,
-            baseDamage * (1 + typePercent / 100) * (1 + effectiveElementalPercent / 100)
-            + masteryBonus
+            (baseDamage * (1 + typePercent / 100) * (1 + effectiveElementalPercent / 100)
+                + masteryBonus)
+            * blueDamageMultiplier
         );
 
         return {
@@ -167,6 +176,9 @@ export const damageModifiersStep = {
             elementalSynergyFlat: elementalSynergy.elementalPowerFlat,
             elementalDamagePercent,
             effectiveElementalPercent,
+            blueOrbs: supportOrbs.activeBlueOrbs,
+            blueDamageMultiplier,
+            blueDamagePercent: (blueDamageMultiplier - 1) * 100,
             damage,
             modifiers
         };
@@ -194,6 +206,9 @@ export const damageModifiersStep = {
             }
             if (result.elementalSynergyFlat > 0) {
                 rows.push({ label: 'Elemental Synergy EP', value: result.elementalSynergyFlat });
+            }
+            if (result.blueDamagePercent > 0) {
+                rows.push({ label: 'Blue Orb Bonus', value: result.blueDamagePercent, unit: '%' });
             }
             rows.push({ label: 'Elemental Power', value: result.elementalPower });
         }

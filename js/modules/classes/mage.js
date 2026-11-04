@@ -6,7 +6,7 @@ import { getHitStats } from '../damage/hitStats.js';
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string, recoverCrystal: string, powerCrystal: string, crystalCombustion: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string, recoverCrystal: string, powerCrystal: string, crystalCombustion: string, supportOrbs: string}}
  */
 const MAGE_NODES = {
     elementalChanneling: 'DR',
@@ -21,7 +21,8 @@ const MAGE_NODES = {
     potentialCharge: 'UR1',
     recoverCrystal: 'R1',
     powerCrystal: 'R1a',
-    crystalCombustion: 'R1b'
+    crystalCombustion: 'R1b',
+    supportOrbs: 'R2'
 };
 
 /**
@@ -35,6 +36,12 @@ const CRYSTAL_INSIGHTS_DURATION = 8;
  * @type {number}
  */
 const CRYSTAL_DROP_COOLDOWN = 0.5;
+
+/**
+ * Probabilità che un Support Orb spawnato sia RED.
+ * @type {number}
+ */
+const SUPPORT_ORB_RED_CHANCE = 1 / 3;
 
 /**
  * Ogni 1% di Elemental Knowledge aumenta il danno finale del 9%.
@@ -261,8 +268,8 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
 
     const critRate = Math.min(100, Math.max(0, critChancePercent)) / 100;
     const baseHitsPerSecond = (1 / attackInterval) + getBurstHitsPerSecond(context);
-    const explosionsPerSecond = getCrystalExplosionsPerSecond(context, baseHitsPerSecond);
-    const critsPerSecond = (baseHitsPerSecond + explosionsPerSecond) * critRate;
+    const combatHits = getCombatHitModel(context, baseHitsPerSecond);
+    const critsPerSecond = combatHits.totalHitsPerSecond * critRate;
     const shardsPerSecond = critsPerSecond * (insights.chancePercent / 100);
     const averageActiveShards = shardsPerSecond * CRYSTAL_INSIGHTS_DURATION;
 
@@ -363,35 +370,81 @@ export function getPotentialChargeEffects(context, kills) {
  * }}
  */
 export function getCrystalCombustionEffects(context) {
-    const recoverChancePercent = getMageNodeParameter(context, MAGE_NODES.recoverCrystal, 'a');
-    const powerChancePercent = getMageNodeParameter(context, MAGE_NODES.powerCrystal, 'a');
-    const combustionPercent = getMageNodeValue(context, MAGE_NODES.crystalCombustion);
-    const crystalTypesActive = (recoverChancePercent > 0 ? 1 : 0)
-        + (powerChancePercent > 0 ? 1 : 0);
-    const maxExplosions = crystalTypesActive * (1 / CRYSTAL_DROP_COOLDOWN);
-
     const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
-    const explosionsPerSecond = getCrystalExplosionsPerSecond(
-        context,
-        hitStats.totalHitsPerSecond
-    );
-    const drops = getCrystalDropRates(
-        context,
-        hitStats.totalHitsPerSecond + explosionsPerSecond
-    );
+    const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
 
     return {
-        recoverChancePercent,
-        powerChancePercent,
-        combustionPercent,
-        crystalTypesActive,
-        maxExplosions,
+        recoverChancePercent: model.crystalConfig.recoverChancePercent,
+        powerChancePercent: model.crystalConfig.powerChancePercent,
+        combustionPercent: getMageNodeValue(context, MAGE_NODES.crystalCombustion),
+        crystalTypesActive: model.crystalConfig.crystalTypesActive,
+        maxExplosions: model.crystalConfig.maxExplosions,
         hitStats,
-        explosionsPerSecond,
-        totalHitsPerSecond: hitStats.totalHitsPerSecond + explosionsPerSecond,
-        recoverCrystalsPerSecond: drops.recoverCrystalsPerSecond,
-        powerCrystalsPerSecond: drops.powerCrystalsPerSecond,
-        crystalsPerSecond: drops.crystalsPerSecond
+        explosionsPerSecond: model.explosionsPerSecond,
+        totalHitsPerSecond: model.totalHitsPerSecond,
+        recoverCrystalsPerSecond: model.drops.recoverCrystalsPerSecond,
+        powerCrystalsPerSecond: model.drops.powerCrystalsPerSecond,
+        crystalsPerSecond: model.drops.crystalsPerSecond
+    };
+}
+
+/**
+ * Configurazione dei Support Orbs (solo RED orb).
+ * @param {DamageContext} context
+ * @returns {{
+ *   spawnChancePercent: number,
+ *   durationSeconds: number,
+ *   damagePercent: number,
+ *   debuffPercent: number,
+ *   maxOrbs: number
+ * }}
+ */
+function getSupportOrbConfig(context) {
+    return {
+        spawnChancePercent: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'a'),
+        durationSeconds: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'b'),
+        damagePercent: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'c'),
+        debuffPercent: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'e'),
+        maxOrbs: 3
+    };
+}
+
+/**
+ * Support Orbs: hit/s generati dalle orb (1 hit/s per orb attiva).
+ * @param {DamageContext} context
+ * @returns {{
+ *   spawnChancePercent: number,
+ *   durationSeconds: number,
+ *   damagePercent: number,
+ *   maxOrbs: number,
+ *   hitStats: ReturnType<typeof getHitStats>,
+ *   totalHitsPerSecond: number,
+ *   explosionsPerSecond: number,
+ *   orbHitsPerSecond: number,
+ *   activeOrbs: number,
+ *   activeRedOrbs: number,
+ *   activeBlueOrbs: number,
+ *   blueDamageMultiplier: number
+ * }}
+ */
+export function getSupportOrbEffects(context) {
+    const config = getSupportOrbConfig(context);
+    const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
+    const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
+
+    const activeBlueOrbs = model.totalActiveOrbs * SUPPORT_ORB_RED_CHANCE;
+    const blueDamageMultiplier = 1 + (activeBlueOrbs * config.debuffPercent / 100);
+
+    return {
+        ...config,
+        hitStats,
+        totalHitsPerSecond: model.totalHitsPerSecond,
+        explosionsPerSecond: model.explosionsPerSecond,
+        orbHitsPerSecond: model.redOrbHitsPerSecond,
+        activeOrbs: model.totalActiveOrbs,
+        activeRedOrbs: model.redOrbHitsPerSecond,
+        activeBlueOrbs,
+        blueDamageMultiplier
     };
 }
 
@@ -450,35 +503,79 @@ function getCrystalDropRates(context, hitsPerSecond) {
 }
 
 /**
- * Cristalli che esplodono al secondo.
+ * Modello a equilibrio di hit, esplosioni e orb.
  *
- * Se l'override è attivo usa lo slider, altrimenti cerca l'equilibrio:
- * le esplosioni sono hit e possono generare nuovi cristalli.
+ * Ogni cristallo che esplode è una hit e può generare nuovi cristalli/orb;
+ * ogni orb che attacca è una hit e può generare nuovi cristalli/orb.
  *
  * @param {DamageContext} context
  * @param {number} baseHitsPerSecond
- * @returns {number}
+ * @returns {{
+ *   baseHitsPerSecond: number,
+ *   totalHitsPerSecond: number,
+ *   explosionsPerSecond: number,
+ *   redOrbHitsPerSecond: number,
+ *   totalActiveOrbs: number,
+ *   drops: ReturnType<typeof getCrystalDropRates>,
+ *   crystalConfig: ReturnType<typeof getCrystalDropConfig>,
+ *   orbConfig: ReturnType<typeof getSupportOrbConfig>
+ * }}
  */
-export function getCrystalExplosionsPerSecond(context, baseHitsPerSecond) {
-    const config = getCrystalDropConfig(context);
-    if (config.maxExplosions <= 0) return 0;
+function getCombatHitModel(context, baseHitsPerSecond) {
+    const crystalConfig = getCrystalDropConfig(context);
+    const orbConfig = getSupportOrbConfig(context);
 
-    if (context.settings?.crystalExplosionOverride) {
-        return Math.min(
-            config.maxExplosions,
-            Math.max(0, context.settings?.crystalExplosionsPerSecond ?? 0)
+    const override = !!context.settings?.crystalExplosionOverride;
+    const fixedExplosions = Math.min(
+        crystalConfig.maxExplosions,
+        Math.max(0, context.settings?.crystalExplosionsPerSecond ?? 0)
+    );
+
+    let explosions = override ? fixedExplosions : 0;
+    let redOrbHits = 0;
+
+    for (let i = 0; i < 200; i++) {
+        const totalHits = baseHitsPerSecond + explosions + redOrbHits;
+        const drops = getCrystalDropRates(context, totalHits);
+
+        const nextExplosions = override
+            ? fixedExplosions
+            : Math.min(crystalConfig.maxExplosions, drops.crystalsPerSecond);
+
+        const orbSpawnRate = totalHits * (orbConfig.spawnChancePercent / 100);
+        const totalActiveOrbs = Math.min(
+            orbConfig.maxOrbs,
+            orbSpawnRate * orbConfig.durationSeconds
         );
-    }
+        const nextRedOrbHits = totalActiveOrbs * SUPPORT_ORB_RED_CHANCE;
 
-    let explosions = 0;
-    for (let i = 0; i < 100; i++) {
-        const drops = getCrystalDropRates(context, baseHitsPerSecond + explosions);
-        const next = Math.min(config.maxExplosions, drops.crystalsPerSecond);
-        if (Math.abs(next - explosions) < 1e-12) {
-            return next;
+        if (Math.abs(nextExplosions - explosions) < 1e-12
+            && Math.abs(nextRedOrbHits - redOrbHits) < 1e-12) {
+            explosions = nextExplosions;
+            redOrbHits = nextRedOrbHits;
+            break;
         }
-        explosions = next;
+
+        explosions = nextExplosions;
+        redOrbHits = nextRedOrbHits;
     }
 
-    return explosions;
+    const totalHits = baseHitsPerSecond + explosions + redOrbHits;
+    const drops = getCrystalDropRates(context, totalHits);
+    const orbSpawnRate = totalHits * (orbConfig.spawnChancePercent / 100);
+    const totalActiveOrbs = Math.min(
+        orbConfig.maxOrbs,
+        orbSpawnRate * orbConfig.durationSeconds
+    );
+
+    return {
+        baseHitsPerSecond,
+        totalHitsPerSecond: totalHits,
+        explosionsPerSecond: explosions,
+        redOrbHitsPerSecond: redOrbHits,
+        totalActiveOrbs,
+        drops,
+        crystalConfig,
+        orbConfig
+    };
 }

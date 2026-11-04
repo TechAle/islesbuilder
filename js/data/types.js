@@ -177,6 +177,9 @@
  * @property {number} elementalSynergyFlat - EP flat guadagnato da Elemental Synergy
  * @property {number} elementalDamagePercent - Percentuale elementale base
  * @property {number} effectiveElementalPercent - Percentuale elementale scalata dall'EP
+ * @property {number} blueOrbs - BLUE orb medie attive
+ * @property {number} blueDamageMultiplier - Moltiplicatore danno dato dalle BLUE orb
+ * @property {number} blueDamagePercent - Bonus percentuale delle BLUE orb
  */
 
 /**
@@ -308,6 +311,27 @@
  * @property {number} explosionsPerSecond
  * @property {number} maxExplosions
  * @property {number} crystalTypesActive
+ */
+
+/**
+ * Risultato dello step "Support Orbs".
+ * @typedef {Object} SupportOrbsStepResult
+ * @property {boolean} enabled
+ * @property {number} averageDamage
+ * @property {number} spawnChancePercent
+ * @property {number} durationSeconds
+ * @property {number} damagePercent
+ * @property {number} activeOrbs
+ * @property {number} activeRedOrbs
+ * @property {number} activeBlueOrbs
+ * @property {number} blueDamageMultiplier
+ * @property {number} blueDamagePercent
+ * @property {number} hitsPerSecond
+ * @property {number} explosionsPerSecond
+ * @property {number} orbHitsPerSecond
+ * @property {number} orbDamage
+ * @property {number} orbDps
+ * @property {number} totalDps
  */
 
 /**
