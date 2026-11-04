@@ -5,20 +5,10 @@ import {
     BURST_INTERVAL
 } from '../../../data/constants.js';
 import { computeEnergyState, getSustainLabel } from '../energy.js';
-import { getPotentialChargeEffects } from '../../classes/mage.js';
+import { getPotentialChargeEffects, hasMageCore } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').BurstStepResult} BurstStepResult */
-
-/**
- * Verifica se il core equipaggiato è un Mage Core.
- * @param {DamageContext} context
- * @returns {boolean}
- */
-function hasMageCore(context) {
-    const core = context.build?.activeEquip?.core;
-    return typeof core?.name === 'string' && core.name.toLowerCase().includes('mage');
-}
 
 /**
  * Step 6 — Burst DPS.

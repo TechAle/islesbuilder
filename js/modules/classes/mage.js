@@ -1,4 +1,4 @@
-import { BASE_ENERGY_REGEN, BURST_ACTIVE_SECONDS, BURST_INTERVAL } from '../../data/constants.js';
+import { BASE_ENERGY_REGEN, BURST_ACTIVE_SECONDS, BURST_HIT_INTERVAL, BURST_INTERVAL } from '../../data/constants.js';
 
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../data/types.js').ElementalKnowledgeEffect} ElementalKnowledgeEffect */
@@ -204,9 +204,20 @@ export function getCrystalInsights(context) {
 }
 
 /**
+ * Verifica se il core equipaggiato è un Mage Core.
+ * @param {DamageContext} context
+ * @returns {boolean}
+ */
+export function hasMageCore(context) {
+    const core = context.build?.activeEquip?.core;
+    return typeof core?.name === 'string' && core.name.toLowerCase().includes('mage');
+}
+
+/**
  * Stima media di Elemental Power% data da Crystal Insights.
  *
  * crit/s = critChance × attackSpeed
+ * + crit/s della burst, se attiva: colpi/s × critChance
  * shard/s = crit/s × chance%
  * shard medi attivi = shard/s × 8s
  * EP% medio = shard medi × b%
@@ -223,7 +234,20 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
     if (!Number.isFinite(attackInterval) || attackInterval <= 0) return 0;
 
     const critRate = Math.min(100, Math.max(0, critChancePercent)) / 100;
-    const critsPerSecond = critRate / attackInterval;
+    const normalCritsPerSecond = critRate / attackInterval;
+
+    let burstCritsPerSecond = 0;
+    if (context.settings?.useBurst && hasMageCore(context)) {
+        const potentialCharge = getPotentialChargeEffects(
+            context,
+            context.settings?.potentialChargeKills ?? 0
+        );
+        const burstHitsPerSecond = (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL)
+            / potentialCharge.burstCycle;
+        burstCritsPerSecond = burstHitsPerSecond * critRate;
+    }
+
+    const critsPerSecond = normalCritsPerSecond + burstCritsPerSecond;
     const shardsPerSecond = critsPerSecond * (insights.chancePercent / 100);
     const averageActiveShards = shardsPerSecond * CRYSTAL_INSIGHTS_DURATION;
 

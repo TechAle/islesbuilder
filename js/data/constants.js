@@ -77,6 +77,9 @@ export const BURST_ACTIVE_SECONDS = 10;
 /** Burst: ciclo completo attivo + cooldown, in secondi. */
 export const BURST_INTERVAL = 30;
 
+/** Burst: intervallo tra un colpo e l'altro durante l'effetto attivo. */
+export const BURST_HIT_INTERVAL = 0.75;
+
 /** Burst: energia consumata da un burst. */
 export const BURST_ENERGY_COST = 50;
 
