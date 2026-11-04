@@ -179,6 +179,15 @@
  */
 
 /**
+ * Risultato di Natural Distillation.
+ * @typedef {Object} NaturalDistillationEffect
+ * @property {number} distillationPercent - Valore del nodo (es. 25)
+ * @property {number} convertedCritDamagePercent - Crit Damage rimosso
+ * @property {number} critDamageModifier - Modificatore con segno da sommare al Crit Damage
+ * @property {number} elementalPowerFlat - EP flat guadagnato (2× il Crit Damage rimosso)
+ */
+
+/**
  * Risultato dello step "Damage Multiplier".
  * @typedef {Object} DamageMultiplierStepResult
  * @property {number} baseDamage - Danno prima del moltiplicatore

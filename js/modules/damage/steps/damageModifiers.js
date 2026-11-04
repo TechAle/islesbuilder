@@ -2,7 +2,7 @@ import { BASE_CRIT_DAMAGE, BASE_ELEMENTAL_POWER } from '../../../data/constants.
 import {
     getCrystalInsightsElementalPowerPercent,
     getElementalChannelingPercent,
-    getNaturalDistillationPercent
+    getNaturalDistillationEffects
 } from '../../classes/mage.js';
 import { getAttackInterval } from '../attackTiming.js';
 import { findFlat, findPercent } from '../statLookup.js';
@@ -122,10 +122,11 @@ export const damageModifiersStep = {
         );
 
         const elementalPowerFlat = findFlat(context.statsValues, 'Elemental Power');
-        const naturalDistillationPercent = getNaturalDistillationPercent(context);
         const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
-        const distilledCritDamagePercent = critDamagePercent * (naturalDistillationPercent / 100);
-        const distilledElementalPowerFlat = distilledCritDamagePercent * 2;
+        const naturalDistillation = getNaturalDistillationEffects(context, critDamagePercent);
+        const naturalDistillationPercent = naturalDistillation.distillationPercent;
+        const distilledCritDamagePercent = naturalDistillation.convertedCritDamagePercent;
+        const distilledElementalPowerFlat = naturalDistillation.elementalPowerFlat;
         const elementalPowerPercent = findPercent(context.statsValues, 'Elemental Power')
             + crystalInsightsPercent;
         const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat + distilledElementalPowerFlat)

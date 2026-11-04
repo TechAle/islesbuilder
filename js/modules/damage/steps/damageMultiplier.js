@@ -1,19 +1,13 @@
-import { getElementalKnowledge, getGriefInflictionPercent, getLastSorrowPercent, getFocusStacks } from '../../classes/mage.js';
+import {
+    getElementalKnowledge,
+    getGriefInflictionEffects,
+    getLastSorrowEffects,
+    getFocusStacksEffects
+} from '../../classes/mage.js';
 import { applyAdditiveMultipliers } from '../applyMultipliers.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').DamageMultiplierStepResult} DamageMultiplierStepResult */
-
-/**
- * Limita un valore tra min e max.
- * @param {number} value
- * @param {number} min
- * @param {number} max
- * @returns {number}
- */
-function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, value));
-}
 
 /**
  * Step 3 — Damage Multiplier.
@@ -42,42 +36,32 @@ export const damageMultiplierStep = {
         const previous = context.results.damageModifiers?.damage ?? 0;
 
         const knowledge = getElementalKnowledge(context);
-        const elementalKnowledge = knowledge.elementalKnowledgePercent;
-
-        const griefInflictionPercent = getGriefInflictionPercent(context);
-        const griefUptime = clamp(context.settings?.griefUptime ?? 100, 1, 100);
-        const griefDamagePercent = griefInflictionPercent * (griefUptime / 100);
-
-        const lastSorrowPercent = getLastSorrowPercent(context);
-        const lastSorrowUptime = clamp(context.settings?.lastSorrowUptime ?? 100, 1, 100);
-        const lastSorrowDamagePercent = lastSorrowPercent * (lastSorrowUptime / 100);
-
-        const focus = getFocusStacks(context);
-        const focusStacks = clamp(context.settings?.focusStacks ?? 0, 0, focus.maxStacks);
-        const focusDamagePercent = focusStacks * focus.focusStacksPercent;
+        const grief = getGriefInflictionEffects(context, context.settings?.griefUptime ?? 100);
+        const lastSorrow = getLastSorrowEffects(context, context.settings?.lastSorrowUptime ?? 100);
+        const focus = getFocusStacksEffects(context, context.settings?.focusStacks ?? 0);
 
         const applied = applyAdditiveMultipliers(previous, [
             knowledge.damageMultiplierPercent,
-            griefDamagePercent,
-            lastSorrowDamagePercent,
-            focusDamagePercent
+            grief.griefDamagePercent,
+            lastSorrow.lastSorrowDamagePercent,
+            focus.focusDamagePercent
         ]);
 
         return {
             baseDamage: previous,
-            elementalKnowledge,
+            elementalKnowledge: knowledge.elementalKnowledgePercent,
             elementalKnowledgeDamagePercent: knowledge.damageMultiplierPercent,
-            griefInflictionPercent,
-            griefUptime,
-            griefDamagePercent,
-            lastSorrowPercent,
-            lastSorrowUptime,
-            lastSorrowDamagePercent,
+            griefInflictionPercent: grief.griefInflictionPercent,
+            griefUptime: grief.griefUptime,
+            griefDamagePercent: grief.griefDamagePercent,
+            lastSorrowPercent: lastSorrow.lastSorrowPercent,
+            lastSorrowUptime: lastSorrow.lastSorrowUptime,
+            lastSorrowDamagePercent: lastSorrow.lastSorrowDamagePercent,
             focusStacksPercent: focus.focusStacksPercent,
             focusCapacity: focus.focusCapacity,
             focusMaxStacks: focus.maxStacks,
-            focusStacks,
-            focusDamagePercent,
+            focusStacks: focus.focusStacks,
+            focusDamagePercent: focus.focusDamagePercent,
             multiplierPercent: applied.totalPercent,
             multiplier: applied.multiplier,
             damage: applied.damage

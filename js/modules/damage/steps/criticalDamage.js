@@ -1,5 +1,5 @@
 import { BASE_CRIT_DAMAGE } from '../../../data/constants.js';
-import { getNaturalDistillationPercent } from '../../classes/mage.js';
+import { getNaturalDistillationEffects } from '../../classes/mage.js';
 import { findPercent } from '../statLookup.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -51,10 +51,15 @@ export const criticalDamageStep = {
         const critChance = Math.max(0, findPercent(context.statsValues, 'Crit Chance'));
         const effectiveCritChance = Math.min(100, critChance);
         const critChanceOverflow = Math.max(0, critChance - 100);
-        const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
-        const distillationPercent = getNaturalDistillationPercent(context);
-        const convertedCritDamagePercent = critDamagePercent * (distillationPercent / 100);
-        const effectiveCritDamagePercent = critDamagePercent - convertedCritDamagePercent;
+        let critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
+        const critDamageRawPercent = critDamagePercent;
+        const naturalDistillation = getNaturalDistillationEffects(context, critDamagePercent);
+        const critDamageModifierNaturalDistillation = naturalDistillation.critDamageModifier;
+        critDamagePercent += critDamageModifierNaturalDistillation;
+
+        const distillationPercent = naturalDistillation.distillationPercent;
+        const convertedCritDamagePercent = naturalDistillation.convertedCritDamagePercent;
+        const effectiveCritDamagePercent = critDamagePercent;
 
         const criticalHit = baseDamage * (1 + effectiveCritDamagePercent / 100);
         const averageDamage = baseDamage * (1 - effectiveCritChance / 100)
@@ -65,7 +70,7 @@ export const criticalDamageStep = {
             critChance,
             effectiveCritChance,
             critChanceOverflow,
-            critDamagePercent,
+            critDamagePercent: critDamageRawPercent,
             effectiveCritDamagePercent,
             distillationPercent,
             convertedCritDamagePercent,

@@ -110,12 +110,40 @@ export function getGriefInflictionPercent(context) {
 }
 
 /**
+ * Grief Infliction applicato all'uptime scelto.
+ * @param {DamageContext} context
+ * @param {number} uptimePercent
+ * @returns {{griefInflictionPercent: number, griefUptime: number, griefDamagePercent: number}}
+ */
+export function getGriefInflictionEffects(context, uptimePercent) {
+    const griefInflictionPercent = getGriefInflictionPercent(context);
+    const griefUptime = Math.min(100, Math.max(1, uptimePercent));
+    const griefDamagePercent = griefInflictionPercent * (griefUptime / 100);
+
+    return { griefInflictionPercent, griefUptime, griefDamagePercent };
+}
+
+/**
  * Last Sorrow: danno extra sul colpo successivo quando Grief scade.
  * @param {DamageContext} context
  * @returns {number}
  */
 export function getLastSorrowPercent(context) {
     return getMageNodeValue(context, MAGE_NODES.lastSorrow);
+}
+
+/**
+ * Last Sorrow applicato all'uptime scelto.
+ * @param {DamageContext} context
+ * @param {number} uptimePercent
+ * @returns {{lastSorrowPercent: number, lastSorrowUptime: number, lastSorrowDamagePercent: number}}
+ */
+export function getLastSorrowEffects(context, uptimePercent) {
+    const lastSorrowPercent = getLastSorrowPercent(context);
+    const lastSorrowUptime = Math.min(100, Math.max(1, uptimePercent));
+    const lastSorrowDamagePercent = lastSorrowPercent * (lastSorrowUptime / 100);
+
+    return { lastSorrowPercent, lastSorrowUptime, lastSorrowDamagePercent };
 }
 
 /**
@@ -132,6 +160,30 @@ export function getFocusStacks(context) {
         focusStacksPercent,
         focusCapacity,
         maxStacks: 3 + focusCapacity
+    };
+}
+
+/**
+ * Focus Stacks applicati agli stack medi scelti, con clamp alla capacità.
+ * @param {DamageContext} context
+ * @param {number} selectedStacks
+ * @returns {{
+ *   focusStacksPercent: number,
+ *   focusCapacity: number,
+ *   maxStacks: number,
+ *   focusStacks: number,
+ *   focusDamagePercent: number
+ * }}
+ */
+export function getFocusStacksEffects(context, selectedStacks) {
+    const focus = getFocusStacks(context);
+    const focusStacks = Math.min(focus.maxStacks, Math.max(0, selectedStacks));
+    const focusDamagePercent = focusStacks * focus.focusStacksPercent;
+
+    return {
+        ...focus,
+        focusStacks,
+        focusDamagePercent
     };
 }
 
@@ -175,10 +227,21 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
 }
 
 /**
- * Natural Distillation: percentuale di Crit Damage convertita in Elemental Power.
+ * Natural Distillation applicata a un dato Crit Damage totale.
+ * Tutta la logica del nodo (percentuale, conversione e ×2) sta qui.
+ *
  * @param {DamageContext} context
- * @returns {number}
+ * @param {number} critDamagePercent
+ * @returns {import('../../data/types.js').NaturalDistillationEffect}
  */
-export function getNaturalDistillationPercent(context) {
-    return getMageNodeValue(context, MAGE_NODES.naturalDistillation);
+export function getNaturalDistillationEffects(context, critDamagePercent) {
+    const distillationPercent = getMageNodeValue(context, MAGE_NODES.naturalDistillation);
+    const convertedCritDamagePercent = critDamagePercent * (distillationPercent / 100);
+
+    return {
+        distillationPercent,
+        convertedCritDamagePercent,
+        critDamageModifier: -convertedCritDamagePercent,
+        elementalPowerFlat: convertedCritDamagePercent * 2
+    };
 }
