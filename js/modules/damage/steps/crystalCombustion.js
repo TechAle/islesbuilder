@@ -24,26 +24,29 @@ export const crystalCombustionStep = {
         const effects = getCrystalCombustionEffects(context);
         const averageDamage = context.results.criticalDamage?.damage ?? 0;
         const damagePerCrystal = averageDamage * (effects.combustionPercent / 100);
-        const combustionDps = effects.crystalsPerSecond * damagePerCrystal;
+        const combustionDps = effects.explosionsPerSecond * damagePerCrystal;
 
         const attack = context.results.attackSpeed;
         const burst = context.results.burst;
         const previousTotalDps = burst?.enabled ? burst.totalDps : (attack?.dps ?? 0);
 
         const enabled = effects.combustionPercent > 0
-            && effects.crystalsPerSecond > 0
+            && effects.crystalTypesActive > 0
             && averageDamage > 0;
 
         return {
             enabled,
             averageDamage,
-            hitsPerSecond: effects.hitStats.totalHitsPerSecond,
-            critsPerSecond: effects.hitStats.critsPerSecond,
+            hitsPerSecond: effects.totalHitsPerSecond,
+            critsPerSecond: effects.totalHitsPerSecond * (effects.hitStats.critChancePercent / 100),
             recoverChancePercent: effects.recoverChancePercent,
             powerChancePercent: effects.powerChancePercent,
             recoverCrystalsPerSecond: effects.recoverCrystalsPerSecond,
             powerCrystalsPerSecond: effects.powerCrystalsPerSecond,
             crystalsPerSecond: effects.crystalsPerSecond,
+            explosionsPerSecond: effects.explosionsPerSecond,
+            maxExplosions: effects.maxExplosions,
+            crystalTypesActive: effects.crystalTypesActive,
             combustionPercent: effects.combustionPercent,
             damagePerCrystal,
             combustionDps: enabled ? combustionDps : 0,
@@ -70,6 +73,7 @@ export const crystalCombustionStep = {
             { label: 'Hits per Second', value: result.hitsPerSecond, unit: '/s' },
             { label: 'Recover Crystal / s', value: result.recoverCrystalsPerSecond, unit: '/s' },
             { label: 'Power Crystal / s', value: result.powerCrystalsPerSecond, unit: '/s' },
+            { label: 'Explosions / s', value: result.explosionsPerSecond, unit: '/s' },
             { label: 'Crystal Combustion DPS', value: result.combustionDps },
             { label: 'Total DPS', value: result.totalDps }
         ];

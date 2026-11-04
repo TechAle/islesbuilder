@@ -52,7 +52,9 @@ export function createDamageContext({ statsValues, skillValues, build, skillTree
             griefUptime: 100,
             lastSorrowUptime: 100,
             focusStacks: 0,
-            potentialChargeKills: 0
+            potentialChargeKills: 0,
+            crystalExplosionOverride: false,
+            crystalExplosionsPerSecond: 0
         },
         results: {}
     };

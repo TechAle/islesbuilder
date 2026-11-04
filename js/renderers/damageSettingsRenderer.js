@@ -15,6 +15,9 @@
  * @property {HTMLElement|null} focusStacksValue
  * @property {HTMLInputElement|null} potentialChargeKills
  * @property {HTMLElement|null} potentialChargeKillsValue
+ * @property {HTMLInputElement|null} crystalExplosionOverride
+ * @property {HTMLInputElement|null} crystalExplosions
+ * @property {HTMLElement|null} crystalExplosionsValue
  * @property {(settings: DamageSettings) => void} onChange
  */
 
@@ -38,6 +41,9 @@ export class DamageSettingsRenderer {
         focusStacksValue,
         potentialChargeKills,
         potentialChargeKillsValue,
+        crystalExplosionOverride,
+        crystalExplosions,
+        crystalExplosionsValue,
         onChange
     }) {
         this.button = button;
@@ -53,10 +59,14 @@ export class DamageSettingsRenderer {
         this.focusStacksValue = focusStacksValue;
         this.potentialChargeKills = potentialChargeKills;
         this.potentialChargeKillsValue = potentialChargeKillsValue;
+        this.crystalExplosionOverride = crystalExplosionOverride;
+        this.crystalExplosions = crystalExplosions;
+        this.crystalExplosionsValue = crystalExplosionsValue;
         this.griefControl = /** @type {HTMLElement|null} */ (griefUptime?.closest('.damage-uptime') ?? null);
         this.lastSorrowControl = /** @type {HTMLElement|null} */ (lastSorrowUptime?.closest('.damage-uptime') ?? null);
         this.focusControl = /** @type {HTMLElement|null} */ (focusStacks?.closest('.damage-uptime') ?? null);
         this.potentialChargeControl = /** @type {HTMLElement|null} */ (potentialChargeKills?.closest('.damage-uptime') ?? null);
+        this.crystalExplosionsControl = /** @type {HTMLElement|null} */ (crystalExplosions?.closest('.damage-uptime') ?? null);
         this.onChange = onChange;
     }
 
@@ -92,6 +102,12 @@ export class DamageSettingsRenderer {
             this.emit();
         });
 
+        this.crystalExplosionOverride?.addEventListener('change', () => this.emit());
+        this.crystalExplosions?.addEventListener('input', () => {
+            this.updateCrystalExplosionsLabel();
+            this.emit();
+        });
+
         // Overlay: chiude cliccando fuori o premendo Escape.
         document.addEventListener('click', event => {
             if (!this.panel || this.panel.hidden) return;
@@ -112,6 +128,7 @@ export class DamageSettingsRenderer {
         this.updateUptimeLabel(this.lastSorrowUptime, this.lastSorrowUptimeValue);
         this.updateFocusLabel();
         this.updatePotentialChargeLabel();
+        this.updateCrystalExplosionsLabel();
     }
 
     togglePanel() {
@@ -208,6 +225,48 @@ export class DamageSettingsRenderer {
         }
     }
 
+    updateCrystalExplosionsLabel() {
+        if (!this.crystalExplosionsValue || !this.crystalExplosions) return;
+
+        const value = Number.parseFloat(this.crystalExplosions.value);
+        const max = Number.parseFloat(this.crystalExplosions.max);
+        this.crystalExplosionsValue.textContent = `${value} / ${max}`;
+    }
+
+    /**
+     * @param {number} maxExplosions
+     */
+    configureCrystalExplosionSlider(maxExplosions) {
+        if (!this.crystalExplosions) return;
+
+        this.crystalExplosions.max = String(maxExplosions);
+
+        const value = Number.parseFloat(this.crystalExplosions.value);
+        if (Number.isFinite(value) && value > maxExplosions) {
+            this.crystalExplosions.value = String(maxExplosions);
+        }
+
+        this.updateCrystalExplosionsLabel();
+    }
+
+    /**
+     * Sposta checkbox e slider delle esplosioni nella sezione Crystal Combustion.
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeCrystalExplosionsControl(container, visible) {
+        if (!this.crystalExplosionsControl) return;
+
+        if (visible && container) {
+            if (this.crystalExplosionsControl.parentElement !== container) {
+                container.prepend(this.crystalExplosionsControl);
+            }
+            this.crystalExplosionsControl.hidden = false;
+        } else {
+            this.crystalExplosionsControl.hidden = true;
+        }
+    }
+
     /**
      * Sposta gli slider uptime dentro la sezione Damage Multiplier.
      * @param {HTMLElement|null} container
@@ -246,6 +305,7 @@ export class DamageSettingsRenderer {
         const lastSorrowUptime = Number.parseFloat(this.lastSorrowUptime?.value ?? '100');
         const focusStacks = Number.parseFloat(this.focusStacks?.value ?? '0');
         const potentialChargeKills = Number.parseFloat(this.potentialChargeKills?.value ?? '0');
+        const crystalExplosions = Number.parseFloat(this.crystalExplosions?.value ?? '0');
 
         return {
             slowAttack,
@@ -254,7 +314,9 @@ export class DamageSettingsRenderer {
             griefUptime: Number.isFinite(griefUptime) ? griefUptime : 100,
             lastSorrowUptime: Number.isFinite(lastSorrowUptime) ? lastSorrowUptime : 100,
             focusStacks: Number.isFinite(focusStacks) ? focusStacks : 0,
-            potentialChargeKills: Number.isFinite(potentialChargeKills) ? potentialChargeKills : 0
+            potentialChargeKills: Number.isFinite(potentialChargeKills) ? potentialChargeKills : 0,
+            crystalExplosionOverride: this.crystalExplosionOverride?.checked ?? false,
+            crystalExplosionsPerSecond: Number.isFinite(crystalExplosions) ? crystalExplosions : 0
         };
     }
 

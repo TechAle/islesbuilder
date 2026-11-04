@@ -253,6 +253,8 @@
  * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
  * @property {number} focusStacks - Stack medi di Focus (0-3+)
  * @property {number} potentialChargeKills - Kill medi per Potential Charge (0-30)
+ * @property {boolean} crystalExplosionOverride - Se true, usa il valore dello slider
+ * @property {number} crystalExplosionsPerSecond - Cristalli esplosi al secondo (override)
  */
 
 /**
@@ -303,6 +305,9 @@
  * @property {number} damagePerCrystal
  * @property {number} combustionDps
  * @property {number} totalDps
+ * @property {number} explosionsPerSecond
+ * @property {number} maxExplosions
+ * @property {number} crystalTypesActive
  */
 
 /**

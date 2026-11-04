@@ -96,7 +96,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         griefUptime: 100,
         lastSorrowUptime: 100,
         focusStacks: 0,
-        potentialChargeKills: 0
+        potentialChargeKills: 0,
+        crystalExplosionOverride: false,
+        crystalExplosionsPerSecond: 0
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -113,6 +115,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         focusStacksValue: document.getElementById('focus-stacks-value'),
         potentialChargeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('potential-charge-kills')),
         potentialChargeKillsValue: document.getElementById('potential-charge-kills-value'),
+        crystalExplosionOverride: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosion-override')),
+        crystalExplosions: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosions')),
+        crystalExplosionsValue: document.getElementById('crystal-explosions-value'),
         onChange: settings => {
             damageSettings = settings;
             renderCombat();
@@ -180,6 +185,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageSettingsRenderer.placePotentialChargeControl(
             damageRenderer.getStepContent('burst'),
             potentialCharge > 0
+        );
+
+        const crystalCombustion = dpsManager.getSteps().crystalCombustion;
+        damageSettingsRenderer.configureCrystalExplosionSlider(
+            crystalCombustion?.maxExplosions ?? 0
+        );
+        damageSettingsRenderer.placeCrystalExplosionsControl(
+            damageRenderer.getStepContent('crystalCombustion'),
+            crystalCombustion?.enabled === true
         );
     };
 

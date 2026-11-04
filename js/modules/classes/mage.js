@@ -260,11 +260,9 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
     if (!Number.isFinite(attackInterval) || attackInterval <= 0) return 0;
 
     const critRate = Math.min(100, Math.max(0, critChancePercent)) / 100;
-    const normalCritsPerSecond = critRate / attackInterval;
-
-    const burstCritsPerSecond = getBurstHitsPerSecond(context) * critRate;
-
-    const critsPerSecond = normalCritsPerSecond + burstCritsPerSecond;
+    const baseHitsPerSecond = (1 / attackInterval) + getBurstHitsPerSecond(context);
+    const explosionsPerSecond = getCrystalExplosionsPerSecond(context, baseHitsPerSecond);
+    const critsPerSecond = (baseHitsPerSecond + explosionsPerSecond) * critRate;
     const shardsPerSecond = critsPerSecond * (insights.chancePercent / 100);
     const averageActiveShards = shardsPerSecond * CRYSTAL_INSIGHTS_DURATION;
 
@@ -354,7 +352,11 @@ export function getPotentialChargeEffects(context, kills) {
  *   recoverChancePercent: number,
  *   powerChancePercent: number,
  *   combustionPercent: number,
+ *   crystalTypesActive: number,
+ *   maxExplosions: number,
  *   hitStats: ReturnType<typeof getHitStats>,
+ *   explosionsPerSecond: number,
+ *   totalHitsPerSecond: number,
  *   recoverCrystalsPerSecond: number,
  *   powerCrystalsPerSecond: number,
  *   crystalsPerSecond: number
@@ -364,26 +366,119 @@ export function getCrystalCombustionEffects(context) {
     const recoverChancePercent = getMageNodeParameter(context, MAGE_NODES.recoverCrystal, 'a');
     const powerChancePercent = getMageNodeParameter(context, MAGE_NODES.powerCrystal, 'a');
     const combustionPercent = getMageNodeValue(context, MAGE_NODES.crystalCombustion);
+    const crystalTypesActive = (recoverChancePercent > 0 ? 1 : 0)
+        + (powerChancePercent > 0 ? 1 : 0);
+    const maxExplosions = crystalTypesActive * (1 / CRYSTAL_DROP_COOLDOWN);
 
     const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
-    const maxDropsPerSecond = 1 / CRYSTAL_DROP_COOLDOWN;
-
-    const recoverCrystalsPerSecond = Math.min(
-        hitStats.totalHitsPerSecond * (recoverChancePercent / 100),
-        maxDropsPerSecond
+    const explosionsPerSecond = getCrystalExplosionsPerSecond(
+        context,
+        hitStats.totalHitsPerSecond
     );
-    const powerCrystalsPerSecond = Math.min(
-        hitStats.totalHitsPerSecond * (powerChancePercent / 100),
-        maxDropsPerSecond
+    const drops = getCrystalDropRates(
+        context,
+        hitStats.totalHitsPerSecond + explosionsPerSecond
     );
 
     return {
         recoverChancePercent,
         powerChancePercent,
         combustionPercent,
+        crystalTypesActive,
+        maxExplosions,
         hitStats,
+        explosionsPerSecond,
+        totalHitsPerSecond: hitStats.totalHitsPerSecond + explosionsPerSecond,
+        recoverCrystalsPerSecond: drops.recoverCrystalsPerSecond,
+        powerCrystalsPerSecond: drops.powerCrystalsPerSecond,
+        crystalsPerSecond: drops.crystalsPerSecond
+    };
+}
+
+/**
+ * Configurazione dei due drop di cristalli.
+ * @param {DamageContext} context
+ * @returns {{
+ *   recoverChancePercent: number,
+ *   powerChancePercent: number,
+ *   crystalTypesActive: number,
+ *   maxExplosions: number
+ * }}
+ */
+function getCrystalDropConfig(context) {
+    const recoverChancePercent = getMageNodeParameter(context, MAGE_NODES.recoverCrystal, 'a');
+    const powerChancePercent = getMageNodeParameter(context, MAGE_NODES.powerCrystal, 'a');
+    const crystalTypesActive = (recoverChancePercent > 0 ? 1 : 0)
+        + (powerChancePercent > 0 ? 1 : 0);
+
+    return {
+        recoverChancePercent,
+        powerChancePercent,
+        crystalTypesActive,
+        maxExplosions: crystalTypesActive * (1 / CRYSTAL_DROP_COOLDOWN)
+    };
+}
+
+/**
+ * Drop rate dei cristalli per un dato numero di hit/s.
+ * @param {DamageContext} context
+ * @param {number} hitsPerSecond
+ * @returns {{
+ *   recoverCrystalsPerSecond: number,
+ *   powerCrystalsPerSecond: number,
+ *   crystalsPerSecond: number
+ * }}
+ */
+function getCrystalDropRates(context, hitsPerSecond) {
+    const config = getCrystalDropConfig(context);
+    const maxDropsPerSecond = 1 / CRYSTAL_DROP_COOLDOWN;
+
+    const recoverCrystalsPerSecond = Math.min(
+        hitsPerSecond * (config.recoverChancePercent / 100),
+        maxDropsPerSecond
+    );
+    const powerCrystalsPerSecond = Math.min(
+        hitsPerSecond * (config.powerChancePercent / 100),
+        maxDropsPerSecond
+    );
+
+    return {
         recoverCrystalsPerSecond,
         powerCrystalsPerSecond,
         crystalsPerSecond: recoverCrystalsPerSecond + powerCrystalsPerSecond
     };
+}
+
+/**
+ * Cristalli che esplodono al secondo.
+ *
+ * Se l'override è attivo usa lo slider, altrimenti cerca l'equilibrio:
+ * le esplosioni sono hit e possono generare nuovi cristalli.
+ *
+ * @param {DamageContext} context
+ * @param {number} baseHitsPerSecond
+ * @returns {number}
+ */
+export function getCrystalExplosionsPerSecond(context, baseHitsPerSecond) {
+    const config = getCrystalDropConfig(context);
+    if (config.maxExplosions <= 0) return 0;
+
+    if (context.settings?.crystalExplosionOverride) {
+        return Math.min(
+            config.maxExplosions,
+            Math.max(0, context.settings?.crystalExplosionsPerSecond ?? 0)
+        );
+    }
+
+    let explosions = 0;
+    for (let i = 0; i < 100; i++) {
+        const drops = getCrystalDropRates(context, baseHitsPerSecond + explosions);
+        const next = Math.min(config.maxExplosions, drops.crystalsPerSecond);
+        if (Math.abs(next - explosions) < 1e-12) {
+            return next;
+        }
+        explosions = next;
+    }
+
+    return explosions;
 }
