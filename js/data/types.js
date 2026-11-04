@@ -186,6 +186,11 @@
  * @property {number} lastSorrowPercent - Valore del nodo Last Sorrow
  * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
  * @property {number} lastSorrowDamagePercent - Aumento effettivo di Last Sorrow
+ * @property {number} focusStacksPercent - Danno% per stack di Focus
+ * @property {number} focusCapacity - Stack extra da Focus Capacity
+ * @property {number} focusMaxStacks - Stack massimi (3 + Focus Capacity)
+ * @property {number} focusStacks - Stack medi usati
+ * @property {number} focusDamagePercent - Aumento effettivo di Focus
  * @property {number} multiplierPercent - Aumento percentuale totale
  * @property {number} multiplier - Moltiplicatore applicato
  * @property {number} damage - Danno dopo il moltiplicatore
@@ -229,6 +234,7 @@
  * @property {boolean} useBurst - Se true, aggiunge il burst ogni 30s
  * @property {number} griefUptime - Uptime di Grief Infliction (1-100)
  * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
+ * @property {number} focusStacks - Stack medi di Focus (0-3+)
  */
 
 /**

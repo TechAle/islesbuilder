@@ -3,13 +3,15 @@
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string}}
  */
 const MAGE_NODES = {
     elementalChanneling: 'DR',
     elementalKnowledge: 'DR1',
     griefInfliction: 'L2',
-    lastSorrow: 'L2b'
+    lastSorrow: 'L2b',
+    focusStacks: 'L1',
+    focusCapacity: 'L1a'
 };
 
 /**
@@ -94,4 +96,21 @@ export function getGriefInflictionPercent(context) {
  */
 export function getLastSorrowPercent(context) {
     return getMageNodeValue(context, MAGE_NODES.lastSorrow);
+}
+
+/**
+ * Focus Stacks: danno% per stack e capacità massima.
+ * La base è 3 stack, aumentata da Focus Capacity.
+ * @param {DamageContext} context
+ * @returns {{focusStacksPercent: number, focusCapacity: number, maxStacks: number}}
+ */
+export function getFocusStacks(context) {
+    const focusStacksPercent = getMageNodeValue(context, MAGE_NODES.focusStacks);
+    const focusCapacity = getMageNodeValue(context, MAGE_NODES.focusCapacity);
+
+    return {
+        focusStacksPercent,
+        focusCapacity,
+        maxStacks: 3 + focusCapacity
+    };
 }

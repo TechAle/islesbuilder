@@ -1,4 +1,4 @@
-import { getElementalKnowledge, getGriefInflictionPercent, getLastSorrowPercent } from '../../classes/mage.js';
+import { getElementalKnowledge, getGriefInflictionPercent, getLastSorrowPercent, getFocusStacks } from '../../classes/mage.js';
 import { applyAdditiveMultipliers } from '../applyMultipliers.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -24,6 +24,7 @@ function clamp(value, min, max) {
  * - Elemental Knowledge: 9% per ogni 1% del nodo.
  * - Grief Infliction: val% del nodo, scalato dal Grief uptime.
  * - Last Sorrow: val% del nodo, scalato dal Last Sorrow uptime.
+ * - Focus Stacks: stacks medi × val% per stack (max 3 + Focus Capacity).
  *
  * Esempio: 9% + 15% → +24%, non 1.09 × 1.15.
  *
@@ -51,10 +52,15 @@ export const damageMultiplierStep = {
         const lastSorrowUptime = clamp(context.settings?.lastSorrowUptime ?? 100, 1, 100);
         const lastSorrowDamagePercent = lastSorrowPercent * (lastSorrowUptime / 100);
 
+        const focus = getFocusStacks(context);
+        const focusStacks = clamp(context.settings?.focusStacks ?? 0, 0, focus.maxStacks);
+        const focusDamagePercent = focusStacks * focus.focusStacksPercent;
+
         const applied = applyAdditiveMultipliers(previous, [
             knowledge.damageMultiplierPercent,
             griefDamagePercent,
-            lastSorrowDamagePercent
+            lastSorrowDamagePercent,
+            focusDamagePercent
         ]);
 
         return {
@@ -67,6 +73,11 @@ export const damageMultiplierStep = {
             lastSorrowPercent,
             lastSorrowUptime,
             lastSorrowDamagePercent,
+            focusStacksPercent: focus.focusStacksPercent,
+            focusCapacity: focus.focusCapacity,
+            focusMaxStacks: focus.maxStacks,
+            focusStacks,
+            focusDamagePercent,
             multiplierPercent: applied.totalPercent,
             multiplier: applied.multiplier,
             damage: applied.damage
@@ -80,7 +91,8 @@ export const damageMultiplierStep = {
     isVisible(result) {
         return (result?.elementalKnowledge ?? 0) > 0
             || (result?.griefInflictionPercent ?? 0) > 0
-            || (result?.lastSorrowPercent ?? 0) > 0;
+            || (result?.lastSorrowPercent ?? 0) > 0
+            || (result?.focusStacksPercent ?? 0) > 0;
     },
 
     /**
@@ -105,6 +117,11 @@ export const damageMultiplierStep = {
         if (result.lastSorrowPercent > 0) {
             rows.push({ label: 'Last Sorrow', value: result.lastSorrowPercent, unit: '%' });
             rows.push({ label: 'Last Sorrow Uptime', value: result.lastSorrowUptime, unit: '%' });
+        }
+
+        if (result.focusStacksPercent > 0) {
+            rows.push({ label: 'Focus Stacks', value: result.focusStacks });
+            rows.push({ label: 'Focus Damage', value: result.focusDamagePercent, unit: '%' });
         }
 
         rows.push({ label: 'Damage Multiplier', value: result.multiplierPercent, unit: '%' });

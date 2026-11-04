@@ -94,7 +94,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         attackInterval: null,
         useBurst: false,
         griefUptime: 100,
-        lastSorrowUptime: 100
+        lastSorrowUptime: 100,
+        focusStacks: 0
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -107,6 +108,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         griefUptimeValue: document.getElementById('grief-uptime-value'),
         lastSorrowUptime: /** @type {HTMLInputElement|null} */ (document.getElementById('last-sorrow-uptime')),
         lastSorrowUptimeValue: document.getElementById('last-sorrow-uptime-value'),
+        focusStacks: /** @type {HTMLInputElement|null} */ (document.getElementById('focus-stacks')),
+        focusStacksValue: document.getElementById('focus-stacks-value'),
         onChange: settings => {
             damageSettings = settings;
             renderCombat();
@@ -158,9 +161,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const griefPercent = dpsManager.getSteps().damageMultiplier?.griefInflictionPercent ?? 0;
         const lastSorrowPercent = dpsManager.getSteps().damageMultiplier?.lastSorrowPercent ?? 0;
+        const focusPercent = dpsManager.getSteps().damageMultiplier?.focusStacksPercent ?? 0;
+        const focusMaxStacks = dpsManager.getSteps().damageMultiplier?.focusMaxStacks ?? 3;
+        damageSettingsRenderer.configureFocusSlider(focusMaxStacks);
         damageSettingsRenderer.placeUptimeControls(
             damageRenderer.getStepContent('damageMultiplier'),
-            { grief: griefPercent > 0, lastSorrow: lastSorrowPercent > 0 }
+            {
+                grief: griefPercent > 0,
+                lastSorrow: lastSorrowPercent > 0,
+                focus: focusPercent > 0
+            }
         );
     };
 

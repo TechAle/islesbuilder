@@ -48,7 +48,8 @@ export function createDamageContext({ statsValues, skillValues, build, skillTree
             attackInterval: null,
             useBurst: false,
             griefUptime: 100,
-            lastSorrowUptime: 100
+            lastSorrowUptime: 100,
+            focusStacks: 0
         },
         results: {}
     };
