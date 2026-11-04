@@ -1,5 +1,9 @@
-import { BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
-import { getCrystalInsightsElementalPowerPercent, getElementalChannelingPercent } from '../../classes/mage.js';
+import { BASE_CRIT_DAMAGE, BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
+import {
+    getCrystalInsightsElementalPowerPercent,
+    getElementalChannelingPercent,
+    getNaturalDistillationPercent
+} from '../../classes/mage.js';
 import { getAttackInterval } from '../attackTiming.js';
 import { findFlat, findPercent } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
@@ -63,6 +67,9 @@ export const damageModifiersStep = {
                 masteryBonus: 0,
                 elementalPower: BASE_ELEMENTAL_POWER,
                 crystalInsightsPercent: 0,
+                naturalDistillationPercent: 0,
+                distilledCritDamagePercent: 0,
+                distilledElementalPowerFlat: 0,
                 elementalDamagePercent: 0,
                 effectiveElementalPercent: 0,
                 damage: 0,
@@ -115,9 +122,13 @@ export const damageModifiersStep = {
         );
 
         const elementalPowerFlat = findFlat(context.statsValues, 'Elemental Power');
+        const naturalDistillationPercent = getNaturalDistillationPercent(context);
+        const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
+        const distilledCritDamagePercent = critDamagePercent * (naturalDistillationPercent / 100);
+        const distilledElementalPowerFlat = distilledCritDamagePercent * 2;
         const elementalPowerPercent = findPercent(context.statsValues, 'Elemental Power')
             + crystalInsightsPercent;
-        const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat)
+        const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat + distilledElementalPowerFlat)
             * (1 + elementalPowerPercent / 100);
 
         // Scaling: percent * (EP / 100).
@@ -139,6 +150,9 @@ export const damageModifiersStep = {
             masteryBonus,
             elementalPower,
             crystalInsightsPercent,
+            naturalDistillationPercent,
+            distilledCritDamagePercent,
+            distilledElementalPowerFlat,
             elementalDamagePercent,
             effectiveElementalPercent,
             damage,
@@ -162,6 +176,9 @@ export const damageModifiersStep = {
         if (hasElementalDamage) {
             if (result.crystalInsightsPercent > 0) {
                 rows.push({ label: 'Crystal Insights EP', value: result.crystalInsightsPercent, unit: '%' });
+            }
+            if (result.distilledElementalPowerFlat > 0) {
+                rows.push({ label: 'Natural Distillation EP', value: result.distilledElementalPowerFlat });
             }
             rows.push({ label: 'Elemental Power', value: result.elementalPower });
         }

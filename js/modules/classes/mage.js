@@ -3,7 +3,7 @@
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string}}
  */
 const MAGE_NODES = {
     elementalChanneling: 'DR',
@@ -12,7 +12,8 @@ const MAGE_NODES = {
     lastSorrow: 'L2b',
     focusStacks: 'L1',
     focusCapacity: 'L1a',
-    crystalInsights: 'UL1'
+    crystalInsights: 'UL1',
+    naturalDistillation: 'UL2'
 };
 
 /**
@@ -171,4 +172,13 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
     const averageActiveShards = shardsPerSecond * CRYSTAL_INSIGHTS_DURATION;
 
     return averageActiveShards * insights.elementalPowerPercent;
+}
+
+/**
+ * Natural Distillation: percentuale di Crit Damage convertita in Elemental Power.
+ * @param {DamageContext} context
+ * @returns {number}
+ */
+export function getNaturalDistillationPercent(context) {
+    return getMageNodeValue(context, MAGE_NODES.naturalDistillation);
 }

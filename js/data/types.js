@@ -171,6 +171,9 @@
  * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
  * @property {number} elementalPower - Elemental Power totale
  * @property {number} crystalInsightsPercent - EP% medio stimato da Crystal Insights
+ * @property {number} naturalDistillationPercent - Percentuale di Crit Damage convertita
+ * @property {number} distilledCritDamagePercent - Crit Damage percentuale rimosso
+ * @property {number} distilledElementalPowerFlat - EP flat guadagnato (2× il Crit Damage rimosso)
  * @property {number} elementalDamagePercent - Percentuale elementale base
  * @property {number} effectiveElementalPercent - Percentuale elementale scalata dall'EP
  */
@@ -205,6 +208,9 @@
  * @property {number} effectiveCritChance - Probabilità usata nella media (max 100)
  * @property {number} critChanceOverflow - Quanto il crit chance supera 100
  * @property {number} critDamagePercent - Crit Damage totale (base + statistica)
+ * @property {number} effectiveCritDamagePercent - Crit Damage dopo Natural Distillation
+ * @property {number} distillationPercent - Percentuale convertita da Natural Distillation
+ * @property {number} convertedCritDamagePercent - Crit Damage convertito in Elemental Power
  * @property {number} criticalHit - Danno del colpo critico
  * @property {number} averageDamage - Danno medio pesato sul crit rate
  * @property {number} damage - Danno finale dello step

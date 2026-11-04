@@ -1,4 +1,5 @@
 import { BASE_CRIT_DAMAGE } from '../../../data/constants.js';
+import { getNaturalDistillationPercent } from '../../classes/mage.js';
 import { findPercent } from '../statLookup.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -8,7 +9,9 @@ import { findPercent } from '../statLookup.js';
  * Step 4 — Critical Damage.
  *
  * - Crit Damage totale = 50% base + `Crit Damage%` dalle statistiche.
- * - Colpo critico = danno × (1 + critDamage / 100).
+ * - Natural Distillation converte una parte del Crit Damage in Elemental Power:
+ *   il Crit Damage usato qui viene ridotto della stessa percentuale.
+ * - Colpo critico = danno × (1 + effectiveCritDamage / 100).
  * - Danno medio = non crit × (1 - critChanceEff) + critico × critChanceEff.
  *
  * Il Crit Chance viene limitato solo verso il basso (0), perché nell'API può
@@ -36,6 +39,9 @@ export const criticalDamageStep = {
                 effectiveCritChance: 0,
                 critChanceOverflow: 0,
                 critDamagePercent: BASE_CRIT_DAMAGE,
+                effectiveCritDamagePercent: BASE_CRIT_DAMAGE,
+                distillationPercent: 0,
+                convertedCritDamagePercent: 0,
                 criticalHit: 0,
                 averageDamage: 0,
                 damage: 0
@@ -46,8 +52,11 @@ export const criticalDamageStep = {
         const effectiveCritChance = Math.min(100, critChance);
         const critChanceOverflow = Math.max(0, critChance - 100);
         const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
+        const distillationPercent = getNaturalDistillationPercent(context);
+        const convertedCritDamagePercent = critDamagePercent * (distillationPercent / 100);
+        const effectiveCritDamagePercent = critDamagePercent - convertedCritDamagePercent;
 
-        const criticalHit = baseDamage * (1 + critDamagePercent / 100);
+        const criticalHit = baseDamage * (1 + effectiveCritDamagePercent / 100);
         const averageDamage = baseDamage * (1 - effectiveCritChance / 100)
             + criticalHit * (effectiveCritChance / 100);
 
@@ -57,6 +66,9 @@ export const criticalDamageStep = {
             effectiveCritChance,
             critChanceOverflow,
             critDamagePercent,
+            effectiveCritDamagePercent,
+            distillationPercent,
+            convertedCritDamagePercent,
             criticalHit,
             averageDamage,
             damage: averageDamage
