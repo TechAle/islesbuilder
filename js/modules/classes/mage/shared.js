@@ -2,7 +2,7 @@
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string, recoverCrystal: string, powerCrystal: string, crystalCombustion: string, supportOrbs: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string, recoverCrystal: string, powerCrystal: string, crystalCombustion: string, supportOrbs: string, magicalCapacity: string}}
  */
 export const MAGE_NODES = {
     elementalChanneling: 'DR',
@@ -18,7 +18,8 @@ export const MAGE_NODES = {
     recoverCrystal: 'R1',
     powerCrystal: 'R1a',
     crystalCombustion: 'R1b',
-    supportOrbs: 'R2'
+    supportOrbs: 'R2',
+    magicalCapacity: 'R2a'
 };
 
 /**

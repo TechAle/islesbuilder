@@ -1,5 +1,6 @@
 import { getBurstHitsPerSecond } from './burst.js';
 import { getHitStats } from '../../damage/hitStats.js';
+import { findPercent } from '../../damage/statLookup.js';
 import { getMageNodeParameter, getMageNodeValue, MAGE_NODES } from './shared.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -101,16 +102,33 @@ export function getCrystalCombustionEffects(context) {
  *   durationSeconds: number,
  *   damagePercent: number,
  *   debuffPercent: number,
- *   maxOrbs: number
+ *   maxOrbs: number,
+ *   rechargeSeconds: number,
+ *   extraCapacityChancePercent: number,
+ *   extraCapacityDuration: number
  * }}
  */
 function getSupportOrbConfig(context) {
+    const magicalCapacityRecharge = getMageNodeParameter(
+        context,
+        MAGE_NODES.magicalCapacity,
+        'a'
+    );
+    const magicalCapacityChance = getMageNodeParameter(
+        context,
+        MAGE_NODES.magicalCapacity,
+        'val'
+    );
+
     return {
         spawnChancePercent: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'a'),
         durationSeconds: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'b'),
         damagePercent: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'c'),
         debuffPercent: getMageNodeParameter(context, MAGE_NODES.supportOrbs, 'e'),
-        maxOrbs: 3
+        maxOrbs: 3,
+        rechargeSeconds: magicalCapacityRecharge > 0 ? magicalCapacityRecharge : 12,
+        extraCapacityChancePercent: magicalCapacityChance,
+        extraCapacityDuration: magicalCapacityRecharge > 0 ? magicalCapacityRecharge : 0
     };
 }
 
@@ -129,7 +147,11 @@ function getSupportOrbConfig(context) {
  *   activeOrbs: number,
  *   activeRedOrbs: number,
  *   activeBlueOrbs: number,
- *   blueDamageMultiplier: number
+ *   blueUptime: number,
+ *   blueDamageMultiplier: number,
+ *   normalActiveOrbs: number,
+ *   specialActiveOrbs: number,
+ *   extraCapacity: number
  * }}
  */
 export function getSupportOrbEffects(context) {
@@ -138,7 +160,8 @@ export function getSupportOrbEffects(context) {
     const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
 
     const activeBlueOrbs = model.totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
-    const blueDamageMultiplier = 1 + (activeBlueOrbs * config.debuffPercent / 100);
+    const blueUptime = Math.min(1, activeBlueOrbs);
+    const blueDamageMultiplier = 1 + (blueUptime * config.debuffPercent / 100);
 
     return {
         ...config,
@@ -149,7 +172,11 @@ export function getSupportOrbEffects(context) {
         activeOrbs: model.totalActiveOrbs,
         activeRedOrbs: model.redOrbHitsPerSecond,
         activeBlueOrbs,
-        blueDamageMultiplier
+        blueUptime,
+        blueDamageMultiplier,
+        normalActiveOrbs: model.normalActiveOrbs,
+        specialActiveOrbs: model.specialActiveOrbs,
+        extraCapacity: model.extraCapacity
     };
 }
 
@@ -220,6 +247,9 @@ function getCrystalDropRates(context, hitsPerSecond) {
  *   explosionsPerSecond: number,
  *   redOrbHitsPerSecond: number,
  *   totalActiveOrbs: number,
+ *   normalActiveOrbs: number,
+ *   specialActiveOrbs: number,
+ *   extraCapacity: number,
  *   drops: ReturnType<typeof getCrystalDropRates>,
  *   crystalConfig: ReturnType<typeof getCrystalDropConfig>,
  *   orbConfig: ReturnType<typeof getSupportOrbConfig>
@@ -242,21 +272,17 @@ function getCombatHitModel(context, baseHitsPerSecond) {
 
     let explosions = override ? fixedExplosions : 0;
     let redOrbHits = 0;
+    const critRate = Math.min(100, Math.max(0, findPercent(context.statsValues ?? {}, 'Crit Chance'))) / 100;
 
     for (let i = 0; i < 200; i++) {
         const totalHits = baseHitsPerSecond + explosions + redOrbHits;
         const drops = getCrystalDropRates(context, totalHits);
+        const orbs = getActiveOrbCounts(orbConfig, totalHits, critRate);
 
         const nextExplosions = override
             ? fixedExplosions
             : Math.min(crystalConfig.maxExplosions, drops.crystalsPerSecond);
-
-        const orbSpawnRate = totalHits * (orbConfig.spawnChancePercent / 100);
-        const totalActiveOrbs = Math.min(
-            orbConfig.maxOrbs,
-            orbSpawnRate * orbConfig.durationSeconds
-        );
-        const nextRedOrbHits = totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
+        const nextRedOrbHits = orbs.totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
 
         if (Math.abs(nextExplosions - explosions) < 1e-12
             && Math.abs(nextRedOrbHits - redOrbHits) < 1e-12) {
@@ -271,18 +297,17 @@ function getCombatHitModel(context, baseHitsPerSecond) {
 
     const totalHits = baseHitsPerSecond + explosions + redOrbHits;
     const drops = getCrystalDropRates(context, totalHits);
-    const orbSpawnRate = totalHits * (orbConfig.spawnChancePercent / 100);
-    const totalActiveOrbs = Math.min(
-        orbConfig.maxOrbs,
-        orbSpawnRate * orbConfig.durationSeconds
-    );
+    const orbs = getActiveOrbCounts(orbConfig, totalHits, critRate);
 
     const model = {
         baseHitsPerSecond,
         totalHitsPerSecond: totalHits,
         explosionsPerSecond: explosions,
         redOrbHitsPerSecond: redOrbHits,
-        totalActiveOrbs,
+        totalActiveOrbs: orbs.totalActiveOrbs,
+        normalActiveOrbs: orbs.normalActiveOrbs,
+        specialActiveOrbs: orbs.specialActiveOrbs,
+        extraCapacity: orbs.extraCapacity,
         drops,
         crystalConfig,
         orbConfig
@@ -291,4 +316,56 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     cache.combatHitModels = cache.combatHitModels ?? {};
     cache.combatHitModels[cacheKey] = model;
     return model;
+}
+
+/**
+ * Orb normali + orb speciali attive in media.
+ * @param {ReturnType<typeof getSupportOrbConfig>} orbConfig
+ * @param {number} totalHitsPerSecond
+ * @param {number} critRate
+ * @returns {{
+ *   normalActiveOrbs: number,
+ *   specialActiveOrbs: number,
+ *   totalActiveOrbs: number,
+ *   extraCapacity: number
+ * }}
+ */
+function getActiveOrbCounts(orbConfig, totalHitsPerSecond, critRate) {
+    if (orbConfig.spawnChancePercent <= 0 || orbConfig.durationSeconds <= 0) {
+        return {
+            normalActiveOrbs: 0,
+            specialActiveOrbs: 0,
+            totalActiveOrbs: 0,
+            extraCapacity: 0
+        };
+    }
+
+    const critsPerSecond = totalHitsPerSecond * critRate;
+    const spawnAttempts = totalHitsPerSecond * (orbConfig.spawnChancePercent / 100);
+
+    const extraCapacity = orbConfig.extraCapacityDuration > 0
+        ? Math.min(
+            3,
+            critsPerSecond
+            * (orbConfig.extraCapacityChancePercent / 100)
+            * orbConfig.extraCapacityDuration
+        )
+        : 0;
+
+    const maxOrbs = orbConfig.maxOrbs + extraCapacity;
+    const chargeCap = maxOrbs
+        * Math.min(1, orbConfig.durationSeconds / orbConfig.rechargeSeconds);
+
+    const totalActiveOrbs = Math.min(
+        maxOrbs,
+        spawnAttempts * orbConfig.durationSeconds,
+        chargeCap
+    );
+
+    return {
+        normalActiveOrbs: Math.min(orbConfig.maxOrbs, totalActiveOrbs),
+        specialActiveOrbs: Math.max(0, totalActiveOrbs - orbConfig.maxOrbs),
+        totalActiveOrbs,
+        extraCapacity
+    };
 }

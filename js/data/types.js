@@ -322,8 +322,13 @@
  * @property {number} durationSeconds
  * @property {number} damagePercent
  * @property {number} activeOrbs
+ * @property {number} baseCapacity
+ * @property {number} normalActiveOrbs
+ * @property {number} specialActiveOrbs
+ * @property {number} extraCapacity
  * @property {number} activeRedOrbs
  * @property {number} activeBlueOrbs
+ * @property {number} blueUptime
  * @property {number} blueDamageMultiplier
  * @property {number} blueDamagePercent
  * @property {number} hitsPerSecond
