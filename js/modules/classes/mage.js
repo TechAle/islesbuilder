@@ -1,11 +1,12 @@
 import { BASE_ENERGY_REGEN, BURST_ACTIVE_SECONDS, BURST_HIT_INTERVAL, BURST_INTERVAL } from '../../data/constants.js';
+import { getHitStats } from '../damage/hitStats.js';
 
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../data/types.js').ElementalKnowledgeEffect} ElementalKnowledgeEffect */
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string, recoverCrystal: string, powerCrystal: string, crystalCombustion: string}}
  */
 const MAGE_NODES = {
     elementalChanneling: 'DR',
@@ -17,7 +18,10 @@ const MAGE_NODES = {
     crystalInsights: 'UL1',
     naturalDistillation: 'UL2',
     elementalSynergy: 'UR',
-    potentialCharge: 'UR1'
+    potentialCharge: 'UR1',
+    recoverCrystal: 'R1',
+    powerCrystal: 'R1a',
+    crystalCombustion: 'R1b'
 };
 
 /**
@@ -25,6 +29,12 @@ const MAGE_NODES = {
  * @type {number}
  */
 const CRYSTAL_INSIGHTS_DURATION = 8;
+
+/**
+ * Cooldown tra due drop di cristalli, in secondi.
+ * @type {number}
+ */
+const CRYSTAL_DROP_COOLDOWN = 0.5;
 
 /**
  * Ogni 1% di Elemental Knowledge aumenta il danno finale del 9%.
@@ -214,6 +224,22 @@ export function hasMageCore(context) {
 }
 
 /**
+ * Hits al secondo aggiunti dalla burst, mediati sul ciclo della burst.
+ * @param {DamageContext} context
+ * @returns {number}
+ */
+export function getBurstHitsPerSecond(context) {
+    if (!context.settings?.useBurst || !hasMageCore(context)) return 0;
+
+    const potentialCharge = getPotentialChargeEffects(
+        context,
+        context.settings?.potentialChargeKills ?? 0
+    );
+
+    return (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL) / potentialCharge.burstCycle;
+}
+
+/**
  * Stima media di Elemental Power% data da Crystal Insights.
  *
  * crit/s = critChance × attackSpeed
@@ -236,16 +262,7 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
     const critRate = Math.min(100, Math.max(0, critChancePercent)) / 100;
     const normalCritsPerSecond = critRate / attackInterval;
 
-    let burstCritsPerSecond = 0;
-    if (context.settings?.useBurst && hasMageCore(context)) {
-        const potentialCharge = getPotentialChargeEffects(
-            context,
-            context.settings?.potentialChargeKills ?? 0
-        );
-        const burstHitsPerSecond = (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL)
-            / potentialCharge.burstCycle;
-        burstCritsPerSecond = burstHitsPerSecond * critRate;
-    }
+    const burstCritsPerSecond = getBurstHitsPerSecond(context) * critRate;
 
     const critsPerSecond = normalCritsPerSecond + burstCritsPerSecond;
     const shardsPerSecond = critsPerSecond * (insights.chancePercent / 100);
@@ -324,5 +341,49 @@ export function getPotentialChargeEffects(context, kills) {
         cooldownReduction,
         burstCooldown,
         burstCycle
+    };
+}
+
+/**
+ * Crystal Combustion: drop rate dei cristalli e percentuale di danno.
+ *
+ * I due drop sono indipendenti e ognuno ha un cooldown di 0.5s.
+ *
+ * @param {DamageContext} context
+ * @returns {{
+ *   recoverChancePercent: number,
+ *   powerChancePercent: number,
+ *   combustionPercent: number,
+ *   hitStats: ReturnType<typeof getHitStats>,
+ *   recoverCrystalsPerSecond: number,
+ *   powerCrystalsPerSecond: number,
+ *   crystalsPerSecond: number
+ * }}
+ */
+export function getCrystalCombustionEffects(context) {
+    const recoverChancePercent = getMageNodeParameter(context, MAGE_NODES.recoverCrystal, 'a');
+    const powerChancePercent = getMageNodeParameter(context, MAGE_NODES.powerCrystal, 'a');
+    const combustionPercent = getMageNodeValue(context, MAGE_NODES.crystalCombustion);
+
+    const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
+    const maxDropsPerSecond = 1 / CRYSTAL_DROP_COOLDOWN;
+
+    const recoverCrystalsPerSecond = Math.min(
+        hitStats.totalHitsPerSecond * (recoverChancePercent / 100),
+        maxDropsPerSecond
+    );
+    const powerCrystalsPerSecond = Math.min(
+        hitStats.totalHitsPerSecond * (powerChancePercent / 100),
+        maxDropsPerSecond
+    );
+
+    return {
+        recoverChancePercent,
+        powerChancePercent,
+        combustionPercent,
+        hitStats,
+        recoverCrystalsPerSecond,
+        powerCrystalsPerSecond,
+        crystalsPerSecond: recoverCrystalsPerSecond + powerCrystalsPerSecond
     };
 }

@@ -288,6 +288,24 @@
  */
 
 /**
+ * Risultato dello step "Crystal Combustion".
+ * @typedef {Object} CrystalCombustionStepResult
+ * @property {boolean} enabled
+ * @property {number} averageDamage
+ * @property {number} hitsPerSecond
+ * @property {number} critsPerSecond
+ * @property {number} recoverChancePercent
+ * @property {number} powerChancePercent
+ * @property {number} recoverCrystalsPerSecond
+ * @property {number} powerCrystalsPerSecond
+ * @property {number} crystalsPerSecond
+ * @property {number} combustionPercent
+ * @property {number} damagePerCrystal
+ * @property {number} combustionDps
+ * @property {number} totalDps
+ */
+
+/**
  * Contesto condiviso dagli step di calcolo del danno.
  * @typedef {Object} DamageContext
  * @property {Record<string, StatTotals>} statsValues

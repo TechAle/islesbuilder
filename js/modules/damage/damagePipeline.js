@@ -4,6 +4,7 @@ import { damageMultiplierStep } from './steps/damageMultiplier.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
 import { burstStep } from './steps/burst.js';
+import { crystalCombustionStep } from './steps/crystalCombustion.js';
 
 /** @typedef {import('../../data/types.js').BuildState} BuildState */
 /** @typedef {import('../../data/types.js').ClassKey} ClassKey */
@@ -23,7 +24,8 @@ export const DAMAGE_STEPS = [
     damageMultiplierStep,
     criticalDamageStep,
     attackSpeedStep,
-    burstStep
+    burstStep,
+    crystalCombustionStep
 ];
 
 /**
