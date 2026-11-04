@@ -58,7 +58,8 @@ export function createDamageContext({ statsValues, skillValues, build, skillTree
             crystalExplosionOverride: false,
             crystalExplosionsPerSecond: 0
         },
-        results: {}
+        results: {},
+        cache: {}
     };
 }
 

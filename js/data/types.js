@@ -344,6 +344,7 @@
  * @property {EquipSlotData|null} weapon
  * @property {DamageSettings} settings
  * @property {Record<string, any>} results - Risultati accumulati dagli step
+ * @property {Record<string, any>} [cache] - Cache interna della pipeline
  */
 
 /**

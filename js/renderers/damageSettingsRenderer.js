@@ -1,3 +1,5 @@
+import { CheckboxControl, SliderControl } from './controls.js';
+
 /** @typedef {import('../data/types.js').DamageSettings} DamageSettings */
 
 /**
@@ -27,47 +29,63 @@
  */
 export class DamageSettingsRenderer {
     /** @param {DamageSettingsRendererOptions} options */
-    constructor({
-        button,
-        panel,
-        slowAttack,
-        slowAttackValue,
-        useBurst,
-        griefUptime,
-        griefUptimeValue,
-        lastSorrowUptime,
-        lastSorrowUptimeValue,
-        focusStacks,
-        focusStacksValue,
-        potentialChargeKills,
-        potentialChargeKillsValue,
-        crystalExplosionOverride,
-        crystalExplosions,
-        crystalExplosionsValue,
-        onChange
-    }) {
-        this.button = button;
-        this.panel = panel;
-        this.slowAttack = slowAttack;
-        this.slowAttackValue = slowAttackValue;
-        this.useBurst = useBurst;
-        this.griefUptime = griefUptime;
-        this.griefUptimeValue = griefUptimeValue;
-        this.lastSorrowUptime = lastSorrowUptime;
-        this.lastSorrowUptimeValue = lastSorrowUptimeValue;
-        this.focusStacks = focusStacks;
-        this.focusStacksValue = focusStacksValue;
-        this.potentialChargeKills = potentialChargeKills;
-        this.potentialChargeKillsValue = potentialChargeKillsValue;
-        this.crystalExplosionOverride = crystalExplosionOverride;
-        this.crystalExplosions = crystalExplosions;
-        this.crystalExplosionsValue = crystalExplosionsValue;
-        this.griefControl = /** @type {HTMLElement|null} */ (griefUptime?.closest('.damage-uptime') ?? null);
-        this.lastSorrowControl = /** @type {HTMLElement|null} */ (lastSorrowUptime?.closest('.damage-uptime') ?? null);
-        this.focusControl = /** @type {HTMLElement|null} */ (focusStacks?.closest('.damage-uptime') ?? null);
-        this.potentialChargeControl = /** @type {HTMLElement|null} */ (potentialChargeKills?.closest('.damage-uptime') ?? null);
-        this.crystalExplosionsControl = /** @type {HTMLElement|null} */ (crystalExplosions?.closest('.damage-uptime') ?? null);
-        this.onChange = onChange;
+    constructor(options) {
+        this.button = options.button;
+        this.panel = options.panel;
+        this.slowAttack = options.slowAttack;
+        this.slowAttackValue = options.slowAttackValue;
+        this.useBurst = options.useBurst;
+        this.crystalExplosionOverride = options.crystalExplosionOverride;
+        this.onChange = options.onChange;
+
+        this.griefControl = /** @type {HTMLElement|null} */ (options.griefUptime?.closest('.damage-uptime') ?? null);
+        this.lastSorrowControl = /** @type {HTMLElement|null} */ (options.lastSorrowUptime?.closest('.damage-uptime') ?? null);
+        this.focusControl = /** @type {HTMLElement|null} */ (options.focusStacks?.closest('.damage-uptime') ?? null);
+        this.potentialChargeControl = /** @type {HTMLElement|null} */ (options.potentialChargeKills?.closest('.damage-uptime') ?? null);
+        this.crystalExplosionsControl = /** @type {HTMLElement|null} */ (options.crystalExplosions?.closest('.damage-uptime') ?? null);
+
+        const emit = () => this.emit();
+
+        this.griefSlider = new SliderControl({
+            input: options.griefUptime,
+            valueEl: options.griefUptimeValue,
+            onChange: emit,
+            format: value => `${value}%`
+        });
+        this.lastSorrowSlider = new SliderControl({
+            input: options.lastSorrowUptime,
+            valueEl: options.lastSorrowUptimeValue,
+            onChange: emit,
+            format: value => `${value}%`
+        });
+        this.focusSlider = new SliderControl({
+            input: options.focusStacks,
+            valueEl: options.focusStacksValue,
+            onChange: emit
+        });
+        this.potentialChargeSlider = new SliderControl({
+            input: options.potentialChargeKills,
+            valueEl: options.potentialChargeKillsValue,
+            onChange: emit
+        });
+        this.crystalExplosionSlider = new SliderControl({
+            input: options.crystalExplosions,
+            valueEl: options.crystalExplosionsValue,
+            onChange: emit
+        });
+
+        this.sliders = [
+            this.griefSlider,
+            this.lastSorrowSlider,
+            this.focusSlider,
+            this.potentialChargeSlider,
+            this.crystalExplosionSlider
+        ];
+
+        this.checkboxes = [
+            new CheckboxControl({ input: options.useBurst, onChange: emit }),
+            new CheckboxControl({ input: options.crystalExplosionOverride, onChange: emit })
+        ];
     }
 
     /** Collega gli eventi dei controlli. */
@@ -80,33 +98,9 @@ export class DamageSettingsRenderer {
         });
 
         this.slowAttackValue?.addEventListener('input', () => this.emit());
-        this.useBurst?.addEventListener('change', () => this.emit());
 
-        this.griefUptime?.addEventListener('input', () => {
-            this.updateUptimeLabel(this.griefUptime, this.griefUptimeValue);
-            this.emit();
-        });
-
-        this.lastSorrowUptime?.addEventListener('input', () => {
-            this.updateUptimeLabel(this.lastSorrowUptime, this.lastSorrowUptimeValue);
-            this.emit();
-        });
-
-        this.focusStacks?.addEventListener('input', () => {
-            this.updateFocusLabel();
-            this.emit();
-        });
-
-        this.potentialChargeKills?.addEventListener('input', () => {
-            this.updatePotentialChargeLabel();
-            this.emit();
-        });
-
-        this.crystalExplosionOverride?.addEventListener('change', () => this.emit());
-        this.crystalExplosions?.addEventListener('input', () => {
-            this.updateCrystalExplosionsLabel();
-            this.emit();
-        });
+        this.sliders.forEach(slider => slider.mount());
+        this.checkboxes.forEach(checkbox => checkbox.mount());
 
         // Overlay: chiude cliccando fuori o premendo Escape.
         document.addEventListener('click', event => {
@@ -124,11 +118,6 @@ export class DamageSettingsRenderer {
         });
 
         this.updateSlowInput();
-        this.updateUptimeLabel(this.griefUptime, this.griefUptimeValue);
-        this.updateUptimeLabel(this.lastSorrowUptime, this.lastSorrowUptimeValue);
-        this.updateFocusLabel();
-        this.updatePotentialChargeLabel();
-        this.updateCrystalExplosionsLabel();
     }
 
     togglePanel() {
@@ -164,107 +153,18 @@ export class DamageSettingsRenderer {
     }
 
     /**
-     * @param {HTMLInputElement|null} input
-     * @param {HTMLElement|null} valueEl
-     */
-    updateUptimeLabel(input, valueEl) {
-        if (!valueEl) return;
-
-        const value = Number.parseFloat(input?.value ?? '100');
-        valueEl.textContent = `${Number.isFinite(value) ? value : 100}%`;
-    }
-
-    updateFocusLabel() {
-        if (!this.focusStacksValue || !this.focusStacks) return;
-
-        const value = Number.parseFloat(this.focusStacks.value);
-        const max = Number.parseFloat(this.focusStacks.max);
-        this.focusStacksValue.textContent = `${value} / ${max}`;
-    }
-
-    /**
      * Imposta il massimo dello slider Focus in base a Focus Capacity.
      * @param {number} maxStacks
      */
     configureFocusSlider(maxStacks) {
-        if (!this.focusStacks) return;
-
-        this.focusStacks.max = String(maxStacks);
-
-        const value = Number.parseFloat(this.focusStacks.value);
-        if (Number.isFinite(value) && value > maxStacks) {
-            this.focusStacks.value = String(maxStacks);
-        }
-
-        this.updateFocusLabel();
-    }
-
-    updatePotentialChargeLabel() {
-        if (!this.potentialChargeKillsValue || !this.potentialChargeKills) return;
-
-        const value = Number.parseFloat(this.potentialChargeKills.value);
-        const max = Number.parseFloat(this.potentialChargeKills.max);
-        this.potentialChargeKillsValue.textContent = `${value} / ${max}`;
-    }
-
-    /**
-     * Sposta lo slider Kills dentro la sezione Burst DPS.
-     * @param {HTMLElement|null} container
-     * @param {boolean} visible
-     */
-    placePotentialChargeControl(container, visible) {
-        if (!this.potentialChargeControl) return;
-
-        if (visible && container) {
-            if (this.potentialChargeControl.parentElement !== container) {
-                container.prepend(this.potentialChargeControl);
-            }
-            this.potentialChargeControl.hidden = false;
-        } else {
-            this.potentialChargeControl.hidden = true;
-        }
-    }
-
-    updateCrystalExplosionsLabel() {
-        if (!this.crystalExplosionsValue || !this.crystalExplosions) return;
-
-        const value = Number.parseFloat(this.crystalExplosions.value);
-        const max = Number.parseFloat(this.crystalExplosions.max);
-        this.crystalExplosionsValue.textContent = `${value} / ${max}`;
+        this.focusSlider.setMax(maxStacks);
     }
 
     /**
      * @param {number} maxExplosions
      */
     configureCrystalExplosionSlider(maxExplosions) {
-        if (!this.crystalExplosions) return;
-
-        this.crystalExplosions.max = String(maxExplosions);
-
-        const value = Number.parseFloat(this.crystalExplosions.value);
-        if (Number.isFinite(value) && value > maxExplosions) {
-            this.crystalExplosions.value = String(maxExplosions);
-        }
-
-        this.updateCrystalExplosionsLabel();
-    }
-
-    /**
-     * Sposta checkbox e slider delle esplosioni nella sezione Crystal Combustion.
-     * @param {HTMLElement|null} container
-     * @param {boolean} visible
-     */
-    placeCrystalExplosionsControl(container, visible) {
-        if (!this.crystalExplosionsControl) return;
-
-        if (visible && container) {
-            if (this.crystalExplosionsControl.parentElement !== container) {
-                container.prepend(this.crystalExplosionsControl);
-            }
-            this.crystalExplosionsControl.hidden = false;
-        } else {
-            this.crystalExplosionsControl.hidden = true;
-        }
+        this.crystalExplosionSlider.setMax(maxExplosions);
     }
 
     /**
@@ -273,10 +173,25 @@ export class DamageSettingsRenderer {
      * @param {{grief: boolean, lastSorrow: boolean, focus: boolean}} visible
      */
     placeUptimeControls(container, visible) {
-        // Ordine finale: Grief, Last Sorrow, Focus.
-        this.placeUptimeControl(this.focusControl, container, visible.focus);
-        this.placeUptimeControl(this.lastSorrowControl, container, visible.lastSorrow);
-        this.placeUptimeControl(this.griefControl, container, visible.grief);
+        this.placeControl(this.focusControl, container, visible.focus);
+        this.placeControl(this.lastSorrowControl, container, visible.lastSorrow);
+        this.placeControl(this.griefControl, container, visible.grief);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placePotentialChargeControl(container, visible) {
+        this.placeControl(this.potentialChargeControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeCrystalExplosionsControl(container, visible) {
+        this.placeControl(this.crystalExplosionsControl, container, visible);
     }
 
     /**
@@ -284,7 +199,7 @@ export class DamageSettingsRenderer {
      * @param {HTMLElement|null} container
      * @param {boolean} visible
      */
-    placeUptimeControl(control, container, visible) {
+    placeControl(control, container, visible) {
         if (!control) return;
 
         if (visible && container) {
@@ -301,22 +216,17 @@ export class DamageSettingsRenderer {
     getSettings() {
         const slowAttack = this.slowAttack?.checked ?? false;
         const parsed = Number.parseFloat(this.slowAttackValue?.value ?? '');
-        const griefUptime = Number.parseFloat(this.griefUptime?.value ?? '100');
-        const lastSorrowUptime = Number.parseFloat(this.lastSorrowUptime?.value ?? '100');
-        const focusStacks = Number.parseFloat(this.focusStacks?.value ?? '0');
-        const potentialChargeKills = Number.parseFloat(this.potentialChargeKills?.value ?? '0');
-        const crystalExplosions = Number.parseFloat(this.crystalExplosions?.value ?? '0');
 
         return {
             slowAttack,
             attackInterval: slowAttack && Number.isFinite(parsed) && parsed > 0 ? parsed : null,
             useBurst: this.useBurst?.checked ?? false,
-            griefUptime: Number.isFinite(griefUptime) ? griefUptime : 100,
-            lastSorrowUptime: Number.isFinite(lastSorrowUptime) ? lastSorrowUptime : 100,
-            focusStacks: Number.isFinite(focusStacks) ? focusStacks : 0,
-            potentialChargeKills: Number.isFinite(potentialChargeKills) ? potentialChargeKills : 0,
+            griefUptime: this.griefSlider.value,
+            lastSorrowUptime: this.lastSorrowSlider.value,
+            focusStacks: this.focusSlider.value,
+            potentialChargeKills: this.potentialChargeSlider.value,
             crystalExplosionOverride: this.crystalExplosionOverride?.checked ?? false,
-            crystalExplosionsPerSecond: Number.isFinite(crystalExplosions) ? crystalExplosions : 0
+            crystalExplosionsPerSecond: this.crystalExplosionSlider.value
         };
     }
 
