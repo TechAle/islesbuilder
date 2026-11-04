@@ -3,10 +3,10 @@ import {
     BASE_ENERGY_REGEN,
     BASE_MAX_ENERGY
 } from '../../../data/constants.js';
-import { computeEnergyState, getSustainLabel } from '../energy.js';
+import { computeEnergyState, getEnergyRegen, getSustainLabel } from '../energy.js';
 import { getEnergyCostMultiplier } from '../energyCost.js';
 import { getAttackInterval } from '../attackTiming.js';
-import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
+import { findFlat, findPercentMultiplier } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -67,8 +67,7 @@ export const attackSpeedStep = {
             baseAttackEnergy * getEnergyCostMultiplier(context.statsValues, 'Attack Costs', weaponClass)
         );
 
-        const energyRegen = (BASE_ENERGY_REGEN + findFlat(context.statsValues, 'Energy Regen'))
-            * (1 + findPercent(context.statsValues, 'Energy Regen') / 100);
+        const energyRegen = getEnergyRegen(context);
 
         const energyPerSecond = energyRegen - attackEnergyCost * attacksPerSecond;
 

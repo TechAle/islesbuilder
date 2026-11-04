@@ -2,9 +2,11 @@ import { BASE_CRIT_DAMAGE, BASE_ELEMENTAL_POWER } from '../../../data/constants.
 import {
     getCrystalInsightsElementalPowerPercent,
     getElementalChannelingPercent,
+    getElementalSynergyEffects,
     getNaturalDistillationEffects
 } from '../../classes/mage.js';
 import { getAttackInterval } from '../attackTiming.js';
+import { getEnergyRegen } from '../energy.js';
 import { findFlat, findPercent } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -70,6 +72,7 @@ export const damageModifiersStep = {
                 naturalDistillationPercent: 0,
                 distilledCritDamagePercent: 0,
                 distilledElementalPowerFlat: 0,
+                elementalSynergyFlat: 0,
                 elementalDamagePercent: 0,
                 effectiveElementalPercent: 0,
                 damage: 0,
@@ -127,9 +130,16 @@ export const damageModifiersStep = {
         const naturalDistillationPercent = naturalDistillation.distillationPercent;
         const distilledCritDamagePercent = naturalDistillation.convertedCritDamagePercent;
         const distilledElementalPowerFlat = naturalDistillation.elementalPowerFlat;
+
+        const energyRegen = getEnergyRegen(context);
+        const elementalSynergy = getElementalSynergyEffects(context, energyRegen);
+
         const elementalPowerPercent = findPercent(context.statsValues, 'Elemental Power')
             + crystalInsightsPercent;
-        const elementalPower = (BASE_ELEMENTAL_POWER + elementalPowerFlat + distilledElementalPowerFlat)
+        const elementalPower = (BASE_ELEMENTAL_POWER
+            + elementalPowerFlat
+            + distilledElementalPowerFlat
+            + elementalSynergy.elementalPowerFlat)
             * (1 + elementalPowerPercent / 100);
 
         // Scaling: percent * (EP / 100).
@@ -154,6 +164,7 @@ export const damageModifiersStep = {
             naturalDistillationPercent,
             distilledCritDamagePercent,
             distilledElementalPowerFlat,
+            elementalSynergyFlat: elementalSynergy.elementalPowerFlat,
             elementalDamagePercent,
             effectiveElementalPercent,
             damage,
@@ -180,6 +191,9 @@ export const damageModifiersStep = {
             }
             if (result.distilledElementalPowerFlat > 0) {
                 rows.push({ label: 'Natural Distillation EP', value: result.distilledElementalPowerFlat });
+            }
+            if (result.elementalSynergyFlat > 0) {
+                rows.push({ label: 'Elemental Synergy EP', value: result.elementalSynergyFlat });
             }
             rows.push({ label: 'Elemental Power', value: result.elementalPower });
         }

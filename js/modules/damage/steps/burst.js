@@ -5,6 +5,7 @@ import {
     BURST_INTERVAL
 } from '../../../data/constants.js';
 import { computeEnergyState, getSustainLabel } from '../energy.js';
+import { getPotentialChargeEffects } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').BurstStepResult} BurstStepResult */
@@ -53,6 +54,11 @@ export const burstStep = {
             burstDps: 0,
             burstDamagePerSecond: 0,
             burstEnergyPerSecond: 0,
+            potentialChargeSeconds: 0,
+            potentialChargeKills: 0,
+            cooldownReduction: 0,
+            burstCooldown: 0,
+            burstCycle: BURST_INTERVAL,
             attackDps,
             totalDps: attackDps,
             energyPerSecond: attack?.energyPerSecond ?? 0,
@@ -69,8 +75,14 @@ export const burstStep = {
 
         const damage = context.results.criticalDamage?.damage ?? 0;
         const burstDamagePerSecond = damage * (BURST_DAMAGE_PERCENT / 100);
-        const burstDps = burstDamagePerSecond * BURST_ACTIVE_SECONDS / BURST_INTERVAL;
-        const burstEnergyPerSecond = BURST_ENERGY_COST / BURST_INTERVAL;
+
+        const potentialCharge = getPotentialChargeEffects(
+            context,
+            context.settings?.potentialChargeKills ?? 0
+        );
+
+        const burstDps = burstDamagePerSecond * BURST_ACTIVE_SECONDS / potentialCharge.burstCycle;
+        const burstEnergyPerSecond = BURST_ENERGY_COST / potentialCharge.burstCycle;
 
         const totalDps = attackDps + burstDps;
         const energyPerSecond = attack.energyPerSecond - burstEnergyPerSecond;
@@ -83,6 +95,11 @@ export const burstStep = {
             burstDps,
             burstDamagePerSecond,
             burstEnergyPerSecond,
+            potentialChargeSeconds: potentialCharge.potentialChargeSeconds,
+            potentialChargeKills: potentialCharge.potentialChargeKills,
+            cooldownReduction: potentialCharge.cooldownReduction,
+            burstCooldown: potentialCharge.burstCooldown,
+            burstCycle: potentialCharge.burstCycle,
             attackDps,
             totalDps,
             energyPerSecond,
@@ -116,6 +133,12 @@ export const burstStep = {
 
         return [
             { label: 'Burst Damage / s', value: result.burstDamagePerSecond },
+            ...(result.potentialChargeSeconds > 0
+                ? [
+                    { label: 'Cooldown Reduction', value: result.cooldownReduction, unit: 's' },
+                    { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
+                ]
+                : []),
             { label: 'Burst DPS', value: result.burstDps },
             { label: 'Attack DPS', value: result.attackDps },
             { label: 'Total DPS', value: result.totalDps },

@@ -13,6 +13,8 @@
  * @property {HTMLElement|null} lastSorrowUptimeValue
  * @property {HTMLInputElement|null} focusStacks
  * @property {HTMLElement|null} focusStacksValue
+ * @property {HTMLInputElement|null} potentialChargeKills
+ * @property {HTMLElement|null} potentialChargeKillsValue
  * @property {(settings: DamageSettings) => void} onChange
  */
 
@@ -34,6 +36,8 @@ export class DamageSettingsRenderer {
         lastSorrowUptimeValue,
         focusStacks,
         focusStacksValue,
+        potentialChargeKills,
+        potentialChargeKillsValue,
         onChange
     }) {
         this.button = button;
@@ -47,9 +51,12 @@ export class DamageSettingsRenderer {
         this.lastSorrowUptimeValue = lastSorrowUptimeValue;
         this.focusStacks = focusStacks;
         this.focusStacksValue = focusStacksValue;
+        this.potentialChargeKills = potentialChargeKills;
+        this.potentialChargeKillsValue = potentialChargeKillsValue;
         this.griefControl = /** @type {HTMLElement|null} */ (griefUptime?.closest('.damage-uptime') ?? null);
         this.lastSorrowControl = /** @type {HTMLElement|null} */ (lastSorrowUptime?.closest('.damage-uptime') ?? null);
         this.focusControl = /** @type {HTMLElement|null} */ (focusStacks?.closest('.damage-uptime') ?? null);
+        this.potentialChargeControl = /** @type {HTMLElement|null} */ (potentialChargeKills?.closest('.damage-uptime') ?? null);
         this.onChange = onChange;
     }
 
@@ -80,6 +87,11 @@ export class DamageSettingsRenderer {
             this.emit();
         });
 
+        this.potentialChargeKills?.addEventListener('input', () => {
+            this.updatePotentialChargeLabel();
+            this.emit();
+        });
+
         // Overlay: chiude cliccando fuori o premendo Escape.
         document.addEventListener('click', event => {
             if (!this.panel || this.panel.hidden) return;
@@ -99,6 +111,7 @@ export class DamageSettingsRenderer {
         this.updateUptimeLabel(this.griefUptime, this.griefUptimeValue);
         this.updateUptimeLabel(this.lastSorrowUptime, this.lastSorrowUptimeValue);
         this.updateFocusLabel();
+        this.updatePotentialChargeLabel();
     }
 
     togglePanel() {
@@ -169,6 +182,32 @@ export class DamageSettingsRenderer {
         this.updateFocusLabel();
     }
 
+    updatePotentialChargeLabel() {
+        if (!this.potentialChargeKillsValue || !this.potentialChargeKills) return;
+
+        const value = Number.parseFloat(this.potentialChargeKills.value);
+        const max = Number.parseFloat(this.potentialChargeKills.max);
+        this.potentialChargeKillsValue.textContent = `${value} / ${max}`;
+    }
+
+    /**
+     * Sposta lo slider Kills dentro la sezione Burst DPS.
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placePotentialChargeControl(container, visible) {
+        if (!this.potentialChargeControl) return;
+
+        if (visible && container) {
+            if (this.potentialChargeControl.parentElement !== container) {
+                container.prepend(this.potentialChargeControl);
+            }
+            this.potentialChargeControl.hidden = false;
+        } else {
+            this.potentialChargeControl.hidden = true;
+        }
+    }
+
     /**
      * Sposta gli slider uptime dentro la sezione Damage Multiplier.
      * @param {HTMLElement|null} container
@@ -206,6 +245,7 @@ export class DamageSettingsRenderer {
         const griefUptime = Number.parseFloat(this.griefUptime?.value ?? '100');
         const lastSorrowUptime = Number.parseFloat(this.lastSorrowUptime?.value ?? '100');
         const focusStacks = Number.parseFloat(this.focusStacks?.value ?? '0');
+        const potentialChargeKills = Number.parseFloat(this.potentialChargeKills?.value ?? '0');
 
         return {
             slowAttack,
@@ -213,7 +253,8 @@ export class DamageSettingsRenderer {
             useBurst: this.useBurst?.checked ?? false,
             griefUptime: Number.isFinite(griefUptime) ? griefUptime : 100,
             lastSorrowUptime: Number.isFinite(lastSorrowUptime) ? lastSorrowUptime : 100,
-            focusStacks: Number.isFinite(focusStacks) ? focusStacks : 0
+            focusStacks: Number.isFinite(focusStacks) ? focusStacks : 0,
+            potentialChargeKills: Number.isFinite(potentialChargeKills) ? potentialChargeKills : 0
         };
     }
 

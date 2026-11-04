@@ -1,4 +1,17 @@
-import { POTION_COOLDOWN, POTION_ENERGY } from '../../data/constants.js';
+import { BASE_ENERGY_REGEN, POTION_COOLDOWN, POTION_ENERGY } from '../../data/constants.js';
+import { findFlat, findPercent } from './statLookup.js';
+
+/** @typedef {import('../../data/types.js').DamageContext} DamageContext */
+
+/**
+ * Energy Regen totale: (10 base + flat) × (1 + percent/100).
+ * @param {DamageContext} context
+ * @returns {number}
+ */
+export function getEnergyRegen(context) {
+    return (BASE_ENERGY_REGEN + findFlat(context.statsValues, 'Energy Regen'))
+        * (1 + findPercent(context.statsValues, 'Energy Regen') / 100);
+}
 
 /**
  * Stato energetico derivato da un saldo al secondo.

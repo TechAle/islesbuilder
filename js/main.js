@@ -95,7 +95,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         useBurst: false,
         griefUptime: 100,
         lastSorrowUptime: 100,
-        focusStacks: 0
+        focusStacks: 0,
+        potentialChargeKills: 0
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -110,6 +111,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         lastSorrowUptimeValue: document.getElementById('last-sorrow-uptime-value'),
         focusStacks: /** @type {HTMLInputElement|null} */ (document.getElementById('focus-stacks')),
         focusStacksValue: document.getElementById('focus-stacks-value'),
+        potentialChargeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('potential-charge-kills')),
+        potentialChargeKillsValue: document.getElementById('potential-charge-kills-value'),
         onChange: settings => {
             damageSettings = settings;
             renderCombat();
@@ -171,6 +174,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lastSorrow: lastSorrowPercent > 0,
                 focus: focusPercent > 0
             }
+        );
+
+        const potentialCharge = dpsManager.getSteps().burst?.potentialChargeSeconds ?? 0;
+        damageSettingsRenderer.placePotentialChargeControl(
+            damageRenderer.getStepContent('burst'),
+            potentialCharge > 0
         );
     };
 

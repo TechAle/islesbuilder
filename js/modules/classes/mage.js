@@ -1,9 +1,11 @@
+import { BASE_ENERGY_REGEN, BURST_ACTIVE_SECONDS, BURST_INTERVAL } from '../../data/constants.js';
+
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../data/types.js').ElementalKnowledgeEffect} ElementalKnowledgeEffect */
 
 /**
  * Nodi del tree del mago usati dal calcolo danni.
- * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string}}
+ * @type {{elementalChanneling: string, elementalKnowledge: string, griefInfliction: string, lastSorrow: string, focusStacks: string, focusCapacity: string, crystalInsights: string, naturalDistillation: string, elementalSynergy: string, potentialCharge: string}}
  */
 const MAGE_NODES = {
     elementalChanneling: 'DR',
@@ -13,7 +15,9 @@ const MAGE_NODES = {
     focusStacks: 'L1',
     focusCapacity: 'L1a',
     crystalInsights: 'UL1',
-    naturalDistillation: 'UL2'
+    naturalDistillation: 'UL2',
+    elementalSynergy: 'UR',
+    potentialCharge: 'UR1'
 };
 
 /**
@@ -243,5 +247,58 @@ export function getNaturalDistillationEffects(context, critDamagePercent) {
         convertedCritDamagePercent,
         critDamageModifier: -convertedCritDamagePercent,
         elementalPowerFlat: convertedCritDamagePercent * 2
+    };
+}
+
+/**
+ * Elemental Synergy: EP flat per ogni punto intero di Energy Regen sopra 10/s.
+ * @param {DamageContext} context
+ * @param {number} energyRegen
+ * @returns {{
+ *   a: number,
+ *   b: number,
+ *   energyRegen: number,
+ *   extraRegen: number,
+ *   steps: number,
+ *   elementalPowerFlat: number
+ * }}
+ */
+export function getElementalSynergyEffects(context, energyRegen) {
+    const a = getMageNodeParameter(context, MAGE_NODES.elementalSynergy, 'a');
+    const b = getMageNodeParameter(context, MAGE_NODES.elementalSynergy, 'b');
+    const extraRegen = Math.max(0, energyRegen - BASE_ENERGY_REGEN);
+    const steps = Math.floor(extraRegen);
+    const elementalPowerFlat = Math.min(steps * a, b);
+
+    return { a, b, energyRegen, extraRegen, steps, elementalPowerFlat };
+}
+
+/**
+ * Potential Charge: riduce il cooldown della burst in base ai kill.
+ * @param {DamageContext} context
+ * @param {number} kills
+ * @returns {{
+ *   potentialChargeSeconds: number,
+ *   potentialChargeKills: number,
+ *   cooldownReduction: number,
+ *   burstCooldown: number,
+ *   burstCycle: number
+ * }}
+ */
+export function getPotentialChargeEffects(context, kills) {
+    const potentialChargeSeconds = getMageNodeValue(context, MAGE_NODES.potentialCharge);
+    const potentialChargeKills = Math.min(30, Math.max(0, kills));
+    const cooldownReduction = potentialChargeSeconds * potentialChargeKills;
+
+    const baseCooldown = Math.max(0, BURST_INTERVAL - BURST_ACTIVE_SECONDS);
+    const burstCooldown = Math.max(0, baseCooldown - cooldownReduction);
+    const burstCycle = BURST_ACTIVE_SECONDS + burstCooldown;
+
+    return {
+        potentialChargeSeconds,
+        potentialChargeKills,
+        cooldownReduction,
+        burstCooldown,
+        burstCycle
     };
 }

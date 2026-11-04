@@ -174,6 +174,7 @@
  * @property {number} naturalDistillationPercent - Percentuale di Crit Damage convertita
  * @property {number} distilledCritDamagePercent - Crit Damage percentuale rimosso
  * @property {number} distilledElementalPowerFlat - EP flat guadagnato (2× il Crit Damage rimosso)
+ * @property {number} elementalSynergyFlat - EP flat guadagnato da Elemental Synergy
  * @property {number} elementalDamagePercent - Percentuale elementale base
  * @property {number} effectiveElementalPercent - Percentuale elementale scalata dall'EP
  */
@@ -251,6 +252,7 @@
  * @property {number} griefUptime - Uptime di Grief Infliction (1-100)
  * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
  * @property {number} focusStacks - Stack medi di Focus (0-3+)
+ * @property {number} potentialChargeKills - Kill medi per Potential Charge (0-30)
  */
 
 /**
@@ -262,6 +264,11 @@
  * @property {number} burstDps
  * @property {number} burstDamagePerSecond
  * @property {number} burstEnergyPerSecond
+ * @property {number} potentialChargeSeconds
+ * @property {number} potentialChargeKills
+ * @property {number} cooldownReduction
+ * @property {number} burstCooldown
+ * @property {number} burstCycle
  * @property {number} attackDps
  * @property {number} totalDps
  * @property {number} energyPerSecond
