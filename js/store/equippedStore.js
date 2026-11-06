@@ -22,7 +22,8 @@ function createEmptyEquipSlot() {
     return {
         name: '',
         stats: {},
-        augments: Array(AUGMENT_SLOTS_PER_ITEM).fill('')
+        augments: Array(AUGMENT_SLOTS_PER_ITEM).fill(''),
+        upgradeLevel: 0
     };
 }
 
@@ -115,6 +116,19 @@ export class BuildStore extends ObservableStore {
             const augments = state.activeEquip[slot]?.augments;
             if (!augments || index < 0 || index >= augments.length) return;
             augments[index] = value;
+        }, 'equip');
+    }
+
+    /**
+     * Aggiorna il livello di upgrade di uno slot equipaggiato.
+     * @param {EquipSlot} slot
+     * @param {number} value
+     */
+    setUpgradeLevel(slot, value) {
+        this.update(state => {
+            const slotData = state.activeEquip[slot];
+            if (!slotData) return;
+            slotData.upgradeLevel = value;
         }, 'equip');
     }
 

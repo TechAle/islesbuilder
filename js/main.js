@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const equipRenderer = new EquipRenderer({
         root: document,
         onItemChange: (slot, value) => itemManager.handleItemInput(slot, value),
+        onUpgradeChange: (slot, value) => itemManager.handleUpgradeInput(slot, value),
         onAugmentChange: (slot, index, value) => itemManager.handleAugmentInput(slot, index, value),
         onOpenModal: slot => itemModalRenderer.open(slot, equippedStore.state.activeEquip[slot])
     });

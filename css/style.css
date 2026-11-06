@@ -164,6 +164,22 @@ body {
     outline: none;
 }
 
+.item-upgrade-input {
+    width: 52px;
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 5px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+    outline: none;
+}
+
+.item-upgrade-input:disabled {
+    opacity: 0.45;
+}
+
 .btn-edit {
     background: #34383f;
     border: 1px solid var(--border-color);

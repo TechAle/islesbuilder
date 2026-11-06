@@ -47,10 +47,13 @@ export class ItemModalRenderer {
         if (!container) return;
 
         container.innerHTML = '';
-        Object.entries(item.stats).forEach(([name, value]) => {
+        const editableStats = Object.entries(item.stats).filter(([name]) => (
+            name !== 'Augment Slots' && name !== 'Normal Attack'
+        ));
+        editableStats.forEach(([name, value]) => {
             this.addRow(name, String(value));
         });
-        if (Object.keys(item.stats).length === 0) this.addRow('', '');
+        if (editableStats.length === 0) this.addRow('', '');
 
         this.getElementById('modal-editor')?.classList.add('active');
     }

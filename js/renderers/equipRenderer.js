@@ -1,4 +1,5 @@
 import { EQUIP_SLOTS } from '../data/constants.js';
+import { clampUpgradeLevel, getMaxUpgradeLevel } from '../modules/itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
 /** @typedef {import('../data/types.js').EquipSlot} EquipSlot */
@@ -7,6 +8,7 @@ import { EQUIP_SLOTS } from '../data/constants.js';
  * @typedef {Object} EquipRendererOptions
  * @property {Document|HTMLElement} root
  * @property {(slot: EquipSlot, value: string) => void} onItemChange
+ * @property {(slot: EquipSlot, value: string) => void} onUpgradeChange
  * @property {(slot: EquipSlot, index: number, value: string) => void} onAugmentChange
  * @property {(slot: EquipSlot) => void} onOpenModal
  */
@@ -16,9 +18,10 @@ import { EQUIP_SLOTS } from '../data/constants.js';
  */
 export class EquipRenderer {
     /** @param {EquipRendererOptions} options */
-    constructor({ root, onItemChange, onAugmentChange, onOpenModal }) {
+    constructor({ root, onItemChange, onUpgradeChange, onAugmentChange, onOpenModal }) {
         this.root = root;
         this.onItemChange = onItemChange;
+        this.onUpgradeChange = onUpgradeChange;
         this.onAugmentChange = onAugmentChange;
         this.onOpenModal = onOpenModal;
     }
@@ -39,6 +42,25 @@ export class EquipRenderer {
                 const slot = /** @type {EquipSlot|undefined} */ (target.dataset.slot);
                 if (slot) this.onItemChange(slot, target.value);
             });
+
+            const target = /** @type {HTMLInputElement} */ (input);
+            const slot = /** @type {EquipSlot|undefined} */ (target.dataset.slot);
+            const controls = target.closest('.equip-controls');
+            if (!slot || !controls) return;
+
+            const upgradeInput = document.createElement('input');
+            upgradeInput.type = 'number';
+            upgradeInput.className = 'item-upgrade-input';
+            upgradeInput.min = '0';
+            upgradeInput.max = '35';
+            upgradeInput.step = '1';
+            upgradeInput.value = '0';
+            upgradeInput.title = 'Upgrade level (0-35)';
+            upgradeInput.dataset.upgradeSlot = slot;
+            upgradeInput.addEventListener('input', () => {
+                this.onUpgradeChange(slot, upgradeInput.value);
+            });
+            controls.appendChild(upgradeInput);
         });
 
         this.root.querySelectorAll('.augment-input').forEach(input => {
@@ -61,6 +83,16 @@ export class EquipRenderer {
                 this.root.querySelector(`input[data-slot="${slot}"]`)
             );
             if (input) input.value = item.name || '';
+
+            const upgradeInput = /** @type {HTMLInputElement|null} */ (
+                this.root.querySelector(`input[data-upgrade-slot="${slot}"]`)
+            );
+            if (upgradeInput) {
+                const maxUpgrade = getMaxUpgradeLevel(item);
+                upgradeInput.max = String(maxUpgrade);
+                upgradeInput.value = String(clampUpgradeLevel(item, item.upgradeLevel ?? 0));
+                upgradeInput.disabled = !item.name;
+            }
 
             (item.augments || []).forEach((value, index) => {
                 const augmentInput = /** @type {HTMLInputElement|null} */ (

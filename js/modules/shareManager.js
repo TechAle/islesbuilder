@@ -1,4 +1,5 @@
 import { CLASS_KEYS, getItemCategoryForSlot } from '../data/constants.js';
+import { clampUpgradeLevel } from './itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
 /** @typedef {import('../data/types.js').ClassKey} ClassKey */
@@ -103,7 +104,8 @@ export class ShareManager {
                         stats: { ...(savedItem.stats || {}) },
                         augments: Array.isArray(savedItem.augments)
                             ? savedItem.augments
-                            : currentSlot.augments
+                            : currentSlot.augments,
+                        upgradeLevel: Number(savedItem.upgradeLevel) || 0
                     };
 
                     if (item.name) {
@@ -124,6 +126,7 @@ export class ShareManager {
                         }
                     }
 
+                    item.upgradeLevel = clampUpgradeLevel(item, item.upgradeLevel);
                     reconstructedEquip[equipSlot] = item;
                 });
 

@@ -39,6 +39,12 @@ export const RING_SLOTS = ['ring1', 'ring2'];
 
 export const RING_ITEM_CATEGORY = 'ring';
 export const AUGMENT_SLOTS_PER_ITEM = 3;
+
+/** Incremento percentuale di ogni statistica per livello di upgrade. */
+export const ITEM_UPGRADE_STAT_PER_LEVEL = 0.066;
+
+/** Livello massimo di upgrade di un oggetto. */
+export const MAX_ITEM_UPGRADE_LEVEL = 35;
 export const MAX_ELIXIR_LEVEL = 5;
 export const DEFAULT_ELIXIR_LEVEL = 0;
 export const DEFAULT_SHARED_POINTS = 100;

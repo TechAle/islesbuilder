@@ -1,4 +1,10 @@
-import { BASE_CRIT_DAMAGE, BASE_ELEMENTAL_POWER, CLASS_KEYS } from '../data/constants.js';
+import {
+    BASE_CRIT_DAMAGE,
+    BASE_ELEMENTAL_POWER,
+    CLASS_KEYS,
+    ITEM_UPGRADE_STAT_PER_LEVEL
+} from '../data/constants.js';
+import { clampUpgradeLevel } from '../modules/itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
 /** @typedef {import('../data/types.js').ClassKey} ClassKey */
@@ -51,9 +57,15 @@ export function selectStats(catalog, build) {
     Object.values(build.activeEquip).forEach(item => {
         if (!item.stats) return;
 
+        const upgradeLevel = clampUpgradeLevel(item, item.upgradeLevel ?? 0);
+        const upgradeMultiplier = 1 + upgradeLevel * ITEM_UPGRADE_STAT_PER_LEVEL;
+
         Object.entries(item.stats).forEach(([stat, val]) => {
             if (stat.includes("Augment") || stat.includes("Level") || stat.includes("Damage Type"))
                 return;
+            if (stat === 'Default Attack' || stat === 'Normal Attack') return;
+            if (stat === 'Weapon Type' || stat === 'element') return;
+            if (stat.startsWith('Ability ')) return;
 
             let numericVal = 0;
             let isPercent = false;
@@ -70,6 +82,7 @@ export function selectStats(catalog, build) {
             }
 
             if (!isNaN(numericVal)) {
+                numericVal *= upgradeMultiplier;
                 addStat(statsValues, stat, numericVal, isPercent || stat.endsWith('%'));
             }
         });

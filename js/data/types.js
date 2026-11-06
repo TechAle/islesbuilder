@@ -98,6 +98,7 @@
  * @property {string} name
  * @property {ItemStats} stats
  * @property {string[]} augments
+ * @property {number} [upgradeLevel]
  */
 
 /**

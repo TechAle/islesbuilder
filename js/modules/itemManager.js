@@ -4,6 +4,7 @@ import {
     RING_SLOTS,
     getItemCategoryForSlot
 } from '../data/constants.js';
+import { clampUpgradeLevel } from './itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').EquipSlot} EquipSlot */
 /** @typedef {import('../data/types.js').ItemStats} ItemStats */
@@ -53,6 +54,7 @@ export class ItemManager {
         Object.values(this.dataStore.data.items).forEach(items => {
             items.forEach(item => {
                 Object.keys(item.stats || {}).forEach(statKey => {
+                    if (statKey === 'Augment Slots' || statKey === 'Normal Attack') return;
                     uniqueStats.add(statKey);
                 });
             });
@@ -73,7 +75,8 @@ export class ItemManager {
             this.equippedStore.setEquipSlot(slot, {
                 name: '',
                 stats: {},
-                augments: Array(AUGMENT_SLOTS_PER_ITEM).fill('')
+                augments: Array(AUGMENT_SLOTS_PER_ITEM).fill(''),
+                upgradeLevel: 0
             });
             return;
         }
@@ -82,13 +85,15 @@ export class ItemManager {
         if (preset) {
             this.equippedStore.setEquipSlot(slot, {
                 name: preset.name,
-                stats: { ...preset.stats }
+                stats: { ...preset.stats },
+                upgradeLevel: 0
             });
         } else {
             // Nome personalizzato: non possiamo mantenere le statistiche del vecchio oggetto
             this.equippedStore.setEquipSlot(slot, {
                 name: trimmed,
-                stats: {}
+                stats: {},
+                upgradeLevel: 0
             });
         }
     }
@@ -113,6 +118,20 @@ export class ItemManager {
      */
     handleAugmentInput(slot, index, value) {
         this.equippedStore.setAugment(slot, index, value.trim());
+    }
+
+    /**
+     * Aggiorna il livello di upgrade di un oggetto.
+     * @param {EquipSlot} slot
+     * @param {string|number} value
+     */
+    handleUpgradeInput(slot, value) {
+        const item = this.equippedStore.state.activeEquip[slot];
+        const parsed = parseInt(String(value), 10);
+        this.equippedStore.setUpgradeLevel(
+            slot,
+            clampUpgradeLevel(item, Number.isFinite(parsed) ? parsed : 0)
+        );
     }
 
     /**
