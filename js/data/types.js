@@ -26,6 +26,22 @@
  */
 
 /**
+ * Abilità speciale o passive di un'arma.
+ * @typedef {Object} SpecialAbility
+ * @property {string} name - `NomeAbilità-NomeArma`
+ * @property {string} ability - Nome dell'abilità originale
+ * @property {string} weapon - Nome dell'arma
+ * @property {'ability'|'passive'} kind
+ * @property {'rightClick'|'f'|null} key
+ * @property {number|null} energy
+ * @property {number} damage - Percentuale di danno dell'abilità
+ * @property {number} times - Numero di colpi/istanze
+ * @property {number} cooldown - Cooldown in secondi (default 1.6 per onClick)
+ * @property {number|null} everyHits - Per le passive: ogni quanti attacchi scatta
+ * @property {string} text
+ */
+
+/**
  * @typedef {Object} ItemPreset
  * @property {string} name
  * @property {ItemStats} stats
@@ -147,6 +163,7 @@
  * @property {string} label - Nome della voce di danno
  * @property {number|string} value - Valore calcolato
  * @property {string} [unit] - Unità opzionale (es. "%", "DPS")
+ * @property {string} [help] - Tooltip opzionale mostrato accanto alla label
  */
 
 /**
@@ -230,15 +247,60 @@
  */
 
 /**
+ * Risultato dello step "Special Attacks".
+ * @typedef {Object} SpecialAttackStepResult
+ * @property {boolean} enabled
+ * @property {number} baseDamage
+ * @property {number} reverseMultiplier
+ * @property {number} energyRegen
+ * @property {number} baseDps
+ * @property {number} maxEnergy
+ * @property {Array<{
+ *   name: string,
+ *   ability: string,
+ *   weapon: string,
+ *   key: string|null,
+ *   energy: number|null,
+ *   damagePercent: number,
+ *   times: number,
+ *   cooldown: number,
+ *   baseCooldown: number,
+ *   enabled: boolean,
+ *   damagePerHit: number,
+ *   damagePerUse: number,
+ *   castsPerSecond: number,
+ *   dps: number,
+ *   totalDps: number,
+ *   energyPerSecond: number,
+ *   energyOnlySpecial: number,
+ *   sustainOnlySpecial: string,
+ *   specialPotionInterval: number,
+ *   energyWithAttack: number,
+ *   sustainWithAttack: string,
+ *   attackPotionInterval: number
+ * }>} abilities
+ */
+
+/**
  * Risultato dello step "Attack Speed & Energy".
  * @typedef {Object} AttackSpeedStepResult
  * @property {number} damage - Danno medio per colpo
  * @property {number} attackInterval - Secondi per attacco
  * @property {number} attacksPerSecond - Attacchi al secondo
  * @property {number} dps - Danno al secondo
+ * @property {number} [dpsAll] - DPS totale: attack + burst + combustion + orb + special attack
+ * @property {number} passiveDps - Danno al secondo dalle passive
+ * @property {number} passiveHitsPerSecond - Hit al secondo dalle passive
+ * @property {Array<{name: string, dps: number, hitsPerSecond: number}>} passiveBreakdown
  * @property {number} attackEnergyCost - Energia consumata per attacco
  * @property {number} energyRegen - Energia rigenerata al secondo
  * @property {number} energyPerSecond - Saldo energetico al secondo
+ * @property {number} [energyPerSecondAttackBurst] - Energia/s con attacco + burst
+ * @property {number} [energyPerSecondAttackBurstSpecial] - Energia/s con attacco + burst + special attack
+ * @property {string} [sustainAttackBurst] - Sustain attacco + burst
+ * @property {string} [sustainAttackBurstSpecial] - Sustain attacco + burst + special attack
+ * @property {number} [secondsToEmptyAttackBurst] - Tempo a 0 energia con attacco + burst
+ * @property {number} [secondsToEmptyAttackBurstSpecial] - Tempo a 0 energia con attacco + burst + special attack
  * @property {number} maxEnergy - Energia massima
  * @property {number} secondsToEmpty - Secondi prima di esaurire l'energia (Infinity se non si esaurisce)
  * @property {boolean} sustain - True se l'energia rigenerata copre quella consumata
@@ -258,6 +320,8 @@
  * @property {number} potentialChargeKills - Kill medi per Potential Charge (0-30)
  * @property {boolean} crystalExplosionOverride - Se true, usa il valore dello slider
  * @property {number} crystalExplosionsPerSecond - Cristalli esplosi al secondo (override)
+ * @property {string[]} [disabledSpecialAttacks] - Nomi delle abilità onClick disabilitate
+ * @property {Record<string, number>} [abilityCooldownOverrides] - Cooldown override per abilità
  */
 
 /**
@@ -268,6 +332,7 @@
  * @property {boolean} enabled - Se il burst è attivo
  * @property {number} burstDps
  * @property {number} burstDamagePerSecond
+ * @property {number} reverseMultiplier
  * @property {number} burstEnergyPerSecond
  * @property {number} potentialChargeSeconds
  * @property {number} potentialChargeKills
@@ -347,6 +412,7 @@
  * @property {BuildState} build
  * @property {Record<ClassKey, SkillTreeClass>} [skillTrees]
  * @property {EquipSlotData|null} weapon
+ * @property {import('../modules/specialAbilityManager.js').SpecialAbilityManager} [specialAbilityManager]
  * @property {DamageSettings} settings
  * @property {Record<string, any>} results - Risultati accumulati dagli step
  * @property {Record<string, any>} [cache] - Cache interna della pipeline

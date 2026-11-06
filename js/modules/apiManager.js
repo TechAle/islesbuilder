@@ -57,11 +57,16 @@ import { applyItemOverride } from "./itemOverrides.js";
  * Adapter API: scarica e normalizza il catalogo, poi aggiorna il DataStore.
  */
 export class ApiManager {
-    /** @param {{dataStore: import('../store/dataStore.js').DataStore}} options */
-    constructor({ dataStore }) {
+    /**
+     * @param {Object} options
+     * @param {import('../store/dataStore.js').DataStore} options.dataStore
+     * @param {import('./specialAbilityManager.js').SpecialAbilityManager} [options.specialAbilityManager]
+     */
+    constructor({ dataStore, specialAbilityManager }) {
         /** @type {string} */
         this.url = API_URL;
         this.dataStore = dataStore;
+        this.specialAbilityManager = specialAbilityManager;
     }
 
     /** Aggiorna in parallelo oggetti ed elisir dall'API. */
@@ -193,6 +198,9 @@ export class ApiManager {
                 }
             });
 
+            // Le abilità speciali vengono ricostruite a ogni sincronizzazione.
+            this.specialAbilityManager?.reset();
+
             // 4. Smistamento e formattazione
             allFetchedItems.forEach(item => {
                 const rawSlot = item.gear?.slot;
@@ -207,6 +215,10 @@ export class ApiManager {
 
                 const name = item.name || item.gear?.name;
                 const gear = item.gear || {};
+
+                if (Array.isArray(gear.abilities) && gear.abilities.length > 0) {
+                    this.specialAbilityManager?.registerAbilities(name, gear.abilities);
+                }
 
                 // Chiamata alla funzione di appoggio per generare tutte le statistiche pulite
                 const statsObj = this.formatGearStats(gear, targetCategory, item.tooltipJson, name);

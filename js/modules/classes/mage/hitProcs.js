@@ -1,4 +1,5 @@
 import { getBurstHitsPerSecond } from './burst.js';
+import { getAttackInterval } from '../../damage/attackTiming.js';
 import { getHitStats } from '../../damage/hitStats.js';
 import { findPercent } from '../../damage/statLookup.js';
 import { getMageNodeParameter, getMageNodeValue, MAGE_NODES } from './shared.js';
@@ -244,12 +245,16 @@ function getCrystalDropRates(context, hitsPerSecond) {
  * @returns {{
  *   baseHitsPerSecond: number,
  *   totalHitsPerSecond: number,
+ *   nonPassiveHitsPerSecond: number,
+ *   specialAttackHitsPerSecond: number,
  *   explosionsPerSecond: number,
  *   redOrbHitsPerSecond: number,
  *   totalActiveOrbs: number,
  *   normalActiveOrbs: number,
  *   specialActiveOrbs: number,
  *   extraCapacity: number,
+ *   passiveHitsPerSecond: number,
+ *   passiveBreakdown: Array<{name: string, everyHits: number, hitsPerSecond: number}>,
  *   drops: ReturnType<typeof getCrystalDropRates>,
  *   crystalConfig: ReturnType<typeof getCrystalDropConfig>,
  *   orbConfig: ReturnType<typeof getSupportOrbConfig>
@@ -258,6 +263,8 @@ function getCrystalDropRates(context, hitsPerSecond) {
 function getCombatHitModel(context, baseHitsPerSecond) {
     const crystalConfig = getCrystalDropConfig(context);
     const orbConfig = getSupportOrbConfig(context);
+    const manager = context.specialAbilityManager;
+    const specialAttackHits = manager ? manager.getOnClickHitsPerSecond(context) : 0;
 
     const override = !!context.settings?.crystalExplosionOverride;
     const fixedExplosions = Math.min(
@@ -266,16 +273,21 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     );
 
     const cache = context.cache ?? (context.cache = {});
-    const cacheKey = `${baseHitsPerSecond.toFixed(10)}|${override ? 1 : 0}|${fixedExplosions}`;
+    const cacheKey = `${baseHitsPerSecond.toFixed(10)}|${specialAttackHits.toFixed(10)}|${override ? 1 : 0}|${fixedExplosions}`;
     const cached = cache.combatHitModels?.[cacheKey];
     if (cached) return cached;
 
     let explosions = override ? fixedExplosions : 0;
     let redOrbHits = 0;
+    let passiveHits = 0;
     const critRate = Math.min(100, Math.max(0, findPercent(context.statsValues ?? {}, 'Crit Chance'))) / 100;
 
     for (let i = 0; i < 200; i++) {
-        const totalHits = baseHitsPerSecond + explosions + redOrbHits;
+        const nonPassiveHits = baseHitsPerSecond + specialAttackHits + explosions + redOrbHits;
+        const passive = manager
+            ? manager.getPassiveHitsFromBase(context, nonPassiveHits)
+            : { hitsPerSecond: 0 };
+        const totalHits = nonPassiveHits + passive.hitsPerSecond;
         const drops = getCrystalDropRates(context, totalHits);
         const orbs = getActiveOrbCounts(orbConfig, totalHits, critRate);
 
@@ -283,24 +295,34 @@ function getCombatHitModel(context, baseHitsPerSecond) {
             ? fixedExplosions
             : Math.min(crystalConfig.maxExplosions, drops.crystalsPerSecond);
         const nextRedOrbHits = orbs.totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
+        const nextPassiveHits = passive.hitsPerSecond;
 
         if (Math.abs(nextExplosions - explosions) < 1e-12
-            && Math.abs(nextRedOrbHits - redOrbHits) < 1e-12) {
+            && Math.abs(nextRedOrbHits - redOrbHits) < 1e-12
+            && Math.abs(nextPassiveHits - passiveHits) < 1e-12) {
             explosions = nextExplosions;
             redOrbHits = nextRedOrbHits;
+            passiveHits = nextPassiveHits;
             break;
         }
 
         explosions = nextExplosions;
         redOrbHits = nextRedOrbHits;
+        passiveHits = nextPassiveHits;
     }
 
-    const totalHits = baseHitsPerSecond + explosions + redOrbHits;
+    const nonPassiveHits = baseHitsPerSecond + specialAttackHits + explosions + redOrbHits;
+    const totalHits = nonPassiveHits + passiveHits;
+    const passive = manager
+        ? manager.getPassiveHitsFromBase(context, nonPassiveHits)
+        : { hitsPerSecond: 0, applied: [] };
     const drops = getCrystalDropRates(context, totalHits);
     const orbs = getActiveOrbCounts(orbConfig, totalHits, critRate);
 
     const model = {
         baseHitsPerSecond,
+        specialAttackHitsPerSecond: specialAttackHits,
+        nonPassiveHitsPerSecond: nonPassiveHits,
         totalHitsPerSecond: totalHits,
         explosionsPerSecond: explosions,
         redOrbHitsPerSecond: redOrbHits,
@@ -308,6 +330,8 @@ function getCombatHitModel(context, baseHitsPerSecond) {
         normalActiveOrbs: orbs.normalActiveOrbs,
         specialActiveOrbs: orbs.specialActiveOrbs,
         extraCapacity: orbs.extraCapacity,
+        passiveHitsPerSecond: passive.hitsPerSecond,
+        passiveBreakdown: passive.applied ?? [],
         drops,
         crystalConfig,
         orbConfig
@@ -316,6 +340,30 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     cache.combatHitModels = cache.combatHitModels ?? {};
     cache.combatHitModels[cacheKey] = model;
     return model;
+}
+
+/**
+ * Hit delle passive e hit totali del modello.
+ * Include attacchi base, burst, esplosioni, orb e passive.
+ *
+ * @param {DamageContext} context
+ * @returns {{
+ *   hitsPerSecond: number,
+ *   nonPassiveHitsPerSecond: number,
+ *   totalHitsPerSecond: number,
+ *   breakdown: Array<{name: string, everyHits: number, hitsPerSecond: number}>
+ * }}
+ */
+export function getPassiveHitStats(context) {
+    const baseHits = (1 / getAttackInterval(context)) + getBurstHitsPerSecond(context);
+    const model = getCombatHitModel(context, baseHits);
+
+    return {
+        hitsPerSecond: model.passiveHitsPerSecond,
+        nonPassiveHitsPerSecond: model.nonPassiveHitsPerSecond,
+        totalHitsPerSecond: model.totalHitsPerSecond,
+        breakdown: model.passiveBreakdown
+    };
 }
 
 /**

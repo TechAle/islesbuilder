@@ -33,3 +33,18 @@ export function getWeaponClass(weapon) {
 export function getWeaponDefaultAttackPercent(weapon) {
     return readNumber(weapon?.stats?.['Default Attack']);
 }
+
+/**
+ * Fattore per tornare dal danno "dopo Default Attack" al danno base
+ * dell'arma. Esempio: Default Attack 85% → 100 / 85 = 1.17647.
+ *
+ * Le abilità e le passive usano il danno base dell'arma, non quello già
+ * scalato dal Default Attack.
+ *
+ * @param {EquipSlotData|null|undefined} weapon
+ * @returns {number}
+ */
+export function getDefaultAttackReverseMultiplier(weapon) {
+    const defaultAttackPercent = getWeaponDefaultAttackPercent(weapon);
+    return defaultAttackPercent > 0 ? 100 / defaultAttackPercent : 0;
+}

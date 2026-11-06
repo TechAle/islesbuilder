@@ -385,6 +385,16 @@ svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; }
 .card-title { font-size: 15px; font-weight: 800; border-bottom: 2px solid var(--border-color); padding-bottom: 6px; color: var(--gold); }
 .stat-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px dashed #2c3036; }
 .stat-label { color: var(--text-muted); }
+.stat-label--help {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.stat-help {
+    width: 12px;
+    height: 12px;
+    font-size: 9px;
+}
 .stat-val { font-weight: 700; color: #fff; }
 
 #top {
@@ -566,6 +576,35 @@ svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; }
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.setting-main--column {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.setting-ability {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.setting-ability-cooldown {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.setting-ability-cooldown input[type="range"] {
+    width: 110px;
+}
+
+.setting-ability-cooldown-value {
+    min-width: 42px;
+    text-align: right;
 }
 
 .setting-help {

@@ -4,7 +4,7 @@ import { getSupportOrbEffects } from '../../classes/mage.js';
 /** @typedef {import('../../../data/types.js').SupportOrbsStepResult} SupportOrbsStepResult */
 
 /**
- * Step 8 — Support Orbs (RED orb).
+ * Step 9 — Support Orbs (RED orb).
  *
  * Le hit hanno una probabilità di spawnare un'orb; le orb attaccano 1 volta
  * al secondo per la loro durata. Ogni hit dell'orb infligge `c%` dell'Average
@@ -89,8 +89,7 @@ export const supportOrbsStep = {
             { label: 'Orb Hits / s', value: result.orbHitsPerSecond, unit: '/s' },
             { label: 'Support Orb DPS', value: result.orbDps },
             { label: 'Blue Uptime', value: result.blueUptime * 100, unit: '%' },
-            { label: 'Blue Orb Bonus', value: result.blueDamagePercent, unit: '%' },
-            { label: 'Total DPS', value: result.totalDps }
+            { label: 'Blue Orb Bonus', value: result.blueDamagePercent, unit: '%' }
         ];
     }
 };

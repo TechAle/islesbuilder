@@ -20,6 +20,8 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLInputElement|null} crystalExplosionOverride
  * @property {HTMLInputElement|null} crystalExplosions
  * @property {HTMLElement|null} crystalExplosionsValue
+ * @property {HTMLElement|null} specialAttacksRow
+ * @property {HTMLElement|null} specialAttacksContainer
  * @property {(settings: DamageSettings) => void} onChange
  */
 
@@ -36,7 +38,15 @@ export class DamageSettingsRenderer {
         this.slowAttackValue = options.slowAttackValue;
         this.useBurst = options.useBurst;
         this.crystalExplosionOverride = options.crystalExplosionOverride;
+        this.specialAttacksRow = options.specialAttacksRow;
+        this.specialAttacksContainer = options.specialAttacksContainer;
         this.onChange = options.onChange;
+
+        /** @type {Set<string>} */
+        this.disabledSpecialAttacks = new Set();
+        /** @type {Map<string, number>} */
+        this.abilityCooldownOverrides = new Map();
+        this.specialAttackSignature = '';
 
         this.griefControl = /** @type {HTMLElement|null} */ (options.griefUptime?.closest('.damage-uptime') ?? null);
         this.lastSorrowControl = /** @type {HTMLElement|null} */ (options.lastSorrowUptime?.closest('.damage-uptime') ?? null);
@@ -213,6 +223,107 @@ export class DamageSettingsRenderer {
     }
 
     /** @returns {DamageSettings} */
+    /**
+     * Aggiorna le checkbox e gli slider cooldown delle special attack onClick.
+     * @param {Array<{name: string, ability: string, key?: string|null, damagePercent: number, baseCooldown: number, cooldown: number}>} abilities
+     */
+    configureSpecialAttacks(abilities) {
+        const row = this.specialAttacksRow;
+        const container = this.specialAttacksContainer;
+        if (!row || !container) return;
+
+        const list = (abilities ?? []).filter(ability => ability.damagePercent > 0);
+        const signature = list
+            .map(ability => `${ability.name}:${ability.ability}:${ability.baseCooldown}`)
+            .join('|');
+
+        if (signature === this.specialAttackSignature) return;
+        this.specialAttackSignature = signature;
+
+        const validNames = new Set(list.map(ability => ability.name));
+        this.disabledSpecialAttacks.forEach(name => {
+            if (!validNames.has(name)) this.disabledSpecialAttacks.delete(name);
+        });
+        this.abilityCooldownOverrides.forEach((_, name) => {
+            if (!validNames.has(name)) this.abilityCooldownOverrides.delete(name);
+        });
+
+        container.innerHTML = '';
+
+        list.forEach(ability => {
+            const duplicates = list.filter(entry => entry.ability === ability.ability).length > 1;
+            const keyLabel = ability.key === 'rightClick'
+                ? 'Right Click'
+                : (ability.key === 'f' ? 'F' : '');
+            const labelText = duplicates && keyLabel
+                ? `${ability.ability} (${keyLabel})`
+                : ability.ability;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'setting-ability';
+
+            const label = document.createElement('label');
+            label.className = 'setting-check';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = !this.disabledSpecialAttacks.has(ability.name);
+
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(` ${labelText}`));
+            wrapper.appendChild(label);
+
+            const cooldownRow = document.createElement('div');
+            cooldownRow.className = 'setting-ability-cooldown';
+            cooldownRow.hidden = !input.checked;
+
+            const cooldownLabel = document.createElement('span');
+            cooldownLabel.textContent = 'Override ability cooldown';
+
+            const cooldownInput = document.createElement('input');
+            cooldownInput.type = 'range';
+            cooldownInput.min = String(ability.baseCooldown);
+            cooldownInput.max = String(ability.baseCooldown * 5);
+            cooldownInput.step = '0.1';
+            cooldownInput.value = String(
+                this.abilityCooldownOverrides.get(ability.name) ?? ability.baseCooldown
+            );
+
+            const cooldownValue = document.createElement('span');
+            cooldownValue.className = 'setting-ability-cooldown-value';
+
+            const slider = new SliderControl({
+                input: cooldownInput,
+                valueEl: cooldownValue,
+                onChange: () => {
+                    this.abilityCooldownOverrides.set(ability.name, slider.value);
+                    this.emit();
+                },
+                format: value => `${value.toFixed(2)}s`
+            });
+
+            slider.mount();
+
+            input.addEventListener('change', () => {
+                if (input.checked) {
+                    this.disabledSpecialAttacks.delete(ability.name);
+                } else {
+                    this.disabledSpecialAttacks.add(ability.name);
+                }
+                cooldownRow.hidden = !input.checked;
+                this.emit();
+            });
+
+            cooldownRow.appendChild(cooldownLabel);
+            cooldownRow.appendChild(cooldownInput);
+            cooldownRow.appendChild(cooldownValue);
+            wrapper.appendChild(cooldownRow);
+            container.appendChild(wrapper);
+        });
+
+        row.hidden = list.length === 0;
+    }
+
     getSettings() {
         const slowAttack = this.slowAttack?.checked ?? false;
         const parsed = Number.parseFloat(this.slowAttackValue?.value ?? '');
@@ -226,7 +337,9 @@ export class DamageSettingsRenderer {
             focusStacks: this.focusSlider.value,
             potentialChargeKills: this.potentialChargeSlider.value,
             crystalExplosionOverride: this.crystalExplosionOverride?.checked ?? false,
-            crystalExplosionsPerSecond: this.crystalExplosionSlider.value
+            crystalExplosionsPerSecond: this.crystalExplosionSlider.value,
+            disabledSpecialAttacks: [...this.disabledSpecialAttacks],
+            abilityCooldownOverrides: Object.fromEntries(this.abilityCooldownOverrides)
         };
     }
 

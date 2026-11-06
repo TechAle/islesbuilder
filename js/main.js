@@ -8,7 +8,7 @@ import { ItemManager } from './modules/itemManager.js';
 import { ShareManager } from './modules/shareManager.js';
 import { SkillTreeManager } from './modules/skillTreeManager.js';
 import { DpsManager } from './modules/dpsManager.js';
-
+import { SpecialAbilityManager } from './modules/specialAbilityManager.js';
 import { EquipRenderer } from './renderers/equipRenderer.js';
 import { ElixirRenderer } from './renderers/elixirRenderer.js';
 import { ItemModalRenderer } from './renderers/itemModalRenderer.js';
@@ -34,6 +34,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     window.dataStore = dataStore;
 
+    const specialAbilityManager = new SpecialAbilityManager();
+    window.specialAbilityManager = specialAbilityManager;
+
+    // Le abilità speciali vengono estratte dal catalogo locale prima del
+    // primo render; l'API le risincronizza subito dopo.
+    specialAbilityManager.parseFromItems(dataStore.data.items);
+
     const equippedStore = new BuildStore({
         skillTrees: dataStore.data.skillTrees,
         elixirsConfig: dataStore.data.elixirsConfig
@@ -45,8 +52,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elixirManager = new ElixirManager({ equippedStore });
     const skillTreeManager = new SkillTreeManager({ dataStore, equippedStore });
     const shareManager = new ShareManager({ dataStore, equippedStore, location: window.location });
-    const apiManager = new ApiManager({ dataStore });
-    const dpsManager = new DpsManager();
+    const apiManager = new ApiManager({ dataStore, specialAbilityManager });
+    const dpsManager = new DpsManager({ specialAbilityManager });
 
     // --- Renderer ------------------------------------------------------
     const itemModalRenderer = new ItemModalRenderer({
@@ -98,7 +105,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         focusStacks: 0,
         potentialChargeKills: 0,
         crystalExplosionOverride: false,
-        crystalExplosionsPerSecond: 0
+        crystalExplosionsPerSecond: 0,
+        disabledSpecialAttacks: [],
+        abilityCooldownOverrides: {}
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -118,6 +127,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         crystalExplosionOverride: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosion-override')),
         crystalExplosions: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosions')),
         crystalExplosionsValue: document.getElementById('crystal-explosions-value'),
+        specialAttacksRow: document.getElementById('setting-special-attacks'),
+        specialAttacksContainer: document.getElementById('setting-special-attack-list'),
         onChange: settings => {
             damageSettings = settings;
             renderCombat();
@@ -166,6 +177,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             settings: damageSettings
         });
         damageRenderer.render(dpsManager.getStepGroups(), dpsManager.getDps());
+
+        damageSettingsRenderer.configureSpecialAttacks(
+            dpsManager.getSteps().specialAttacks?.abilities ?? []
+        );
 
         const griefPercent = dpsManager.getSteps().damageMultiplier?.griefInflictionPercent ?? 0;
         const lastSorrowPercent = dpsManager.getSteps().damageMultiplier?.lastSorrowPercent ?? 0;

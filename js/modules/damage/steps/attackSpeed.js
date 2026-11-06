@@ -6,6 +6,7 @@ import {
 import { computeEnergyState, getEnergyRegen, getSustainLabel } from '../energy.js';
 import { getEnergyCostMultiplier } from '../energyCost.js';
 import { getAttackInterval } from '../attackTiming.js';
+import { getPassiveHitStats } from '../../classes/mage.js';
 import { findFlat, findPercentMultiplier } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -43,6 +44,9 @@ export const attackSpeedStep = {
                 attackInterval: BASE_ATTACK_TIME,
                 attacksPerSecond: 0,
                 dps: 0,
+                passiveDps: 0,
+                passiveHitsPerSecond: 0,
+                passiveBreakdown: [],
                 attackEnergyCost: 0,
                 energyRegen: BASE_ENERGY_REGEN,
                 energyPerSecond: 0,
@@ -57,7 +61,16 @@ export const attackSpeedStep = {
         const attackInterval = getAttackInterval(context);
 
         const attacksPerSecond = 1 / attackInterval;
-        const dps = damage * attacksPerSecond;
+        const attackDps = damage * attacksPerSecond;
+        const passiveHits = getPassiveHitStats(context);
+        const passiveDamage = context.specialAbilityManager
+            ? context.specialAbilityManager.applyDamagePassives(
+                context,
+                damage,
+                passiveHits.nonPassiveHitsPerSecond
+            )
+            : { dps: 0, applied: [] };
+        const dps = attackDps + passiveDamage.dps;
 
         const baseAttackEnergy = findFlat(context.statsValues, 'Attack Energy');
 
@@ -84,6 +97,9 @@ export const attackSpeedStep = {
             attackInterval,
             attacksPerSecond,
             dps,
+            passiveDps: passiveDamage.dps,
+            passiveHitsPerSecond: passiveHits.hitsPerSecond,
+            passiveBreakdown: passiveDamage.applied,
             attackEnergyCost,
             energyRegen,
             energyPerSecond,
@@ -99,20 +115,72 @@ export const attackSpeedStep = {
     toResults(result) {
         if (!result || result.damage <= 0) return [];
 
-        const seconds = Number.isFinite(result.secondsToEmpty)
-            ? { value: result.secondsToEmpty, unit: 's' }
+        /**
+         * @param {number} value
+         * @returns {{value: number|string, unit?: string}}
+         */
+        const formatSeconds = value => Number.isFinite(value)
+            ? { value, unit: 's' }
             : { value: '∞' };
 
-        return [
+        /** @type {import('../../../data/types.js').DamageResult[]} */
+        const rows = [
             { label: 'Attack Interval', value: result.attackInterval, unit: 's' },
             { label: 'Attacks per Second', value: result.attacksPerSecond, unit: '/s' },
+            ...(result.passiveDps > 0
+                ? result.passiveBreakdown.flatMap(passive => [
+                    { label: `${passive.name} DPS`, value: passive.dps },
+                    { label: `${passive.name} Hits / s`, value: passive.hitsPerSecond, unit: '/s' }
+                ])
+                : []),
             { label: 'DPS', value: result.dps },
-            { label: 'Attack Energy Cost', value: result.attackEnergyCost },
+            { label: 'DPS (all)', value: result.dpsAll ?? result.dps }
+        ];
+
+        rows.push(
             { label: 'Energy Regen', value: result.energyRegen, unit: '/s' },
             { label: 'Energy per Second', value: result.energyPerSecond, unit: '/s' },
-            { label: 'Max Energy', value: result.maxEnergy },
-            { label: 'Time to 0 Energy', ...seconds },
-            { label: 'Sustain', value: getSustainLabel(result) }
-        ];
+            { label: 'Sustain', value: getSustainLabel(result) },
+            { label: 'Time to 0 Energy', ...formatSeconds(result.secondsToEmpty) }
+        );
+
+        if (typeof result.energyPerSecondAttackBurst === 'number') {
+            rows.push(
+                {
+                    label: 'Energy per Second (A+B)',
+                    value: result.energyPerSecondAttackBurst,
+                    unit: '/s',
+                    ...(typeof result.energyPerSecondAttackBurstSpecial === 'number'
+                        ? {}
+                        : { help: 'A = Attack, B = Burst, S = Special Attack' })
+                },
+                { label: 'Sustain (A+B)', value: result.sustainAttackBurst ?? '' },
+                {
+                    label: 'Time to 0 Energy (A+B)',
+                    ...formatSeconds(result.secondsToEmptyAttackBurst ?? Infinity)
+                }
+            );
+        }
+
+        if (typeof result.energyPerSecondAttackBurstSpecial === 'number') {
+            rows.push(
+                {
+                    label: 'Energy per Second (A+B+S)',
+                    value: result.energyPerSecondAttackBurstSpecial,
+                    unit: '/s',
+                    help: 'A = Attack, B = Burst, S = Special Attack'
+                },
+                {
+                    label: 'Sustain (A+B+S)',
+                    value: result.sustainAttackBurstSpecial ?? ''
+                },
+                {
+                    label: 'Time to 0 Energy (A+B+S)',
+                    ...formatSeconds(result.secondsToEmptyAttackBurstSpecial ?? Infinity)
+                }
+            );
+        }
+
+        return rows;
     }
 };

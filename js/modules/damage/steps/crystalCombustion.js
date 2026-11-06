@@ -4,7 +4,7 @@ import { getCrystalCombustionEffects } from '../../classes/mage.js';
 /** @typedef {import('../../../data/types.js').CrystalCombustionStepResult} CrystalCombustionStepResult */
 
 /**
- * Step 7 — Crystal Combustion.
+ * Step 8 — Crystal Combustion.
  *
  * I cristalli che despawnano infliggono `val%` dell'Average Damage.
  * I drop di Recover Crystal e Power Crystal sono indipendenti e limitati
@@ -74,8 +74,7 @@ export const crystalCombustionStep = {
             { label: 'Recover Crystal / s', value: result.recoverCrystalsPerSecond, unit: '/s' },
             { label: 'Power Crystal / s', value: result.powerCrystalsPerSecond, unit: '/s' },
             { label: 'Explosions / s', value: result.explosionsPerSecond, unit: '/s' },
-            { label: 'Crystal Combustion DPS', value: result.combustionDps },
-            { label: 'Total DPS', value: result.totalDps }
+            { label: 'Crystal Combustion DPS', value: result.combustionDps }
         ];
     }
 };

@@ -2,6 +2,7 @@ import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
 import { damageMultiplierStep } from './steps/damageMultiplier.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
+import { specialAttacksStep } from './steps/specialAttacks.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
 import { burstStep } from './steps/burst.js';
 import { crystalCombustionStep } from './steps/crystalCombustion.js';
@@ -26,6 +27,7 @@ export const DAMAGE_STEPS = [
     criticalDamageStep,
     attackSpeedStep,
     burstStep,
+    specialAttacksStep,
     crystalCombustionStep,
     supportOrbsStep
 ];
@@ -38,15 +40,24 @@ export const DAMAGE_STEPS = [
  * @param {BuildState} options.build
  * @param {Record<ClassKey, import('../../data/types.js').SkillTreeClass>} [options.skillTrees]
  * @param {import('../../data/types.js').DamageSettings} [options.settings]
+ * @param {import('../specialAbilityManager.js').SpecialAbilityManager} [options.specialAbilityManager]
  * @returns {DamageContext}
  */
-export function createDamageContext({ statsValues, skillValues, build, skillTrees, settings }) {
+export function createDamageContext({
+    statsValues,
+    skillValues,
+    build,
+    skillTrees,
+    settings,
+    specialAbilityManager
+}) {
     return {
         statsValues,
         skillValues,
         build,
         skillTrees: skillTrees ?? /** @type {Record<ClassKey, import('../../data/types.js').SkillTreeClass>} */ ({}),
         weapon: build.activeEquip.weapon ?? null,
+        specialAbilityManager,
         settings: settings ?? {
             slowAttack: false,
             attackInterval: null,
@@ -56,7 +67,9 @@ export function createDamageContext({ statsValues, skillValues, build, skillTree
             focusStacks: 0,
             potentialChargeKills: 0,
             crystalExplosionOverride: false,
-            crystalExplosionsPerSecond: 0
+            crystalExplosionsPerSecond: 0,
+            disabledSpecialAttacks: [],
+            abilityCooldownOverrides: {}
         },
         results: {},
         cache: {}

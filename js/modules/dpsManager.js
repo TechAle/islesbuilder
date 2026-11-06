@@ -1,4 +1,6 @@
 import { createDamageContext, runDamagePipeline, DAMAGE_STEPS } from './damage/damagePipeline.js';
+import { computeEnergyState, getSustainLabel } from './damage/energy.js';
+import { SpecialAbilityManager } from './specialAbilityManager.js';
 
 /** @typedef {import('../data/types.js').DamageResult} DamageResult */
 /** @typedef {import('../data/types.js').DamageContext} DamageContext */
@@ -11,7 +13,12 @@ import { createDamageContext, runDamagePipeline, DAMAGE_STEPS } from './damage/d
  * si limita a creare il contesto, eseguire gli step e conservare i risultati.
  */
 export class DpsManager {
-    constructor() {
+    /**
+     * @param {Object} [options]
+     * @param {SpecialAbilityManager} [options.specialAbilityManager]
+     */
+    constructor({ specialAbilityManager } = {}) {
+        this.specialAbilityManager = specialAbilityManager ?? new SpecialAbilityManager();
         /** @type {DamageResult[]} */
         this.results = [];
         /** @type {DamageContext['results']} */
@@ -29,10 +36,64 @@ export class DpsManager {
      * @returns {DamageContext['results']}
      */
     recalculate({ statsValues, skillValues, build, skillTrees, settings }) {
-        const context = createDamageContext({ statsValues, skillValues, build, skillTrees, settings });
+        const context = createDamageContext({
+            statsValues,
+            skillValues,
+            build,
+            skillTrees,
+            settings,
+            specialAbilityManager: this.specialAbilityManager
+        });
         this.steps = runDamagePipeline(context);
+        this.applyEnergySummary();
         this.results = this.buildResults();
         return this.steps;
+    }
+
+    /**
+     * Aggiunge ad Attack Speed & Energy le righe energetiche aggregate.
+     */
+    applyEnergySummary() {
+        const attack = this.steps.attackSpeed;
+        if (!attack) return;
+
+        const burst = this.steps.burst;
+        const burstEnergyPerSecond = burst?.energyPerSecond ?? attack.energyPerSecond;
+        const maxEnergy = attack.maxEnergy;
+
+        /** @type {Array<{enabled: boolean, dps: number, energyPerSecond: number}>} */
+        const specialAbilities = this.steps.specialAttacks?.abilities ?? [];
+        const enabledAbilities = specialAbilities.filter(ability => ability.enabled);
+        const specialDps = enabledAbilities.reduce((sum, ability) => sum + ability.dps, 0);
+        const specialEnergyPerSecond = enabledAbilities
+            .reduce((sum, ability) => sum + ability.energyPerSecond, 0);
+
+        const burstDps = burst?.enabled ? burst.burstDps : 0;
+        const combustion = this.steps.crystalCombustion;
+        const combustionDps = combustion?.enabled ? combustion.combustionDps : 0;
+        const orbs = this.steps.supportOrbs;
+        const orbDps = orbs?.enabled ? orbs.orbDps : 0;
+
+        attack.dpsAll = attack.dps + burstDps + combustionDps + orbDps + specialDps;
+
+        if (burst?.enabled) {
+            attack.energyPerSecondAttackBurst = burstEnergyPerSecond;
+
+            const burstEnergyState = computeEnergyState(burstEnergyPerSecond, maxEnergy);
+            attack.sustainAttackBurst = getSustainLabel(burstEnergyState);
+            attack.secondsToEmptyAttackBurst = burstEnergyState.secondsToEmpty;
+        }
+
+        if (enabledAbilities.length > 0) {
+            attack.energyPerSecondAttackBurstSpecial = burstEnergyPerSecond - specialEnergyPerSecond;
+
+            const combinedEnergyState = computeEnergyState(
+                attack.energyPerSecondAttackBurstSpecial,
+                maxEnergy
+            );
+            attack.sustainAttackBurstSpecial = getSustainLabel(combinedEnergyState);
+            attack.secondsToEmptyAttackBurstSpecial = combinedEnergyState.secondsToEmpty;
+        }
     }
 
     /**
@@ -70,9 +131,6 @@ export class DpsManager {
 
     /** @returns {number|null} */
     getDps() {
-        if (this.steps.supportOrbs?.enabled) return this.steps.supportOrbs.totalDps;
-        if (this.steps.crystalCombustion?.enabled) return this.steps.crystalCombustion.totalDps;
-        if (this.steps.burst?.enabled) return this.steps.burst.totalDps;
-        return this.steps.attackSpeed?.dps ?? null;
+        return this.steps.attackSpeed?.dpsAll ?? null;
     }
 }

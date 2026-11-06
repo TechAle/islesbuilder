@@ -30,5 +30,6 @@ export {
     getCrystalInsights,
     getCrystalInsightsElementalPowerPercent,
     getCrystalCombustionEffects,
-    getSupportOrbEffects
+    getSupportOrbEffects,
+    getPassiveHitStats
 } from './hitProcs.js';

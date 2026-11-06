@@ -4,7 +4,8 @@ import {
     BURST_ENERGY_COST,
     BURST_INTERVAL
 } from '../../../data/constants.js';
-import { computeEnergyState, getSustainLabel } from '../energy.js';
+import { computeEnergyState } from '../energy.js';
+import { getDefaultAttackReverseMultiplier } from '../weaponProps.js';
 import { getPotentialChargeEffects, hasMageCore } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -14,10 +15,11 @@ import { getPotentialChargeEffects, hasMageCore } from '../../classes/mage.js';
  * Step 6 — Burst DPS.
  *
  * Con il Mage Core equipaggiato, ogni secondo per 10 secondi infligge il 75%
- * del "Critical Damage → Average Damage". Poi ci sono 20 secondi di
- * cooldown, quindi su 30 secondi l'effetto è attivo solo per 10.
+ * dell'Average Damage riportato al danno base dell'arma (reverse del
+ * Default Attack). Poi ci sono 20 secondi di cooldown, quindi su 30 secondi
+ * l'effetto è attivo solo per 10.
  *
- * - Burst DPS = averageDamage × 75% × 10 / 30
+ * - Burst DPS = averageDamage × reverseDefaultAttack × 75% × 10 / 30
  * - Costo energetico = 50 / 30 al secondo
  *
  * @type {import('../../../data/types.js').DamageStep}
@@ -43,6 +45,7 @@ export const burstStep = {
             enabled: false,
             burstDps: 0,
             burstDamagePerSecond: 0,
+            reverseMultiplier: 0,
             burstEnergyPerSecond: 0,
             potentialChargeSeconds: 0,
             potentialChargeKills: 0,
@@ -64,7 +67,11 @@ export const burstStep = {
         }
 
         const damage = context.results.criticalDamage?.damage ?? 0;
-        const burstDamagePerSecond = damage * (BURST_DAMAGE_PERCENT / 100);
+        const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
+        const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
+        const burstDamagePerSecond = damage
+            * reverseMultiplier
+            * (BURST_DAMAGE_PERCENT / 100);
 
         const potentialCharge = getPotentialChargeEffects(
             context,
@@ -84,6 +91,7 @@ export const burstStep = {
             enabled: true,
             burstDps,
             burstDamagePerSecond,
+            reverseMultiplier,
             burstEnergyPerSecond,
             potentialChargeSeconds: potentialCharge.potentialChargeSeconds,
             potentialChargeKills: potentialCharge.potentialChargeKills,
@@ -117,10 +125,6 @@ export const burstStep = {
             return [{ label: 'Burst', value: 'Requires Mage Core' }];
         }
 
-        const seconds = Number.isFinite(result.secondsToEmpty)
-            ? { value: result.secondsToEmpty, unit: 's' }
-            : { value: '∞' };
-
         return [
             { label: 'Burst Damage / s', value: result.burstDamagePerSecond },
             ...(result.potentialChargeSeconds > 0
@@ -129,13 +133,7 @@ export const burstStep = {
                     { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
                 ]
                 : []),
-            { label: 'Burst DPS', value: result.burstDps },
-            { label: 'Attack DPS', value: result.attackDps },
-            { label: 'Total DPS', value: result.totalDps },
-            { label: 'Burst Energy Cost', value: result.burstEnergyPerSecond, unit: '/s' },
-            { label: 'Energy per Second', value: result.energyPerSecond, unit: '/s' },
-            { label: 'Time to 0 Energy', ...seconds },
-            { label: 'Sustain', value: getSustainLabel(result) }
+            { label: 'Burst DPS', value: result.burstDps }
         ];
     }
 };

@@ -148,7 +148,18 @@ function createRow(result) {
 
     const label = document.createElement('span');
     label.className = 'stat-label';
-    label.textContent = `${result.label}:`;
+
+    label.appendChild(document.createTextNode(`${result.label}:`));
+
+    if (result.help) {
+        const help = document.createElement('span');
+        help.className = 'setting-help stat-help';
+        help.tabIndex = 0;
+        help.textContent = '?';
+        help.dataset.tooltip = result.help;
+        label.appendChild(help);
+        label.classList.add('stat-label--help');
+    }
 
     const value = document.createElement('span');
     value.className = 'stat-val';
