@@ -35,7 +35,16 @@
  * @property {'rightClick'|'f'|null} key
  * @property {number|null} energy
  * @property {number} damage - Percentuale di danno dell'abilità
- * @property {number} times - Numero di colpi/istanze
+ * @property {number} times - Numero di colpi/istanze per il danno
+ * @property {number} hitsPerUse - Hit contati per gli effetti (default 1)
+ * @property {boolean} [hitsMatchTimes] - Se true, gli hit seguono `times`
+ * @property {number} [minHits] - Minimo hit selezionabili
+ * @property {number} [maxHits] - Massimo hit selezionabili
+ * @property {number} [minDamage] - Danno percentuale minimo selezionabile
+ * @property {number} [maxDamage] - Danno percentuale massimo selezionabile
+ * @property {number} [extraHitsPerSwing] - Hit extra per ogni attacco base
+ * @property {number} [extraHitDamagePercent] - Danno percentuale degli hit extra
+ * @property {number} [damageTakenIncreasePercent] - Aumento danno subito dal nemico
  * @property {number} cooldown - Cooldown in secondi (default 1.6 per onClick)
  * @property {number|null} everyHits - Per le passive: ogni quanti attacchi scatta
  * @property {string} text
@@ -225,6 +234,7 @@
  * @property {number} focusMaxStacks - Stack massimi (3 + Focus Capacity)
  * @property {number} focusStacks - Stack medi usati
  * @property {number} focusDamagePercent - Aumento effettivo di Focus
+ * @property {number} damageTakenIncreasePercent - Aumento danno subito dal nemico
  * @property {number} multiplierPercent - Aumento percentuale totale
  * @property {number} multiplier - Moltiplicatore applicato
  * @property {number} damage - Danno dopo il moltiplicatore
@@ -249,6 +259,7 @@
 /**
  * Risultato dello step "Special Attacks".
  * @typedef {Object} SpecialAttackStepResult
+ * @property {boolean} visible
  * @property {boolean} enabled
  * @property {number} baseDamage
  * @property {number} reverseMultiplier
@@ -261,8 +272,18 @@
  *   weapon: string,
  *   key: string|null,
  *   energy: number|null,
+ *   energyCost: number,
  *   damagePercent: number,
  *   times: number,
+ *   hitsPerUse: number,
+ *   hitsPerSecond: number,
+ *   extraHitsPerSecond: number,
+ *   extraDps: number,
+ *   damageTakenIncreasePercent: number,
+ *   minHits: number|null,
+ *   maxHits: number|null,
+ *   minDamage: number|null,
+ *   maxDamage: number|null,
  *   cooldown: number,
  *   baseCooldown: number,
  *   enabled: boolean,
@@ -322,6 +343,8 @@
  * @property {number} crystalExplosionsPerSecond - Cristalli esplosi al secondo (override)
  * @property {string[]} [disabledSpecialAttacks] - Nomi delle abilità onClick disabilitate
  * @property {Record<string, number>} [abilityCooldownOverrides] - Cooldown override per abilità
+ * @property {Record<string, number>} [abilityHitCountOverrides] - Numero hit per abilità
+ * @property {Record<string, number>} [abilityDamageOverrides] - Danno % per abilità
  */
 
 /**
@@ -331,7 +354,8 @@
  * @property {boolean} available - Se il core Mage è equipaggiato
  * @property {boolean} enabled - Se il burst è attivo
  * @property {number} burstDps
- * @property {number} burstDamagePerSecond
+ * @property {number} burstDamagePerHit
+ * @property {number} energyPerSecondBurstOnly
  * @property {number} reverseMultiplier
  * @property {number} burstEnergyPerSecond
  * @property {number} potentialChargeSeconds

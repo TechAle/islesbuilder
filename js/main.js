@@ -107,7 +107,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         crystalExplosionOverride: false,
         crystalExplosionsPerSecond: 0,
         disabledSpecialAttacks: [],
-        abilityCooldownOverrides: {}
+        abilityCooldownOverrides: {},
+        abilityHitCountOverrides: {},
+        abilityDamageOverrides: {}
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -180,6 +182,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         damageSettingsRenderer.configureSpecialAttacks(
             dpsManager.getSteps().specialAttacks?.abilities ?? []
+        );
+
+        damageSettingsRenderer.placeSlowAttackControl(
+            damageRenderer.getStepContent('attackSpeed')
+        );
+        damageSettingsRenderer.placeBurstControl(
+            damageRenderer.getStepContent('burst')
+        );
+        damageSettingsRenderer.placeSpecialAttacksControl(
+            damageRenderer.getStepContent('specialAttacks')
         );
 
         const griefPercent = dpsManager.getSteps().damageMultiplier?.griefInflictionPercent ?? 0;

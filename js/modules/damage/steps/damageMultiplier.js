@@ -46,6 +46,9 @@ export const damageMultiplierStep = {
             lastSorrow.lastSorrowDamagePercent,
             focus.focusDamagePercent
         ]);
+        const damageTakenIncreasePercent = context.specialAbilityManager
+            ?.getDamageTakenIncreasePercent(context) ?? 0;
+        const damage = applied.damage * (1 + damageTakenIncreasePercent / 100);
 
         return {
             baseDamage: previous,
@@ -62,9 +65,10 @@ export const damageMultiplierStep = {
             focusMaxStacks: focus.maxStacks,
             focusStacks: focus.focusStacks,
             focusDamagePercent: focus.focusDamagePercent,
-            multiplierPercent: applied.totalPercent,
-            multiplier: applied.multiplier,
-            damage: applied.damage
+            damageTakenIncreasePercent,
+            multiplierPercent: applied.totalPercent + damageTakenIncreasePercent,
+            multiplier: applied.multiplier * (1 + damageTakenIncreasePercent / 100),
+            damage
         };
     },
 
@@ -76,7 +80,8 @@ export const damageMultiplierStep = {
         return (result?.elementalKnowledge ?? 0) > 0
             || (result?.griefInflictionPercent ?? 0) > 0
             || (result?.lastSorrowPercent ?? 0) > 0
-            || (result?.focusStacksPercent ?? 0) > 0;
+            || (result?.focusStacksPercent ?? 0) > 0
+            || (result?.damageTakenIncreasePercent ?? 0) > 0;
     },
 
     /**
@@ -106,6 +111,10 @@ export const damageMultiplierStep = {
         if (result.focusStacksPercent > 0) {
             rows.push({ label: 'Focus Stacks', value: result.focusStacks });
             rows.push({ label: 'Focus Damage', value: result.focusDamagePercent, unit: '%' });
+        }
+
+        if (result.damageTakenIncreasePercent > 0) {
+            rows.push({ label: 'Damage Taken Bonus', value: result.damageTakenIncreasePercent, unit: '%' });
         }
 
         rows.push({ label: 'Damage Multiplier', value: result.multiplierPercent, unit: '%' });

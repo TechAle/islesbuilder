@@ -46,6 +46,10 @@ export class DamageSettingsRenderer {
         this.disabledSpecialAttacks = new Set();
         /** @type {Map<string, number>} */
         this.abilityCooldownOverrides = new Map();
+        /** @type {Map<string, number>} */
+        this.abilityHitCountOverrides = new Map();
+        /** @type {Map<string, number>} */
+        this.abilityDamageOverrides = new Map();
         this.specialAttackSignature = '';
 
         this.griefControl = /** @type {HTMLElement|null} */ (options.griefUptime?.closest('.damage-uptime') ?? null);
@@ -53,6 +57,8 @@ export class DamageSettingsRenderer {
         this.focusControl = /** @type {HTMLElement|null} */ (options.focusStacks?.closest('.damage-uptime') ?? null);
         this.potentialChargeControl = /** @type {HTMLElement|null} */ (options.potentialChargeKills?.closest('.damage-uptime') ?? null);
         this.crystalExplosionsControl = /** @type {HTMLElement|null} */ (options.crystalExplosions?.closest('.damage-uptime') ?? null);
+        this.slowAttackControl = /** @type {HTMLElement|null} */ (options.slowAttack?.closest('.setting-row') ?? null);
+        this.burstControl = /** @type {HTMLElement|null} */ (options.useBurst?.closest('.setting-row') ?? null);
 
         const emit = () => this.emit();
 
@@ -205,6 +211,28 @@ export class DamageSettingsRenderer {
     }
 
     /**
+     * @param {HTMLElement|null} container
+     */
+    placeSlowAttackControl(container) {
+        this.placeControl(this.slowAttackControl, container, true);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     */
+    placeBurstControl(container) {
+        this.placeControl(this.burstControl, container, true);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     */
+    placeSpecialAttacksControl(container) {
+        const visible = !!this.specialAttacksRow && !this.specialAttacksRow.hidden;
+        this.placeControl(this.specialAttacksRow, container, visible);
+    }
+
+    /**
      * @param {HTMLElement|null} control
      * @param {HTMLElement|null} container
      * @param {boolean} visible
@@ -222,17 +250,35 @@ export class DamageSettingsRenderer {
         }
     }
 
-    /** @returns {DamageSettings} */
     /**
-     * Aggiorna le checkbox e gli slider cooldown delle special attack onClick.
-     * @param {Array<{name: string, ability: string, key?: string|null, damagePercent: number, baseCooldown: number, cooldown: number}>} abilities
+     * Aggiorna i controlli delle special attack onClick.
+     * @param {Array<{
+     *   name: string,
+     *   ability: string,
+     *   key?: string|null,
+     *   damagePercent: number,
+     *   times: number,
+     *   baseCooldown: number,
+     *   cooldown: number,
+     *   extraHitsPerSecond?: number,
+     *   damageTakenIncreasePercent?: number,
+     *   minHits?: number|null,
+     *   maxHits?: number|null,
+     *   minDamage?: number|null,
+     *   maxDamage?: number|null
+     * }>} abilities
      */
     configureSpecialAttacks(abilities) {
         const row = this.specialAttacksRow;
         const container = this.specialAttacksContainer;
         if (!row || !container) return;
 
-        const list = (abilities ?? []).filter(ability => ability.damagePercent > 0);
+        const list = (abilities ?? []).filter(ability => (
+            ability.damagePercent > 0
+            || (ability.extraHitsPerSecond ?? 0) > 0
+            || (ability.damageTakenIncreasePercent ?? 0) > 0
+            || typeof ability.minDamage === 'number'
+        ));
         const signature = list
             .map(ability => `${ability.name}:${ability.ability}:${ability.baseCooldown}`)
             .join('|');
@@ -247,18 +293,16 @@ export class DamageSettingsRenderer {
         this.abilityCooldownOverrides.forEach((_, name) => {
             if (!validNames.has(name)) this.abilityCooldownOverrides.delete(name);
         });
+        this.abilityHitCountOverrides.forEach((_, name) => {
+            if (!validNames.has(name)) this.abilityHitCountOverrides.delete(name);
+        });
+        this.abilityDamageOverrides.forEach((_, name) => {
+            if (!validNames.has(name)) this.abilityDamageOverrides.delete(name);
+        });
 
         container.innerHTML = '';
 
         list.forEach(ability => {
-            const duplicates = list.filter(entry => entry.ability === ability.ability).length > 1;
-            const keyLabel = ability.key === 'rightClick'
-                ? 'Right Click'
-                : (ability.key === 'f' ? 'F' : '');
-            const labelText = duplicates && keyLabel
-                ? `${ability.ability} (${keyLabel})`
-                : ability.ability;
-
             const wrapper = document.createElement('div');
             wrapper.className = 'setting-ability';
 
@@ -270,39 +314,91 @@ export class DamageSettingsRenderer {
             input.checked = !this.disabledSpecialAttacks.has(ability.name);
 
             label.appendChild(input);
-            label.appendChild(document.createTextNode(` ${labelText}`));
+            label.appendChild(document.createTextNode(` Slow special — ${ability.ability}`));
             wrapper.appendChild(label);
 
-            const cooldownRow = document.createElement('div');
-            cooldownRow.className = 'setting-ability-cooldown';
-            cooldownRow.hidden = !input.checked;
+            /** @type {HTMLElement[]} */
+            const parameterRows = [];
 
-            const cooldownLabel = document.createElement('span');
-            cooldownLabel.textContent = 'Override ability cooldown';
+            /**
+             * @param {Object} options
+             * @param {string} options.labelText
+             * @param {number} options.min
+             * @param {number} options.max
+             * @param {number} options.step
+             * @param {number} options.value
+             * @param {(value: number) => string} options.format
+             * @param {(value: number) => void} options.onInput
+             */
+            const addSlider = ({ labelText, min, max, step, value, format, onInput }) => {
+                const sliderRow = document.createElement('div');
+                sliderRow.className = 'setting-ability-cooldown';
+                sliderRow.hidden = !input.checked;
 
-            const cooldownInput = document.createElement('input');
-            cooldownInput.type = 'range';
-            cooldownInput.min = String(ability.baseCooldown);
-            cooldownInput.max = String(ability.baseCooldown * 5);
-            cooldownInput.step = '0.1';
-            cooldownInput.value = String(
-                this.abilityCooldownOverrides.get(ability.name) ?? ability.baseCooldown
-            );
+                const sliderLabel = document.createElement('span');
+                sliderLabel.textContent = labelText;
 
-            const cooldownValue = document.createElement('span');
-            cooldownValue.className = 'setting-ability-cooldown-value';
+                const sliderInput = document.createElement('input');
+                sliderInput.type = 'range';
+                sliderInput.min = String(min);
+                sliderInput.max = String(max);
+                sliderInput.step = String(step);
+                sliderInput.value = String(value);
 
-            const slider = new SliderControl({
-                input: cooldownInput,
-                valueEl: cooldownValue,
-                onChange: () => {
-                    this.abilityCooldownOverrides.set(ability.name, slider.value);
-                    this.emit();
-                },
-                format: value => `${value.toFixed(2)}s`
+                const sliderValue = document.createElement('span');
+                sliderValue.className = 'setting-ability-cooldown-value';
+
+                const slider = new SliderControl({
+                    input: sliderInput,
+                    valueEl: sliderValue,
+                    onChange: () => {
+                        onInput(slider.value);
+                        this.emit();
+                    },
+                    format
+                });
+
+                slider.mount();
+                sliderRow.appendChild(sliderLabel);
+                sliderRow.appendChild(sliderInput);
+                sliderRow.appendChild(sliderValue);
+                wrapper.appendChild(sliderRow);
+                parameterRows.push(sliderRow);
+            };
+
+            addSlider({
+                labelText: 'Override ability cooldown',
+                min: ability.baseCooldown,
+                max: ability.baseCooldown * 10,
+                step: 0.1,
+                value: this.abilityCooldownOverrides.get(ability.name) ?? ability.baseCooldown,
+                format: value => `${value.toFixed(2)}s`,
+                onInput: value => this.abilityCooldownOverrides.set(ability.name, value)
             });
 
-            slider.mount();
+            if (typeof ability.minHits === 'number' && typeof ability.maxHits === 'number') {
+                addSlider({
+                    labelText: 'Hits',
+                    min: ability.minHits,
+                    max: ability.maxHits,
+                    step: 1,
+                    value: this.abilityHitCountOverrides.get(ability.name) ?? ability.times,
+                    format: value => String(Math.round(value)),
+                    onInput: value => this.abilityHitCountOverrides.set(ability.name, value)
+                });
+            }
+
+            if (typeof ability.minDamage === 'number' && typeof ability.maxDamage === 'number') {
+                addSlider({
+                    labelText: 'Damage %',
+                    min: ability.minDamage,
+                    max: ability.maxDamage,
+                    step: 1,
+                    value: this.abilityDamageOverrides.get(ability.name) ?? ability.damagePercent,
+                    format: value => `${Math.round(value)}%`,
+                    onInput: value => this.abilityDamageOverrides.set(ability.name, value)
+                });
+            }
 
             input.addEventListener('change', () => {
                 if (input.checked) {
@@ -310,20 +406,19 @@ export class DamageSettingsRenderer {
                 } else {
                     this.disabledSpecialAttacks.add(ability.name);
                 }
-                cooldownRow.hidden = !input.checked;
+                parameterRows.forEach(parameterRow => {
+                    parameterRow.hidden = !input.checked;
+                });
                 this.emit();
             });
 
-            cooldownRow.appendChild(cooldownLabel);
-            cooldownRow.appendChild(cooldownInput);
-            cooldownRow.appendChild(cooldownValue);
-            wrapper.appendChild(cooldownRow);
             container.appendChild(wrapper);
         });
 
         row.hidden = list.length === 0;
     }
 
+    /** @returns {DamageSettings} */
     getSettings() {
         const slowAttack = this.slowAttack?.checked ?? false;
         const parsed = Number.parseFloat(this.slowAttackValue?.value ?? '');
@@ -339,7 +434,9 @@ export class DamageSettingsRenderer {
             crystalExplosionOverride: this.crystalExplosionOverride?.checked ?? false,
             crystalExplosionsPerSecond: this.crystalExplosionSlider.value,
             disabledSpecialAttacks: [...this.disabledSpecialAttacks],
-            abilityCooldownOverrides: Object.fromEntries(this.abilityCooldownOverrides)
+            abilityCooldownOverrides: Object.fromEntries(this.abilityCooldownOverrides),
+            abilityHitCountOverrides: Object.fromEntries(this.abilityHitCountOverrides),
+            abilityDamageOverrides: Object.fromEntries(this.abilityDamageOverrides)
         };
     }
 

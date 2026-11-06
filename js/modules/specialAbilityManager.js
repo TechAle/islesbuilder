@@ -4,8 +4,10 @@ import {
     SPECIAL_ABILITY_OVERRIDES
 } from '../data/specialAbilities.js';
 import { DEFAULT_ABILITY_COOLDOWN } from '../data/constants.js';
+import { getAttackInterval } from './damage/attackTiming.js';
 import { getEnergyRegen } from './damage/energy.js';
-import { getDefaultAttackReverseMultiplier } from './damage/weaponProps.js';
+import { getEnergyCostMultiplier } from './damage/energyCost.js';
+import { getDefaultAttackReverseMultiplier, getWeaponClass } from './damage/weaponProps.js';
 
 /** @typedef {import('../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../data/types.js').SpecialAbility} SpecialAbility */
@@ -91,6 +93,7 @@ export class SpecialAbilityManager {
                 : (typeof ability?.energy === 'number' ? ability.energy : 0),
             damage: this.extractDamage(ability?.text),
             times: 1,
+            hitsPerUse: 1,
             cooldown: isPassive ? 0 : DEFAULT_ABILITY_COOLDOWN,
             everyHits: null,
             text: typeof ability?.text === 'string' ? ability.text : ''
@@ -265,7 +268,7 @@ export class SpecialAbilityManager {
     resolveCooldown(baseCooldown, overrideCooldown) {
         if (!Number.isFinite(overrideCooldown)) return baseCooldown;
 
-        return Math.min(baseCooldown * 5, Math.max(baseCooldown, overrideCooldown));
+        return Math.min(baseCooldown * 10, Math.max(baseCooldown, overrideCooldown));
     }
 
     /**
@@ -275,29 +278,65 @@ export class SpecialAbilityManager {
      *   energyRegen: number,
      *   entries: Array<{
      *     ability: SpecialAbility,
+     *     damage: number,
      *     times: number,
+     *     hitsPerUse: number,
      *     baseCooldown: number,
      *     cooldown: number,
      *     energy: number,
      *     enabled: boolean,
-     *     castsPerSecond: number
+     *     castsPerSecond: number,
+     *     extraHitsPerSecond: number
      *   }>
      * }}
      */
     getOnClickCastStats(context) {
         const disabled = new Set(context.settings?.disabledSpecialAttacks ?? []);
         const cooldownOverrides = context.settings?.abilityCooldownOverrides ?? {};
+        const hitOverrides = context.settings?.abilityHitCountOverrides ?? {};
+        const damageOverrides = context.settings?.abilityDamageOverrides ?? {};
         const energyRegen = getEnergyRegen(context);
+        const attacksPerSecond = 1 / getAttackInterval(context);
+        const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
+        const weaponClass = getWeaponClass(weapon);
+        const abilityCostMultiplier = Math.max(
+            0,
+            getEnergyCostMultiplier(context.statsValues ?? {}, 'Ability Costs', weaponClass)
+        );
 
         const entries = this.getActiveOnClick(context).map(ability => {
-            const times = ability.times > 0 ? ability.times : 1;
+            const baseTimes = ability.times > 0 ? ability.times : 1;
+            const minHits = ability.minHits ?? baseTimes;
+            const maxHits = ability.maxHits ?? baseTimes;
+            const hitOverride = hitOverrides[ability.name];
+            const times = Math.min(
+                maxHits,
+                Math.max(minHits, Number.isFinite(hitOverride) ? hitOverride : baseTimes)
+            );
+
+            const minDamage = ability.minDamage ?? ability.damage;
+            const maxDamage = ability.maxDamage ?? ability.damage;
+            const damageOverride = damageOverrides[ability.name];
+            const damage = Math.min(
+                maxDamage,
+                Math.max(minDamage, Number.isFinite(damageOverride) ? damageOverride : ability.damage)
+            );
+
+            const hitsPerUse = ability.hitsMatchTimes
+                ? times
+                : (ability.hitsPerUse ?? 1);
             const baseCooldown = ability.cooldown > 0 ? ability.cooldown : DEFAULT_ABILITY_COOLDOWN;
             const cooldown = this.resolveCooldown(
                 baseCooldown,
                 cooldownOverrides[ability.name]
             );
-            const energy = typeof ability.energy === 'number' ? ability.energy : 0;
+            const energy = typeof ability.energy === 'number'
+                ? Math.max(0, ability.energy * abilityCostMultiplier)
+                : 0;
             const enabled = !disabled.has(ability.name);
+            const extraHitsPerSecond = enabled
+                ? (ability.extraHitsPerSwing ?? 0) * attacksPerSecond
+                : 0;
 
             const cooldownCasts = 1 / cooldown;
             const energyCasts = energy > 0 ? energyRegen / energy : Infinity;
@@ -307,12 +346,15 @@ export class SpecialAbilityManager {
 
             return {
                 ability,
+                damage,
                 times,
+                hitsPerUse,
                 baseCooldown,
                 cooldown,
                 energy,
                 enabled,
-                castsPerSecond
+                castsPerSecond,
+                extraHitsPerSecond
             };
         });
 
@@ -321,14 +363,33 @@ export class SpecialAbilityManager {
 
     /**
      * Hit al secondo generati dalle abilità onClick attive.
-     * Ogni cast conta come un solo hit, indipendentemente da `times`.
      * @param {DamageContext} context
      * @returns {number}
      */
     getOnClickHitsPerSecond(context) {
         return this.getOnClickCastStats(context).entries.reduce((sum, entry) => {
-            if (!entry.enabled || entry.ability.damage <= 0) return sum;
-            return sum + entry.castsPerSecond;
+            if (!entry.enabled) return sum;
+
+            const hasEffect = entry.damage > 0 || entry.extraHitsPerSecond > 0;
+            if (!hasEffect) return sum;
+
+            return sum
+                + (entry.damage > 0 ? entry.castsPerSecond * entry.hitsPerUse : 0)
+                + entry.extraHitsPerSecond;
+        }, 0);
+    }
+
+    /**
+     * Aumento percentuale del danno subito dal nemico (es. Toxic Gas).
+     * @param {DamageContext} context
+     * @returns {number}
+     */
+    getDamageTakenIncreasePercent(context) {
+        const disabled = new Set(context.settings?.disabledSpecialAttacks ?? []);
+
+        return this.getActiveOnClick(context).reduce((sum, ability) => {
+            if (disabled.has(ability.name)) return sum;
+            return sum + (ability.damageTakenIncreasePercent ?? 0);
         }, 0);
     }
 
@@ -349,14 +410,24 @@ export class SpecialAbilityManager {
      *     weapon: string,
      *     key: string|null,
      *     energy: number|null,
+     *     energyCost: number,
      *     damagePercent: number,
      *     times: number,
+     *     hitsPerUse: number,
      *     baseCooldown: number,
      *     cooldown: number,
      *     enabled: boolean,
      *     damagePerUse: number,
      *     damagePerHit: number,
      *     castsPerSecond: number,
+     *     hitsPerSecond: number,
+     *     extraHitsPerSecond: number,
+     *     extraDps: number,
+     *     damageTakenIncreasePercent: number,
+     *     minHits: number|null,
+     *     maxHits: number|null,
+     *     minDamage: number|null,
+     *     maxDamage: number|null,
      *     dps: number,
      *     energyPerSecond: number
      *   }>
@@ -370,8 +441,16 @@ export class SpecialAbilityManager {
 
         const abilities = entries.map(entry => {
             const ability = entry.ability;
-            const damagePerHit = reversedAverageDamage * (ability.damage / 100);
+            const damagePerHit = reversedAverageDamage * (entry.damage / 100);
             const damagePerUse = damagePerHit * entry.times;
+            const extraHitsPerSecond = entry.extraHitsPerSecond;
+            const extraDps = extraHitsPerSecond
+                * reversedAverageDamage
+                * ((ability.extraHitDamagePercent ?? 0) / 100);
+            const hitsPerSecond = entry.enabled
+                ? (entry.damage > 0 ? entry.castsPerSecond * entry.hitsPerUse : 0)
+                    + extraHitsPerSecond
+                : 0;
 
             return {
                 name: ability.name,
@@ -379,15 +458,25 @@ export class SpecialAbilityManager {
                 weapon: ability.weapon,
                 key: ability.key,
                 energy: ability.energy,
-                damagePercent: ability.damage,
+                energyCost: entry.energy,
+                damagePercent: entry.damage,
                 times: entry.times,
+                hitsPerUse: entry.hitsPerUse,
+                minHits: ability.minHits ?? null,
+                maxHits: ability.maxHits ?? null,
+                minDamage: ability.minDamage ?? null,
+                maxDamage: ability.maxDamage ?? null,
                 baseCooldown: entry.baseCooldown,
                 cooldown: entry.cooldown,
                 enabled: entry.enabled,
                 damagePerUse,
                 damagePerHit,
                 castsPerSecond: entry.castsPerSecond,
-                dps: damagePerUse * entry.castsPerSecond,
+                hitsPerSecond,
+                extraHitsPerSecond,
+                extraDps,
+                damageTakenIncreasePercent: ability.damageTakenIncreasePercent ?? 0,
+                dps: damagePerUse * entry.castsPerSecond + extraDps,
                 energyPerSecond: entry.castsPerSecond * entry.energy
             };
         });

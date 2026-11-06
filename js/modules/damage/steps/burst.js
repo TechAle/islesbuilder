@@ -2,6 +2,7 @@ import {
     BURST_ACTIVE_SECONDS,
     BURST_DAMAGE_PERCENT,
     BURST_ENERGY_COST,
+    BURST_HIT_INTERVAL,
     BURST_INTERVAL
 } from '../../../data/constants.js';
 import { computeEnergyState } from '../energy.js';
@@ -35,8 +36,9 @@ export const burstStep = {
     run(context) {
         const attack = context.results.attackSpeed;
         const attackDps = attack?.dps ?? 0;
-        const visible = !!context.settings?.useBurst;
         const available = hasMageCore(context);
+        const useBurst = !!context.settings?.useBurst;
+        const visible = available || useBurst;
 
         /** @type {BurstStepResult} */
         const inactive = {
@@ -44,7 +46,8 @@ export const burstStep = {
             available,
             enabled: false,
             burstDps: 0,
-            burstDamagePerSecond: 0,
+            burstDamagePerHit: 0,
+            energyPerSecondBurstOnly: 0,
             reverseMultiplier: 0,
             burstEnergyPerSecond: 0,
             potentialChargeSeconds: 0,
@@ -62,14 +65,14 @@ export const burstStep = {
             potionSustainable: attack?.potionSustainable ?? true
         };
 
-        if (!visible || !available || !attack || attack.damage <= 0) {
+        if (!useBurst || !available || !attack || attack.damage <= 0) {
             return inactive;
         }
 
         const damage = context.results.criticalDamage?.damage ?? 0;
         const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
         const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
-        const burstDamagePerSecond = damage
+        const burstDamagePerHit = damage
             * reverseMultiplier
             * (BURST_DAMAGE_PERCENT / 100);
 
@@ -78,8 +81,11 @@ export const burstStep = {
             context.settings?.potentialChargeKills ?? 0
         );
 
-        const burstDps = burstDamagePerSecond * BURST_ACTIVE_SECONDS / potentialCharge.burstCycle;
+        const burstHitsPerSecond = (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL)
+            / potentialCharge.burstCycle;
+        const burstDps = burstDamagePerHit * burstHitsPerSecond;
         const burstEnergyPerSecond = BURST_ENERGY_COST / potentialCharge.burstCycle;
+        const energyPerSecondBurstOnly = -burstEnergyPerSecond;
 
         const totalDps = attackDps + burstDps;
         const energyPerSecond = attack.energyPerSecond - burstEnergyPerSecond;
@@ -90,7 +96,8 @@ export const burstStep = {
             available: true,
             enabled: true,
             burstDps,
-            burstDamagePerSecond,
+            burstDamagePerHit,
+            energyPerSecondBurstOnly,
             reverseMultiplier,
             burstEnergyPerSecond,
             potentialChargeSeconds: potentialCharge.potentialChargeSeconds,
@@ -125,15 +132,24 @@ export const burstStep = {
             return [{ label: 'Burst', value: 'Requires Mage Core' }];
         }
 
+        if (!result.enabled) {
+            return [{ label: 'Burst', value: 'Off' }];
+        }
+
         return [
-            { label: 'Burst Damage / s', value: result.burstDamagePerSecond },
+            { label: 'Burst / Hit', value: result.burstDamagePerHit },
             ...(result.potentialChargeSeconds > 0
                 ? [
                     { label: 'Cooldown Reduction', value: result.cooldownReduction, unit: 's' },
                     { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
                 ]
                 : []),
-            { label: 'Burst DPS', value: result.burstDps }
+            { label: 'Burst DPS', value: result.burstDps },
+            {
+                label: 'Energy per Second',
+                value: result.energyPerSecondBurstOnly,
+                unit: '/s'
+            }
         ];
     }
 };

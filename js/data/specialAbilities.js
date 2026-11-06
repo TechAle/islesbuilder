@@ -40,7 +40,40 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     'Tremble-Silver Crux': { times: 2, damage: 100 },
 
     // Abilità difensive/utility: la percentuale nel testo non è danno inflitto.
-    'Toxic Gas-Sporeheart Orb': { damage: 0 },
+    'Toxic Gas-Sporeheart Orb': { damage: 0, damageTakenIncreasePercent: 25 },
     'Bound By Spirits-Essencebinder Tome': { damage: 0 },
+
+    // Il parser prende l'ultima %, che qui è la cura: forziamo il danno.
+    'Bug Vitality-Glowbug Staff': {
+        damage: 75,
+        minHits: 1,
+        maxHits: 5,
+        hitsMatchTimes: true
+    },
+    'Honey Healing-The Drizzler': { damage: 250 },
+
+    // Death Ledger: 30% ogni 0.5s per 14s, cooldown 14s.
+    'Death Ledger-Voras Deathnote': {
+        times: 28,
+        hitsPerUse: 28,
+        cooldown: 14
+    },
+
+    // Astro Break: danno selezionabile tra 150% e 300%.
+    'Astro Break-Astralweaver': {
+        damage: 300,
+        minDamage: 150,
+        maxDamage: 300
+    },
+
+    // Runic Knuckles: 1 hit extra per swing, durata/cooldown 4s.
+    'Runic Knuckles-Runic Putrifists': {
+        damage: 0,
+        extraHitsPerSwing: 1,
+        extraHitDamagePercent: 100,
+        cooldown: 4
+    },
+
+    // Abilità con percentuale non-danno o senza percentuale.
     'Blast Projectile-Oak Wand': { damage: 100 }
 };

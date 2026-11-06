@@ -39,11 +39,16 @@ export const specialAttacksStep = {
         const maxEnergy = attack?.maxEnergy ?? 0;
 
         const manager = context.specialAbilityManager;
+        /** @type {{reverseMultiplier: number, energyRegen: number, abilities: Array<any>}} */
         const effects = manager
             ? manager.getOnClickEffects(context, baseDamage)
             : { reverseMultiplier: 0, energyRegen: 0, abilities: [] };
 
-        const abilities = effects.abilities.map(ability => {
+        /**
+         * @param {any} ability
+         * @returns {any}
+         */
+        function mapAbility(ability) {
             const netOnlySpecial = effects.energyRegen - ability.energyPerSecond;
             const energyOnlySpecial = -ability.energyPerSecond;
             const energyWithAttack = baseEnergyPerSecond - ability.energyPerSecond;
@@ -61,12 +66,20 @@ export const specialAttacksStep = {
                 sustainWithAttack: getSustainLabel(attackEnergyState),
                 attackPotionInterval: attackEnergyState.potionInterval
             };
-        });
+        }
+        const abilities = effects.abilities.map(mapAbility);
 
+        /** @param {any} ability */
+        const hasEffect = ability => ability.damagePercent > 0
+            || ability.extraHitsPerSecond > 0
+            || ability.damageTakenIncreasePercent > 0;
         const enabled = effects.reverseMultiplier > 0
-            && abilities.some(ability => ability.enabled && ability.damagePercent > 0);
+            && abilities.some(ability => ability.enabled && hasEffect(ability));
+        const visible = effects.reverseMultiplier > 0
+            && abilities.some(ability => hasEffect(ability));
 
         return {
+            visible,
             enabled,
             baseDamage,
             reverseMultiplier: effects.reverseMultiplier,
@@ -82,7 +95,7 @@ export const specialAttacksStep = {
      * @returns {boolean}
      */
     isVisible(result) {
-        return result?.enabled === true;
+        return result?.visible === true;
     },
 
     /**
@@ -90,22 +103,52 @@ export const specialAttacksStep = {
      * @returns {import('../../../data/types.js').DamageResult[]}
      */
     toResults(result) {
-        if (!result || !result.enabled) return [];
+        if (!result || !result.visible) return [];
+        if (!result.enabled) return [{ label: 'Special Attacks', value: 'Off' }];
 
         /** @type {import('../../../data/types.js').DamageResult[]} */
         const rows = [];
 
         result.abilities.forEach(ability => {
-            if (!ability.enabled || ability.damagePercent <= 0) return;
+            if (!ability.enabled) return;
 
-            rows.push({ label: `${ability.ability} / Hit`, value: ability.damagePerHit });
-            rows.push({ label: `${ability.ability} Damage`, value: ability.damagePerUse });
-            rows.push({ label: `${ability.ability} DPS`, value: ability.dps });
-            rows.push({
-                label: `Energy per Second (${ability.ability} only)`,
-                value: ability.energyOnlySpecial,
-                unit: '/s'
-            });
+            const hasEffect = ability.damagePercent > 0
+                || ability.extraHitsPerSecond > 0
+                || ability.damageTakenIncreasePercent > 0;
+            if (!hasEffect) return;
+
+            if (ability.damagePercent > 0) {
+                rows.push({ label: `${ability.ability} / Hit`, value: ability.damagePerHit });
+                rows.push({ label: `${ability.ability} Damage`, value: ability.damagePerUse });
+            }
+
+            if (ability.dps > 0) {
+                rows.push({ label: `${ability.ability} DPS`, value: ability.dps });
+            }
+
+            if (ability.extraHitsPerSecond > 0 || ability.hitsPerUse > 1) {
+                rows.push({
+                    label: `${ability.ability} Hits / s`,
+                    value: ability.hitsPerSecond,
+                    unit: '/s'
+                });
+            }
+
+            if (ability.damageTakenIncreasePercent > 0) {
+                rows.push({
+                    label: `${ability.ability} Damage Taken`,
+                    value: ability.damageTakenIncreasePercent,
+                    unit: '%'
+                });
+            }
+
+            if (Number.isFinite(ability.energy) && (ability.energy ?? 0) > 0) {
+                rows.push({
+                    label: 'Energy per Second',
+                    value: ability.energyOnlySpecial,
+                    unit: '/s'
+                });
+            }
         });
 
         return rows;

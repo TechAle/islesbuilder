@@ -69,7 +69,9 @@ export function createDamageContext({
             crystalExplosionOverride: false,
             crystalExplosionsPerSecond: 0,
             disabledSpecialAttacks: [],
-            abilityCooldownOverrides: {}
+            abilityCooldownOverrides: {},
+            abilityHitCountOverrides: {},
+            abilityDamageOverrides: {}
         },
         results: {},
         cache: {}
