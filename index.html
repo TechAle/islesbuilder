@@ -258,6 +258,11 @@
                 </button>
             </div>
             <div id="damage-content" class="section-content output-content">
+            <div class="damage-view-tabs" role="tablist">
+                <button type="button" class="damage-view-tab active" data-damage-view="overview" role="tab">Damage Overview</button>
+                <button type="button" class="damage-view-tab" data-damage-view="enemy" role="tab">Enemy Simulator</button>
+            </div>
+            <div id="damage-overview-view" class="damage-view-panel">
             <div class="damage-highlight">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Average DPS</div>
                 <div class="damage-dps" id="damage-dps">—</div>
@@ -314,6 +319,28 @@
                 </div>
             </div>
             <div id="damage-steps-container"></div>
+            </div>
+            <div id="damage-enemy-view" class="damage-view-panel" hidden>
+                <div class="enemy-inputs">
+                    <label class="enemy-input-row" for="enemy-preset">
+                        <span>Monster</span>
+                        <select id="enemy-preset"></select>
+                    </label>
+                    <label class="enemy-input-row" for="enemy-hp">
+                        <span>Enemy HP</span>
+                        <input type="number" id="enemy-hp" min="0" step="1" value="10000">
+                    </label>
+                    <label class="enemy-input-row" for="enemy-defense">
+                        <span>Enemy Defense</span>
+                        <input type="number" id="enemy-defense" min="0" step="1" value="0">
+                    </label>
+                    <label class="enemy-input-row" for="enemy-damage-percent">
+                        <span>Damage%</span>
+                        <input type="number" id="enemy-damage-percent" step="1" value="0">
+                    </label>
+                </div>
+                <div id="enemy-results" class="enemy-results"></div>
+            </div>
             </div>
         </div>
 
@@ -372,6 +399,8 @@
     <option value="Power Shard (+8 Strength)">
     <option value="Sharpness Rune (+4% Crit)">
 </datalist>
+
+<div id="global-tooltip" class="global-tooltip" hidden></div>
 
 <script type="module" src="js/main.js"></script>
 </body>

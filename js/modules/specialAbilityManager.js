@@ -502,10 +502,15 @@ export class SpecialAbilityManager {
      * @returns {SpecialAbility[]}
      */
     getActiveEffectAbilities(context) {
-        return [
+        const abilities = [
             ...this.getActiveOnClick(context),
             ...this.getActivePassives(context)
         ];
+        if (!context.settings?.firstHit) return abilities;
+
+        // Al primo colpo non sono ancora attivi gli effetti che richiedono
+        // un colpo precedente (es. Royal Praise).
+        return abilities.filter(ability => !ability.requiresPriorHit);
     }
 
     /**

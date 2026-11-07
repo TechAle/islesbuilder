@@ -83,7 +83,8 @@ export const SPECIAL_ABILITY_OVERRIDES = {
         kind: 'passive',
         damage: 0,
         elementalPowerPercent: 25,
-        resistancePercent: { nature: -20 }
+        resistancePercent: { nature: -20 },
+        requiresPriorHit: true
     },
 
     // Soil Infestation: i nemici subiscono il 25% di danno in più.

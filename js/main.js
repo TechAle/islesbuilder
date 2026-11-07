@@ -9,6 +9,7 @@ import { ShareManager } from './modules/shareManager.js';
 import { SkillTreeManager } from './modules/skillTreeManager.js';
 import { DpsManager } from './modules/dpsManager.js';
 import { SpecialAbilityManager } from './modules/specialAbilityManager.js';
+import { simulateEnemy } from './modules/enemySimulator.js';
 import { EquipRenderer } from './renderers/equipRenderer.js';
 import { ElixirRenderer } from './renderers/elixirRenderer.js';
 import { ItemModalRenderer } from './renderers/itemModalRenderer.js';
@@ -19,11 +20,14 @@ import { DamageRenderer } from './renderers/damageRenderer.js';
 import { DamageBreakdownRenderer } from './renderers/damageBreakdownRenderer.js';
 import { SectionRenderer } from './renderers/sectionRenderer.js';
 import { DamageSettingsRenderer } from './renderers/damageSettingsRenderer.js';
+import { EnemySimulatorRenderer } from './renderers/enemySimulatorRenderer.js';
+import { TooltipRenderer } from './renderers/tooltipRenderer.js';
 
 import { ITEM_DATABASE } from './data/items.js';
 import { AUGMENT_DATABASE } from './data/augments.js';
 import { INITIAL_ELIXIRS } from './data/elixirs.js';
 import { CLASS_SKILL_TREES } from './data/skillTrees.js';
+import { MONSTER_PRESETS } from './data/monsters.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- Store ---------------------------------------------------------
@@ -55,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const shareManager = new ShareManager({ dataStore, equippedStore, location: window.location });
     const apiManager = new ApiManager({ dataStore, specialAbilityManager });
     const dpsManager = new DpsManager({ specialAbilityManager });
+    const firstHitDpsManager = new DpsManager({ specialAbilityManager });
 
     // --- Renderer ------------------------------------------------------
     const itemModalRenderer = new ItemModalRenderer({
@@ -99,6 +104,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const damageBreakdownRenderer = new DamageBreakdownRenderer({
         root: document.getElementById('damage-breakdown')
+    });
+
+    const enemySimulatorRenderer = new EnemySimulatorRenderer({
+        root: document,
+        monsters: MONSTER_PRESETS,
+        onSimulate: () => renderCombat()
+    });
+
+    const tooltipRenderer = new TooltipRenderer({
+        root: document,
+        tooltip: document.getElementById('global-tooltip')
     });
 
     /** @type {import('./data/types.js').DamageSettings} */
@@ -170,6 +186,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     shareRenderer.mount();
     sectionRenderer.mount();
     damageSettingsRenderer.mount();
+    enemySimulatorRenderer.mount();
+    tooltipRenderer.mount();
 
     // --- Render helpers ------------------------------------------------
     // Le statistiche sono la base del calcolo danni: vengono calcolate una
@@ -229,6 +247,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             damageRenderer.getStepContent('crystalCombustion'),
             crystalCombustion?.enabled === true
         );
+
+        // --- Enemy Simulator ------------------------------------------
+        firstHitDpsManager.recalculate({
+            statsValues,
+            skillValues,
+            build: equippedStore.state,
+            skillTrees: dataStore.data.skillTrees,
+            settings: { ...damageSettings, firstHit: true }
+        });
+
+        const firstHitDamage = firstHitDpsManager.getSteps().criticalDamage?.averageDamage ?? 0;
+        const attackStep = dpsManager.getSteps().attackSpeed;
+        const energyPerSecond = attackStep?.energyPerSecondAttackBurstSpecial
+            ?? attackStep?.energyPerSecondAttackBurst
+            ?? attackStep?.energyPerSecond
+            ?? 0;
+        const element = dpsManager.getSteps().damageModifiers?.element ?? null;
+        enemySimulatorRenderer.syncElement(element);
+        const { health, defense, damagePercent } = enemySimulatorRenderer.getInputs();
+
+        enemySimulatorRenderer.render(simulateEnemy({
+            health,
+            defense,
+            damagePercent,
+            firstHitDamage,
+            dps: dpsManager.getDps() ?? 0,
+            energyPerSecond,
+            maxEnergy: attackStep?.maxEnergy ?? 0,
+            abilities: dpsManager.getSteps().specialAttacks?.abilities ?? []
+        }));
     };
 
     const renderAll = () => {

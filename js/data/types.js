@@ -47,6 +47,7 @@
  * @property {number} [damageTakenIncreasePercent] - Aumento danno subito dal nemico
  * @property {Record<string, number>} [resistancePercent] - Resistenza nemica per elemento (es. { nature: -20 })
  * @property {number} [elementalPowerPercent] - Elemental Power% aggiunto dall'abilità
+ * @property {boolean} [requiresPriorHit] - True se l'effetto richiede un colpo precedente
  * @property {number} cooldown - Cooldown in secondi (default 1.6 per onClick)
  * @property {number|null} everyHits - Per le passive: ogni quanti attacchi scatta
  * @property {string} text
@@ -357,6 +358,7 @@
  * @property {Record<string, number>} [abilityCooldownOverrides] - Cooldown override per abilità
  * @property {Record<string, number>} [abilityHitCountOverrides] - Numero hit per abilità
  * @property {Record<string, number>} [abilityDamageOverrides] - Danno % per abilità
+ * @property {boolean} [firstHit] - Se true, esclude gli effetti che richiedono un colpo precedente
  */
 
 /**
