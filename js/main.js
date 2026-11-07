@@ -16,6 +16,7 @@ import { ShareRenderer } from './renderers/shareRenderer.js';
 import { SkillTreeRenderer } from './renderers/skillTreeRenderer.js';
 import { StatsRenderer } from './renderers/statsRenderer.js';
 import { DamageRenderer } from './renderers/damageRenderer.js';
+import { DamageBreakdownRenderer } from './renderers/damageBreakdownRenderer.js';
 import { SectionRenderer } from './renderers/sectionRenderer.js';
 import { DamageSettingsRenderer } from './renderers/damageSettingsRenderer.js';
 
@@ -94,6 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const damageRenderer = new DamageRenderer({
         root: document.getElementById('damage-steps-container'),
         dpsValue: document.getElementById('damage-dps')
+    });
+
+    const damageBreakdownRenderer = new DamageBreakdownRenderer({
+        root: document.getElementById('damage-breakdown')
     });
 
     /** @type {import('./data/types.js').DamageSettings} */
@@ -180,6 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             settings: damageSettings
         });
         damageRenderer.render(dpsManager.getStepGroups(), dpsManager.getDps());
+        damageBreakdownRenderer.render(dpsManager.getDamageBreakdown());
 
         damageSettingsRenderer.configureSpecialAttacks(
             dpsManager.getSteps().specialAttacks?.abilities ?? []

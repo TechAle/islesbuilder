@@ -61,10 +61,18 @@ export const damageModifiersStep = {
     run(context) {
         const base = context.results.baseDamage;
         const baseDamage = base?.baseDamage ?? 0;
+        const damageType = base?.damageType ?? null;
+        const weaponClass = getWeaponClass(context.weapon);
+        const element = getWeaponElement(context.weapon);
 
         if (baseDamage <= 0) {
             return {
                 baseDamage: 0,
+                damageType,
+                weaponClass,
+                element,
+                elementSpecificPercent: 0,
+                elementalChannelingPercent: 0,
                 percent: 0,
                 masteryPercent: 0,
                 masteryBonus: 0,
@@ -83,10 +91,6 @@ export const damageModifiersStep = {
                 modifiers: []
             };
         }
-
-        const damageType = base.damageType;
-        const weaponClass = getWeaponClass(context.weapon);
-        const element = getWeaponElement(context.weapon);
 
         /** @type {Array<{label: string, percent: number}>} */
         const modifiers = [];
@@ -114,8 +118,11 @@ export const damageModifiersStep = {
 
         // Elemental channeling (Mage) aggiunge il suo valore a qualsiasi elemento.
         const elementalChanneling = getElementalChannelingPercent(context);
+        const elementSpecificPercent = element
+            ? findPercent(context.statsValues, `${capitalize(element)} Damage`)
+            : 0;
         const elementalDamagePercent = element
-            ? findPercent(context.statsValues, `${capitalize(element)} Damage`) + elementalChanneling
+            ? elementSpecificPercent + elementalChanneling
             : 0;
 
         // Elemental Power totale: (base + flat) * (1 + percent/100).
@@ -149,22 +156,29 @@ export const damageModifiersStep = {
         // Scaling: percent * (EP / 100).
         const effectiveElementalPercent = elementalDamagePercent * (elementalPower / 100);
 
-        // Il mastery (Melee/Ranged/Magic) aggiunge una percentuale del danno
-        // flat dell'arma (prima del Default Attack) come valore piatto.
-        const masteryBonus = (base.damageStat ?? 0) * (masteryPercent / 100);
+        // Il mastery (Melee/Ranged/Magic) aumenta il danno della stessa
+        // percentuale indicata dal nodo.
+        const damageBeforeMastery = baseDamage
+            * (1 + typePercent / 100)
+            * (1 + effectiveElementalPercent / 100);
+        const masteryBonus = damageBeforeMastery * (masteryPercent / 100);
 
         // Le BLUE orb aumentano il danno subito dal nemico.
         const supportOrbs = getSupportOrbEffects(context);
         const blueDamageMultiplier = supportOrbs.blueDamageMultiplier;
 
         const damage = Math.max(0,
-            (baseDamage * (1 + typePercent / 100) * (1 + effectiveElementalPercent / 100)
-                + masteryBonus)
+            (damageBeforeMastery + masteryBonus)
             * blueDamageMultiplier
         );
 
         return {
             baseDamage,
+            damageType,
+            weaponClass,
+            element,
+            elementSpecificPercent,
+            elementalChannelingPercent: elementalChanneling,
             percent: typePercent,
             masteryPercent,
             masteryBonus,
@@ -214,7 +228,21 @@ export const damageModifiersStep = {
         }
 
         if (result.masteryPercent !== 0) {
-            rows.push({ label: 'Mastery Damage', value: result.masteryBonus });
+            const masteryName = result.weaponClass
+                ? `${capitalize(result.weaponClass)} Mastery`
+                : 'Mastery';
+
+            rows.push({
+                label: masteryName,
+                value: result.masteryPercent,
+                unit: '%',
+                help: `${masteryName} aumenta il danno del ${result.masteryPercent}%.`
+            });
+            rows.push({
+                label: `${masteryName} Damage`,
+                value: result.masteryBonus,
+                help: `Danno piatto aggiunto da ${masteryName}: ${result.masteryPercent}% del danno del colpo prima della mastery.`
+            });
         }
 
         rows.push({ label: 'Damage', value: result.damage });

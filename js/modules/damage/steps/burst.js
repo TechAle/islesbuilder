@@ -123,6 +123,16 @@ export const burstStep = {
 
     /**
      * @param {BurstStepResult} result
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsParts(result) {
+        return result?.enabled && result.burstDps > 0
+            ? [{ label: 'Burst', dps: result.burstDps }]
+            : [];
+    },
+
+    /**
+     * @param {BurstStepResult} result
      * @returns {import('../../../data/types.js').DamageResult[]}
      */
     toResults(result) {

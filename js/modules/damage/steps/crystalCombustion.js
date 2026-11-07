@@ -64,6 +64,16 @@ export const crystalCombustionStep = {
 
     /**
      * @param {CrystalCombustionStepResult} result
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsParts(result) {
+        return result?.enabled && result.combustionDps > 0
+            ? [{ label: 'Crystal Combustion', dps: result.combustionDps }]
+            : [];
+    },
+
+    /**
+     * @param {CrystalCombustionStepResult} result
      * @returns {import('../../../data/types.js').DamageResult[]}
      */
     toResults(result) {

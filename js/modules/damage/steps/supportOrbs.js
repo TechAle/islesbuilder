@@ -72,6 +72,16 @@ export const supportOrbsStep = {
 
     /**
      * @param {SupportOrbsStepResult} result
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsParts(result) {
+        return result?.enabled && result.orbDps > 0
+            ? [{ label: 'Support Orbs', dps: result.orbDps }]
+            : [];
+    },
+
+    /**
+     * @param {SupportOrbsStepResult} result
      * @returns {import('../../../data/types.js').DamageResult[]}
      */
     toResults(result) {

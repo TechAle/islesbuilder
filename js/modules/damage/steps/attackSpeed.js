@@ -110,6 +110,24 @@ export const attackSpeedStep = {
 
     /**
      * @param {AttackSpeedStepResult} result
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsParts(result) {
+        const passiveDps = result.passiveDps ?? 0;
+        const baseAttack = Math.max(0, (result.dps ?? 0) - passiveDps);
+        /** @type {Array<{label: string, dps: number}>} */
+        const parts = [];
+
+        if (baseAttack > 0) parts.push({ label: 'Attack', dps: baseAttack });
+        (result.passiveBreakdown ?? []).forEach(passive => {
+            if (passive.dps > 0) parts.push({ label: passive.name, dps: passive.dps });
+        });
+
+        return parts;
+    },
+
+    /**
+     * @param {AttackSpeedStepResult} result
      * @returns {import('../../../data/types.js').DamageResult[]}
      */
     toResults(result) {

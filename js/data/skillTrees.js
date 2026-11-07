@@ -507,7 +507,7 @@ export const CLASS_SKILL_TREES = {
                 statKey: "{val}% Elemental Power",
                 isDirect: true,
                 description: "Increase Elemental Power by {val}%.",
-                parameters: { val: { base: 8.0, increase: 8.0 } }
+                parameters: { val: { base: 10.0, increase: 10.0 } }
             },
             'UL1': {
                 x: 34, y: 16, max: 5, costBase: 1,
@@ -532,7 +532,7 @@ export const CLASS_SKILL_TREES = {
                 statKey: "{level} Elemental Synergy",
                 isDirect: false,
                 description: "Gain {a} Elemental Power for every 1 Energy Regen above 10/s, up to {b}",
-                parameters: { a: { base: 2, increase: 2 }, b: { base: 10.0, increase: 10.0 } }
+                parameters: { a: { base: 1, increase: 1 }, b: { base: 10.0, increase: 10.0 } }
             },
             'UR1': {
                 x: 57, y: 16, max: 5, costBase: 1,
@@ -554,7 +554,7 @@ export const CLASS_SKILL_TREES = {
             'DL': {
                 x: 42, y: 68, max: 5, costBase: 2,
                 name: "Energetic",
-                statKey: "{val}% Energy Regen",
+                statKey: "{val} Energy Regen",
                 isDirect: true,
                 description: "Gain {val} Energy Regen",
                 parameters: { val: { base: 5.0, increase: 5.0 } }
@@ -680,7 +680,7 @@ export const CLASS_SKILL_TREES = {
                 statKey: "{level} Power Crystal",
                 isDirect: false,
                 description: "Hitting an enemy has a {a}% chance to drop an Energy Crystal. Pick it up to recover {b} Energy. 0.5s cooldown",
-                parameters: { a: { base: 5.0, increase: 5.0 }, b: { base: 30.0, increase: 30.0 } }
+                parameters: { a: { base: 5.0, increase: 5.0 }, b: { base: 4.0, increase: 4.0 } }
             },
             'R1b': {
                 x: 92, y: 42, max: 5, costBase: 1,
@@ -699,7 +699,7 @@ export const CLASS_SKILL_TREES = {
                 parameters: { a: { base: 6.0, increase: 3.0 }, b: { base: 4.0, increase: 1.0 }, c: { base: 30.0, increase: 10.0 }, d: { base: 6.0, increase: 3.0 }, e: { base: 4.0, increase: 4.0 } }
             },
             'R2a': {
-                x: 92, y: 58, max: 5, costBase: 1,
+                x: 92, y: 58, max: 3, costBase: 1,
                 name: "Magical Capacity",
                 statKey: "{level} Magical Capacity",
                 isDirect: false,

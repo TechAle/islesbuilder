@@ -191,9 +191,15 @@
  * Risultato dello step "Damage Modifiers".
  * @typedef {Object} DamageModifiersStepResult
  * @property {number} baseDamage - Base Damage di partenza
+ * @property {string|null} damageType - Tipo di danno dell'arma
+ * @property {string} weaponClass - Classe dell'arma
+ * @property {string} element - Elemento dell'arma
+ * @property {number} elementSpecificPercent - Percentuale del danno elementale specifico
+ * @property {number} elementalChannelingPercent - Valore di Elemental Channeling
  * @property {number} percent - Modificatore percentuale del tipo di danno
  * @property {number} masteryPercent - Modificatore del mastery della classe arma
- * @property {number} masteryBonus - Danno piatto aggiunto dal mastery (flatDamage × mastery%)
+ * @property {number} masteryBonus - Danno aggiunto dal mastery
+ * @property {number} [summaryDamage] - Danno finale dopo tutti i moltiplicatori
  * @property {number} damage - Danno finale
  * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
  * @property {number} elementalPower - Elemental Power totale
@@ -449,6 +455,7 @@
  * @property {string} id - Identificativo univoco dello step
  * @property {string} label - Nome leggibile
  * @property {(context: DamageContext) => Record<string, any>} run - Calcolo puro
+ * @property {(result: any) => Array<{label: string, dps: number}>} [getDpsParts] - Contributi DPS della sezione
  * @property {(result: any) => DamageResult[]} [toResults] - Converte il risultato in righe visualizzabili
  * @property {(result: any) => boolean} [isVisible] - Se false, lo step non compare nel render
  */

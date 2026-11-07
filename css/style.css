@@ -462,7 +462,46 @@ svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; }
 .btn-share:hover, .btn-paste:hover { filter: brightness(1.1); }
 
 .damage-highlight { background: #17181b; border: 1px solid #442a2a; padding: 10px; border-radius: 6px; text-align: center; }
-.damage-dps { font-size: 22px; font-weight: 900; color: #ff5252; }
+.damage-dps { font-size: 34px; font-weight: 900; color: #ff5252; line-height: 1.15; }
+.damage-breakdown {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #2c3036;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: left;
+}
+.damage-breakdown[hidden] { display: none; }
+.damage-breakdown-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 12px;
+}
+.damage-breakdown-label {
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.damage-breakdown-dps { font-weight: 700; color: #fff; text-align: right; }
+.damage-breakdown-percent { min-width: 54px; color: var(--text-muted); text-align: right; }
+.damage-breakdown-heading {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #2c3036;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.damage-breakdown-row--modifier .damage-breakdown-label,
+.damage-breakdown-row--modifier .damage-breakdown-dps,
+.damage-breakdown-row--modifier .damage-breakdown-percent {
+    color: #ff9d9d;
+}
 .damage-empty { font-size: 12px; color: var(--text-muted); padding: 8px 0; }
 
 .damage-uptime {

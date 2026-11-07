@@ -100,6 +100,18 @@ export const specialAttacksStep = {
 
     /**
      * @param {SpecialAttackStepResult} result
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsParts(result) {
+        if (!result?.enabled) return [];
+
+        return result.abilities
+            .filter(ability => ability.enabled && ability.dps > 0)
+            .map(ability => ({ label: ability.ability, dps: ability.dps }));
+    },
+
+    /**
+     * @param {SpecialAttackStepResult} result
      * @returns {import('../../../data/types.js').DamageResult[]}
      */
     toResults(result) {

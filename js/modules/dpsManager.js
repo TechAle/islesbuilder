@@ -50,6 +50,7 @@ export class DpsManager {
         return this.steps;
     }
 
+
     /**
      * Aggiunge ad Attack Speed & Energy le righe energetiche aggregate.
      */
@@ -64,17 +65,10 @@ export class DpsManager {
         /** @type {Array<{enabled: boolean, dps: number, energyPerSecond: number}>} */
         const specialAbilities = this.steps.specialAttacks?.abilities ?? [];
         const enabledAbilities = specialAbilities.filter(ability => ability.enabled);
-        const specialDps = enabledAbilities.reduce((sum, ability) => sum + ability.dps, 0);
         const specialEnergyPerSecond = enabledAbilities
             .reduce((sum, ability) => sum + ability.energyPerSecond, 0);
 
-        const burstDps = burst?.enabled ? burst.burstDps : 0;
-        const combustion = this.steps.crystalCombustion;
-        const combustionDps = combustion?.enabled ? combustion.combustionDps : 0;
-        const orbs = this.steps.supportOrbs;
-        const orbDps = orbs?.enabled ? orbs.orbDps : 0;
-
-        attack.dpsAll = attack.dps + burstDps + combustionDps + orbDps + specialDps;
+        attack.dpsAll = this.getDps() ?? 0;
 
         if (burst?.enabled) {
             attack.energyPerSecondAttackBurst = burstEnergyPerSecond;
@@ -129,8 +123,52 @@ export class DpsManager {
         return this.steps;
     }
 
+    /**
+     * @param {DamageContext['results']} steps
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsPartsFromSteps(steps) {
+        return DAMAGE_STEPS.flatMap(step => {
+            const result = steps[step.id];
+            if (!result || !step.getDpsParts) return [];
+            return step.getDpsParts(result);
+        }).filter(part => Number.isFinite(part.dps) && part.dps > 0);
+    }
+
+    /**
+     * Raccolta dei contributi DPS forniti dagli step.
+     * @returns {Array<{label: string, dps: number}>}
+     */
+    getDpsParts() {
+        return this.getDpsPartsFromSteps(this.steps);
+    }
+
     /** @returns {number|null} */
     getDps() {
-        return this.steps.attackSpeed?.dpsAll ?? null;
+        const parts = this.getDpsParts();
+        if (parts.length === 0) return null;
+        return parts.reduce((sum, part) => sum + part.dps, 0);
+    }
+
+    /**
+     * Ripartizione dell'Average DPS per componente.
+     * @returns {{
+     *   total: number,
+     *   sources: Array<{label: string, dps: number, percent: number}>
+     * }}
+     */
+    getDamageBreakdown() {
+        const total = this.getDps() ?? 0;
+        if (total <= 0) return { total: 0, sources: [] };
+
+        const sources = this.getDpsParts()
+            .map(part => ({
+                label: part.label,
+                dps: part.dps,
+                percent: part.dps / total * 100
+            }))
+            .sort((a, b) => b.dps - a.dps);
+
+        return { total, sources };
     }
 }
