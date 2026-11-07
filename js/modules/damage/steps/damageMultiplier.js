@@ -114,7 +114,7 @@ export const damageMultiplierStep = {
         }
 
         if (result.damageTakenIncreasePercent > 0) {
-            rows.push({ label: 'Damage Taken Bonus', value: result.damageTakenIncreasePercent, unit: '%' });
+            rows.push({ label: 'Damage%', value: result.damageTakenIncreasePercent, unit: '%' });
         }
 
         rows.push({ label: 'Damage Multiplier', value: result.multiplierPercent, unit: '%' });

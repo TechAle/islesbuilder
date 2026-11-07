@@ -76,7 +76,8 @@ export class ItemManager {
                 name: '',
                 stats: {},
                 augments: Array(AUGMENT_SLOTS_PER_ITEM).fill(''),
-                upgradeLevel: 0
+                upgradeLevel: 0,
+                abilitiesEdited: false
             });
             return;
         }
@@ -86,14 +87,16 @@ export class ItemManager {
             this.equippedStore.setEquipSlot(slot, {
                 name: preset.name,
                 stats: { ...preset.stats },
-                upgradeLevel: 0
+                upgradeLevel: 0,
+                abilitiesEdited: false
             });
         } else {
             // Nome personalizzato: non possiamo mantenere le statistiche del vecchio oggetto
             this.equippedStore.setEquipSlot(slot, {
                 name: trimmed,
                 stats: {},
-                upgradeLevel: 0
+                upgradeLevel: 0,
+                abilitiesEdited: false
             });
         }
     }
@@ -143,7 +146,8 @@ export class ItemManager {
     saveCustomItem(slot, name, rows) {
         this.equippedStore.setEquipSlot(slot, {
             name: name.trim(),
-            stats: this.normalizeStats(rows)
+            stats: this.normalizeStats(rows),
+            abilitiesEdited: true
         });
     }
 

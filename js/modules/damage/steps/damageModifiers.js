@@ -72,6 +72,8 @@ export const damageModifiersStep = {
                 weaponClass,
                 element,
                 elementSpecificPercent: 0,
+                elementalResistancePercent: 0,
+                abilityElementalPowerPercent: 0,
                 elementalChannelingPercent: 0,
                 percent: 0,
                 masteryPercent: 0,
@@ -118,15 +120,18 @@ export const damageModifiersStep = {
 
         // Elemental channeling (Mage) aggiunge il suo valore a qualsiasi elemento.
         const elementalChanneling = getElementalChannelingPercent(context);
-        const elementSpecificPercent = element
-            ? findPercent(context.statsValues, `${capitalize(element)} Damage`)
+        const elementalResistancePercent = element
+            ? context.specialAbilityManager?.getElementalResistancePercent(context, element) ?? 0
             : 0;
+        const elementSpecificPercent = (element
+            ? findPercent(context.statsValues, `${capitalize(element)} Damage`)
+            : 0) - elementalResistancePercent;
         const elementalDamagePercent = element
             ? elementSpecificPercent + elementalChanneling
             : 0;
 
         // Elemental Power totale: (base + flat) * (1 + percent/100).
-        // Crystal Insights aggiunge una stima media di EP%.
+        // Crystal Insights e le abilità equipaggiate aggiungono EP%.
         const critChancePercent = findPercent(context.statsValues, 'Crit Chance');
         const attackInterval = getAttackInterval(context);
         const crystalInsightsPercent = getCrystalInsightsElementalPowerPercent(
@@ -134,6 +139,8 @@ export const damageModifiersStep = {
             critChancePercent,
             attackInterval
         );
+        const abilityElementalPowerPercent = context.specialAbilityManager
+            ?.getAbilityElementalPowerPercent(context) ?? 0;
 
         const elementalPowerFlat = findFlat(context.statsValues, 'Elemental Power');
         const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
@@ -146,7 +153,8 @@ export const damageModifiersStep = {
         const elementalSynergy = getElementalSynergyEffects(context, energyRegen);
 
         const elementalPowerPercent = findPercent(context.statsValues, 'Elemental Power')
-            + crystalInsightsPercent;
+            + crystalInsightsPercent
+            + abilityElementalPowerPercent;
         const elementalPower = (BASE_ELEMENTAL_POWER
             + elementalPowerFlat
             + distilledElementalPowerFlat
@@ -184,6 +192,8 @@ export const damageModifiersStep = {
             masteryBonus,
             elementalPower,
             crystalInsightsPercent,
+            abilityElementalPowerPercent,
+            elementalResistancePercent,
             naturalDistillationPercent,
             distilledCritDamagePercent,
             distilledElementalPowerFlat,
@@ -220,6 +230,16 @@ export const damageModifiersStep = {
             }
             if (result.elementalSynergyFlat > 0) {
                 rows.push({ label: 'Elemental Synergy EP', value: result.elementalSynergyFlat });
+            }
+            if (result.abilityElementalPowerPercent > 0) {
+                rows.push({ label: 'Elemental Power%', value: result.abilityElementalPowerPercent, unit: '%' });
+            }
+            if (result.elementalResistancePercent !== 0) {
+                rows.push({
+                    label: `${capitalize(result.element)} Resistance%`,
+                    value: result.elementalResistancePercent,
+                    unit: '%'
+                });
             }
             if (result.blueDamagePercent > 0) {
                 rows.push({ label: 'Blue Orb Bonus', value: result.blueDamagePercent, unit: '%' });

@@ -222,6 +222,7 @@ export class ApiManager {
 
                 // Chiamata alla funzione di appoggio per generare tutte le statistiche pulite
                 const statsObj = this.formatGearStats(gear, targetCategory, item.tooltipJson, name);
+                this.specialAbilityManager?.registerAbilitiesFromStats(name, statsObj);
 
                 if (!itemsCopy[targetCategory]) {
                     itemsCopy[targetCategory] = [];

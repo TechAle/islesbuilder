@@ -126,6 +126,38 @@ export class SpecialAbilityManager {
     }
 
     /**
+     * Registra eventuali abilità manuali dichiarate nelle statistiche
+     * `Ability 1`, `Ability 2`, ... dell'oggetto (es. override Royal Tiara).
+     * Registra solo le voci che hanno un override, per non duplicare quelle
+     * già lette da `gear.abilities`.
+     *
+     * @param {string} itemName
+     * @param {Record<string, any>|undefined} stats
+     */
+    registerAbilitiesFromStats(itemName, stats) {
+        if (!itemName || !stats) return;
+
+        Object.entries(stats)
+            .filter(([key]) => /^Ability \d+$/.test(key))
+            .forEach(([, value]) => {
+                const abilityName = String(value ?? '').trim();
+                if (!abilityName) return;
+
+                const fullName = `${abilityName}-${String(itemName).trim()}`.toLowerCase();
+                const exists = onClick.some(entry => entry.name.toLowerCase() === fullName)
+                    || passives.some(entry => entry.name.toLowerCase() === fullName);
+                if (exists) return;
+
+                const override = this.findOverride(`${abilityName}-${itemName}`);
+                if (!override) return;
+                this.registerAbilities(itemName, [{
+                    name: abilityName,
+                    kind: override.kind === 'passive' ? 'passive' : 'ability'
+                }]);
+            });
+    }
+
+    /**
      * Registra le abilità dagli oggetti già presenti nel catalogo locale.
      * Supporta sia `item.abilities` sia `item.gear.abilities`.
      * @param {Record<string, any[]>} items
@@ -137,21 +169,112 @@ export class SpecialAbilityManager {
             list.forEach(item => {
                 const abilities = item?.abilities ?? item?.gear?.abilities;
                 this.registerAbilities(item?.name ?? item?.gear?.name, abilities);
+                this.registerAbilitiesFromStats(
+                    item?.name ?? item?.gear?.name,
+                    item?.stats
+                );
             });
         });
     }
 
     /**
-     * Nomi di tutti gli oggetti equipaggiati.
+     * Oggetti equipaggiati con un nome valido.
      * @param {DamageContext} context
-     * @returns {Set<string>}
+     * @returns {Array<{name: string, stats?: Record<string, any>, abilitiesEdited?: boolean}>}
      */
-    getEquippedItemNames(context) {
-        return new Set(
-            Object.values(context.build?.activeEquip ?? {})
-                .map(item => String(item?.name ?? '').trim().toLowerCase())
-                .filter(Boolean)
-        );
+    getEquippedItems(context) {
+        return Object.values(context.build?.activeEquip ?? {})
+            .filter(item => String(item?.name ?? '').trim());
+    }
+
+    /**
+     * Nomi delle abilità dichiarate nelle statistiche `Ability N` dell'oggetto.
+     * Se l'oggetto non ha più quella statistica, l'abilità non è più attiva.
+     * @param {{stats?: Record<string, any>}|null|undefined} item
+     * @returns {string[]}
+     */
+    getItemAbilityNames(item) {
+        return Object.entries(item?.stats ?? {})
+            .filter(([key]) => /^Ability \d+$/.test(key))
+            .map(([, value]) => String(value ?? '').trim())
+            .filter(Boolean);
+    }
+
+    /**
+     * Recupera un'abilità dal catalogo, creandola se esiste un override
+     * compatibile con la lista richiesta (ability o passive).
+     * @param {SpecialAbility[]} list
+     * @param {string} itemName
+     * @param {string} abilityName
+     * @param {'ability'|'passive'} kind
+     * @returns {SpecialAbility|null}
+     */
+    resolveAbility(list, itemName, abilityName, kind) {
+        const fullName = `${abilityName}-${itemName}`.toLowerCase();
+        const existing = list.find(entry => entry.name.toLowerCase() === fullName);
+        if (existing) return existing;
+
+        // Non registrare un'abilità nella lista sbagliata: se esiste già
+        // nell'altra lista, questa voce non appartiene a `kind`.
+        const otherList = kind === 'passive' ? onClick : passives;
+        if (otherList.some(entry => entry.name.toLowerCase() === fullName)) return null;
+
+        const override = this.findOverride(`${abilityName}-${itemName}`);
+        if (!override) return null;
+
+        const overrideKind = override.kind === 'passive' ? 'passive' : 'ability';
+        if (overrideKind !== kind) return null;
+
+        this.registerAbilities(itemName, [{
+            name: abilityName,
+            kind: overrideKind
+        }]);
+
+        return list.find(entry => entry.name.toLowerCase() === fullName) ?? null;
+    }
+
+    /**
+     * Abilità attive di una lista, filtrate per le statistiche `Ability N`
+     * presenti sugli oggetti equipaggiati.
+     * @param {SpecialAbility[]} list
+     * @param {DamageContext} context
+     * @param {'ability'|'passive'} kind
+     * @returns {SpecialAbility[]}
+     */
+    getActiveAbilities(list, context, kind) {
+        /** @type {SpecialAbility[]} */
+        const active = [];
+        const seen = new Set();
+
+        /**
+         * @param {SpecialAbility|null} ability
+         */
+        const add = ability => {
+            if (!ability) return;
+            const key = ability.name.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            active.push(ability);
+        };
+
+        this.getEquippedItems(context).forEach(item => {
+            const abilityNames = this.getItemAbilityNames(item);
+
+            // Fallback per build/test senza statistiche `Ability N`:
+            // usa le abilità registrate per nome oggetto.
+            if (abilityNames.length === 0 && !item.abilitiesEdited) {
+                list
+                    .filter(entry => entry.weapon.toLowerCase() === item.name.toLowerCase())
+                    .forEach(add);
+                return;
+            }
+
+            abilityNames.forEach(abilityName => {
+                add(this.resolveAbility(list, item.name, abilityName, kind));
+            });
+        });
+
+        return active;
     }
 
     /**
@@ -160,10 +283,7 @@ export class SpecialAbilityManager {
      * @returns {SpecialAbility[]}
      */
     getActivePassives(context) {
-        const itemNames = this.getEquippedItemNames(context);
-        if (itemNames.size === 0) return [];
-
-        return passives.filter(passive => itemNames.has(passive.weapon.toLowerCase()));
+        return this.getActiveAbilities(passives, context, 'passive');
     }
 
     /**
@@ -172,10 +292,7 @@ export class SpecialAbilityManager {
      * @returns {SpecialAbility[]}
      */
     getActiveOnClick(context) {
-        const itemNames = this.getEquippedItemNames(context);
-        if (itemNames.size === 0) return [];
-
-        return onClick.filter(ability => itemNames.has(ability.weapon.toLowerCase()));
+        return this.getActiveAbilities(onClick, context, 'ability');
     }
 
     /**
@@ -380,6 +497,45 @@ export class SpecialAbilityManager {
     }
 
     /**
+     * Abilità/passive equipaggiate che possono applicare effetti permanenti.
+     * @param {DamageContext} context
+     * @returns {SpecialAbility[]}
+     */
+    getActiveEffectAbilities(context) {
+        return [
+            ...this.getActiveOnClick(context),
+            ...this.getActivePassives(context)
+        ];
+    }
+
+    /**
+     * Elemental Power% fornito da abilità/passive equipaggiate.
+     * @param {DamageContext} context
+     * @returns {number}
+     */
+    getAbilityElementalPowerPercent(context) {
+        return this.getActiveEffectAbilities(context)
+            .reduce((sum, ability) => sum + (ability.elementalPowerPercent ?? 0), 0);
+    }
+
+    /**
+     * Resistenza al danno del nemico per uno specifico elemento
+     * (valore negativo = resistenza ridotta).
+     * @param {DamageContext} context
+     * @param {string|null} element
+     * @returns {number}
+     */
+    getElementalResistancePercent(context, element) {
+        const key = String(element ?? '').trim().toLowerCase();
+        if (!key) return 0;
+
+        return this.getActiveEffectAbilities(context).reduce((sum, ability) => {
+            const value = ability.resistancePercent?.[key] ?? 0;
+            return sum + value;
+        }, 0);
+    }
+
+    /**
      * Aumento percentuale del danno subito dal nemico (es. Toxic Gas).
      * @param {DamageContext} context
      * @returns {number}
@@ -387,7 +543,7 @@ export class SpecialAbilityManager {
     getDamageTakenIncreasePercent(context) {
         const disabled = new Set(context.settings?.disabledSpecialAttacks ?? []);
 
-        return this.getActiveOnClick(context).reduce((sum, ability) => {
+        return this.getActiveEffectAbilities(context).reduce((sum, ability) => {
             if (disabled.has(ability.name)) return sum;
             return sum + (ability.damageTakenIncreasePercent ?? 0);
         }, 0);

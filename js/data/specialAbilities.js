@@ -75,5 +75,20 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     },
 
     // Abilità con percentuale non-danno o senza percentuale.
-    'Blast Projectile-Oak Wand': { damage: 100 }
+    'Blast Projectile-Oak Wand': { damage: 100 },
+
+    // Royal Praise: riduce la resistenza Nature del nemico del 20% e dà
+    // +25% Elemental Power. Non è un'abilità di danno diretto.
+    'Royal Praise-Royal Tiara': {
+        kind: 'passive',
+        damage: 0,
+        elementalPowerPercent: 25,
+        resistancePercent: { nature: -20 }
+    },
+
+    // Soil Infestation: i nemici subiscono il 25% di danno in più.
+    'Soil Infestation-Gloomfang Mace': {
+        damage: 0,
+        damageTakenIncreasePercent: 25
+    }
 };

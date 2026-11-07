@@ -148,7 +148,7 @@ export const specialAttacksStep = {
 
             if (ability.damageTakenIncreasePercent > 0) {
                 rows.push({
-                    label: `${ability.ability} Damage Taken`,
+                    label: 'Damage%',
                     value: ability.damageTakenIncreasePercent,
                     unit: '%'
                 });

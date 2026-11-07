@@ -45,6 +45,8 @@
  * @property {number} [extraHitsPerSwing] - Hit extra per ogni attacco base
  * @property {number} [extraHitDamagePercent] - Danno percentuale degli hit extra
  * @property {number} [damageTakenIncreasePercent] - Aumento danno subito dal nemico
+ * @property {Record<string, number>} [resistancePercent] - Resistenza nemica per elemento (es. { nature: -20 })
+ * @property {number} [elementalPowerPercent] - Elemental Power% aggiunto dall'abilità
  * @property {number} cooldown - Cooldown in secondi (default 1.6 per onClick)
  * @property {number|null} everyHits - Per le passive: ogni quanti attacchi scatta
  * @property {string} text
@@ -99,6 +101,7 @@
  * @property {ItemStats} stats
  * @property {string[]} augments
  * @property {number} [upgradeLevel]
+ * @property {boolean} [abilitiesEdited] - True se le abilità sono state modificate manualmente
  */
 
 /**
@@ -195,6 +198,8 @@
  * @property {string} weaponClass - Classe dell'arma
  * @property {string} element - Elemento dell'arma
  * @property {number} elementSpecificPercent - Percentuale del danno elementale specifico
+ * @property {number} elementalResistancePercent - Resistenza nemica per l'elemento (negativa = ridotta)
+ * @property {number} abilityElementalPowerPercent - EP% fornito da abilità equipaggiate
  * @property {number} elementalChannelingPercent - Valore di Elemental Channeling
  * @property {number} percent - Modificatore percentuale del tipo di danno
  * @property {number} masteryPercent - Modificatore del mastery della classe arma

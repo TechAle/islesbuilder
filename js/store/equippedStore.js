@@ -23,7 +23,8 @@ function createEmptyEquipSlot() {
         name: '',
         stats: {},
         augments: Array(AUGMENT_SLOTS_PER_ITEM).fill(''),
-        upgradeLevel: 0
+        upgradeLevel: 0,
+        abilitiesEdited: false
     };
 }
 
