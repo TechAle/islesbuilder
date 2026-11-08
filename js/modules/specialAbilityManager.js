@@ -8,6 +8,7 @@ import { getAttackInterval } from './damage/attackTiming.js';
 import { getEnergyRegen } from './damage/energy.js';
 import { getEnergyCostMultiplier } from './damage/energyCost.js';
 import { getDefaultAttackReverseMultiplier, getWeaponClass } from './damage/weaponProps.js';
+import { findPercent } from './damage/statLookup.js';
 
 /** @typedef {import('../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../data/types.js').SpecialAbility} SpecialAbility */
@@ -420,6 +421,9 @@ export class SpecialAbilityManager {
             0,
             getEnergyCostMultiplier(context.statsValues ?? {}, 'Ability Costs', weaponClass)
         );
+        // Swift channels: riduce il cooldown delle abilità onClick dell'arma.
+        const abilityCooldownPercent = findPercent(context.statsValues ?? {}, 'Ability Cooldown');
+        const abilityCooldownMultiplier = Math.max(0, 1 + abilityCooldownPercent / 100);
 
         const entries = this.getActiveOnClick(context).map(ability => {
             const baseTimes = ability.times > 0 ? ability.times : 1;
@@ -443,9 +447,10 @@ export class SpecialAbilityManager {
                 ? times
                 : (ability.hitsPerUse ?? 1);
             const baseCooldown = ability.cooldown > 0 ? ability.cooldown : DEFAULT_ABILITY_COOLDOWN;
-            const cooldown = this.resolveCooldown(
-                baseCooldown,
-                cooldownOverrides[ability.name]
+            const cooldown = Math.max(
+                0.05,
+                this.resolveCooldown(baseCooldown, cooldownOverrides[ability.name])
+                    * abilityCooldownMultiplier
             );
             const energy = typeof ability.energy === 'number'
                 ? Math.max(0, ability.energy * abilityCostMultiplier)

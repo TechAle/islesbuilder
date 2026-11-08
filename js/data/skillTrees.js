@@ -336,7 +336,7 @@ export const CLASS_SKILL_TREES = {
             'DL2': {
                 x: 43, y: 84, max: 5, costBase: 1,
                 name: "Swift channels",
-                statKey: "{val}% Ability Cooldown",
+                statKey: "-{val}% Ability Cooldown",
                 isDirect: true,
                 description: "Decrease the cooldown of your weapon abilities by {val}%.",
                 parameters: { val: { base: 5.0, increase: 5.0 } }
