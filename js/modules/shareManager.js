@@ -1,4 +1,4 @@
-import { CLASS_KEYS, getItemCategoryForSlot } from '../data/constants.js';
+import { CLASS_KEYS, getItemCategoryForSlot, MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
 import { clampUpgradeLevel } from './itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
@@ -103,7 +103,7 @@ export class ShareManager {
                         ...savedItem,
                         stats: { ...(savedItem.stats || {}) },
                         augments: Array.isArray(savedItem.augments)
-                            ? savedItem.augments
+                            ? savedItem.augments.slice(0, MAX_AUGMENTS_PER_ITEM)
                             : currentSlot.augments,
                         upgradeLevel: Number(savedItem.upgradeLevel) || 0
                     };

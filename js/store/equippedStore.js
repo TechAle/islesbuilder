@@ -1,6 +1,6 @@
 import { ObservableStore } from './observableStore.js';
 import {
-    AUGMENT_SLOTS_PER_ITEM,
+    MAX_AUGMENTS_PER_ITEM,
     CLASS_KEYS,
     DEFAULT_CLASS,
     DEFAULT_SHARED_POINTS,
@@ -22,7 +22,7 @@ function createEmptyEquipSlot() {
     return {
         name: '',
         stats: {},
-        augments: Array(AUGMENT_SLOTS_PER_ITEM).fill(''),
+        augments: Array(MAX_AUGMENTS_PER_ITEM).fill(''),
         upgradeLevel: 0,
         abilitiesEdited: false
     };
@@ -115,7 +115,7 @@ export class BuildStore extends ObservableStore {
     setAugment(slot, index, value) {
         this.update(state => {
             const augments = state.activeEquip[slot]?.augments;
-            if (!augments || index < 0 || index >= augments.length) return;
+            if (!augments || index < 0 || index >= Math.min(augments.length, MAX_AUGMENTS_PER_ITEM)) return;
             augments[index] = value;
         }, 'equip');
     }

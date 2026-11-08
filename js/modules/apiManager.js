@@ -118,11 +118,36 @@ export class ApiManager {
         /** @type {ItemStats} */
         const statsObj = {};
 
-        // 1. Statistiche standard dall'array stats dell'API
+        // 1. Statistiche standard dall'array stats dell'API.
+        // Alcune armi (es. Giant Log) hanno due voci con lo stesso nome:
+        // una flat e una percentuale. Se le assegnassimo direttamente alla
+        // stessa chiave, la seconda sovrascriverebbe la prima. Teniamo quindi
+        // la flat sulla chiave originale e la percentuale su `<stat>%`.
         if (gear.stats && Array.isArray(gear.stats)) {
+            /** @type {Map<string, {flat: number[], percent: number[]}>} */
+            const groupedStats = new Map();
+
             gear.stats.forEach(s => {
-                if (s.stat) {
-                    statsObj[s.stat] = s.percent ? `${s.max}%` : s.max;
+                if (!s?.stat) return;
+
+                const entry = groupedStats.get(s.stat) ?? { flat: [], percent: [] };
+                const value = Number(s.max) || 0;
+
+                if (s.percent) entry.percent.push(value);
+                else entry.flat.push(value);
+
+                groupedStats.set(s.stat, entry);
+            });
+
+            groupedStats.forEach((entry, stat) => {
+                const flat = entry.flat.reduce((sum, value) => sum + value, 0);
+                const percent = entry.percent.reduce((sum, value) => sum + value, 0);
+
+                if (entry.flat.length > 0) {
+                    statsObj[stat] = flat;
+                }
+                if (entry.percent.length > 0) {
+                    statsObj[entry.flat.length > 0 ? `${stat}%` : stat] = `${percent}%`;
                 }
             });
         }

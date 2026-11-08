@@ -1,5 +1,5 @@
 import {
-    AUGMENT_SLOTS_PER_ITEM,
+    MAX_AUGMENTS_PER_ITEM,
     RING_ITEM_CATEGORY,
     RING_SLOTS,
     getItemCategoryForSlot
@@ -55,6 +55,7 @@ export class ItemManager {
             items.forEach(item => {
                 Object.keys(item.stats || {}).forEach(statKey => {
                     if (statKey === 'Augment Slots' || statKey === 'Normal Attack') return;
+                    if (statKey.endsWith('%')) return;
                     uniqueStats.add(statKey);
                 });
             });
@@ -75,7 +76,7 @@ export class ItemManager {
             this.equippedStore.setEquipSlot(slot, {
                 name: '',
                 stats: {},
-                augments: Array(AUGMENT_SLOTS_PER_ITEM).fill(''),
+                augments: Array(MAX_AUGMENTS_PER_ITEM).fill(''),
                 upgradeLevel: 0,
                 abilitiesEdited: false
             });

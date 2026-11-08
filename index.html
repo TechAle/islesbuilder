@@ -31,11 +31,7 @@
                             <datalist id="list-weapon"></datalist>
                             <button class="btn-edit" data-slot="weapon" title="Modifica / Custom">⚙️</button>
                         </div>
-                        <div class="augments-container">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="weapon" data-aug-index="0">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="weapon" data-aug-index="1">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="weapon" data-aug-index="2">
-                        </div>
+                        <div class="augments-container" data-augment-slot="weapon"></div>
                     </div>
                 </div>
 
@@ -62,11 +58,7 @@
                             <datalist id="list-helmet"></datalist>
                             <button class="btn-edit" data-slot="helmet" title="Modifica / Custom">⚙️</button>
                         </div>
-                        <div class="augments-container">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="helmet" data-aug-index="0">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="helmet" data-aug-index="1">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="helmet" data-augment-slot="helmet" data-aug-index="2">
-                        </div>
+                        <div class="augments-container" data-augment-slot="helmet"></div>
                     </div>
                 </div>
 
@@ -93,11 +85,7 @@
                             <datalist id="list-chestplate"></datalist>
                             <button class="btn-edit" data-slot="chestplate" title="Modifica / Custom">⚙️</button>
                         </div>
-                        <div class="augments-container">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="chestplate" data-aug-index="0">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="chestplate" data-aug-index="1">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="chestplate" data-aug-index="2">
-                        </div>
+                        <div class="augments-container" data-augment-slot="chestplate"></div>
                     </div>
                 </div>
 
@@ -124,11 +112,7 @@
                             <datalist id="list-leggings"></datalist>
                             <button class="btn-edit" data-slot="leggings" title="Modifica / Custom">⚙️</button>
                         </div>
-                        <div class="augments-container">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="leggings" data-aug-index="0">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="leggings" data-aug-index="1">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="leggings" data-aug-index="2">
-                        </div>
+                        <div class="augments-container" data-augment-slot="leggings"></div>
                     </div>
                 </div>
 
@@ -155,11 +139,7 @@
                             <datalist id="list-boots"></datalist>
                             <button class="btn-edit" data-slot="boots" title="Modifica / Custom">⚙️</button>
                         </div>
-                        <div class="augments-container">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 1" data-augment-slot="boots" data-aug-index="0">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 2" data-augment-slot="boots" data-aug-index="1">
-                            <input type="text" class="augment-input" list="list-augments" placeholder="Augment 3" data-augment-slot="boots" data-aug-index="2">
-                        </div>
+                        <div class="augments-container" data-augment-slot="boots"></div>
                     </div>
                 </div>
 
@@ -312,7 +292,7 @@
             </div>
             <div class="damage-uptime" id="infected-hits-control" hidden>
                 <label class="damage-uptime-label" for="infected-hits">Infected hits</label>
-                <input type="range" class="damage-uptime-slider" id="infected-hits" min="0" max="30" step="1" value="0">
+                <input type="range" class="damage-uptime-slider" id="infected-hits" min="0" max="15" step="1" value="0">
                 <span class="damage-uptime-value" id="infected-hits-value">Auto</span>
             </div>
             <div class="damage-uptime" id="deathburst-kills-control" hidden>

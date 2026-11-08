@@ -1,4 +1,4 @@
-import { EQUIP_SLOTS } from '../data/constants.js';
+import { EQUIP_SLOTS, MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
 import { clampUpgradeLevel, getMaxUpgradeLevel } from '../modules/itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
@@ -28,6 +28,7 @@ export class EquipRenderer {
 
     /** Collega gli eventi degli input equipaggiamento. */
     mount() {
+        this.renderAugmentInputs();
         this.applyAugmentLists();
 
         this.root.querySelectorAll('.btn-edit').forEach(button => {
@@ -75,6 +76,28 @@ export class EquipRenderer {
         });
     }
 
+    /** Crea gli input augment in base al massimo configurato nelle constants. */
+    renderAugmentInputs() {
+        this.root.querySelectorAll('.augments-container[data-augment-slot]').forEach(container => {
+            const slot = /** @type {EquipSlot|undefined} */ (
+                /** @type {HTMLElement} */ (container).dataset.augmentSlot
+            );
+            if (!slot) return;
+
+            container.innerHTML = '';
+
+            for (let index = 0; index < MAX_AUGMENTS_PER_ITEM; index++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'augment-input';
+                input.placeholder = `Augment ${index + 1}`;
+                input.dataset.augmentSlot = slot;
+                input.dataset.augIndex = String(index);
+                container.appendChild(input);
+            }
+        });
+    }
+
     /** @param {BuildState} state */
     render(state) {
         EQUIP_SLOTS.forEach(slot => {
@@ -96,7 +119,7 @@ export class EquipRenderer {
                 upgradeInput.disabled = !item.name;
             }
 
-            (item.augments || []).forEach((value, index) => {
+            (item.augments || []).slice(0, MAX_AUGMENTS_PER_ITEM).forEach((value, index) => {
                 const augmentInput = /** @type {HTMLInputElement|null} */ (
                     this.root.querySelector(`input[data-augment-slot="${slot}"][data-aug-index="${index}"]`)
                 );

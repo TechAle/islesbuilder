@@ -39,7 +39,12 @@ export const EQUIP_SLOTS = [
 export const RING_SLOTS = ['ring1', 'ring2'];
 
 export const RING_ITEM_CATEGORY = 'ring';
-export const AUGMENT_SLOTS_PER_ITEM = 3;
+
+/**
+ * Numero massimo di augment equipaggiabili per ogni oggetto.
+ * Modifica questo valore per aumentare/diminuire gli input di armi e armature.
+ */
+export const MAX_AUGMENTS_PER_ITEM = 2;
 
 /** Incremento percentuale di ogni statistica per livello di upgrade. */
 export const ITEM_UPGRADE_STAT_PER_LEVEL = 0.066;

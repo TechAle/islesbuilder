@@ -1,4 +1,5 @@
 import { AUGMENT_DATABASE, AUGMENT_OVERRIDES } from '../data/augments.js';
+import { MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
 /** @typedef {import('../data/types.js').DamageContext} DamageContext */
@@ -296,7 +297,7 @@ export function getEquippedAugments(build) {
     Object.entries(build?.activeEquip ?? {}).forEach(([slot, item]) => {
         const kind = slot === 'weapon' ? 'weapon' : 'armor';
 
-        (item?.augments ?? []).forEach(raw => {
+        (item?.augments ?? []).slice(0, MAX_AUGMENTS_PER_ITEM).forEach(raw => {
             const parsed = parseAugment(raw);
             if (!parsed) return;
             if (parsed.augment.goesIn !== kind) return;
@@ -404,14 +405,24 @@ export function getAugmentEffects(context) {
                     cooldown: level.params?.cooldown ?? 5
                 });
                 break;
-            case 'infected':
-                effects.hasInfected = true;
-                effects.infected.push({
+            case 'infected': {
+                // Due Infected non si stackano: il debuff è unico.
+                // Se ne sono equipaggiati più di uno, vale solo il più forte.
+                const candidate = {
                     perHit: level.value,
                     duration: level.params?.duration ?? 2,
                     maxHits: level.params?.maxHits ?? 10
-                });
+                };
+                const current = effects.infected[0];
+                const candidateMax = candidate.perHit * candidate.maxHits;
+                const currentMax = current ? current.perHit * current.maxHits : -1;
+
+                if (!current || candidateMax > currentMax) {
+                    effects.infected[0] = candidate;
+                }
+                effects.hasInfected = true;
                 break;
+            }
             case 'enraged':
                 effects.hasEnraged = true;
                 effects.enragedPercent += level.value * (1 - enragedHp);
