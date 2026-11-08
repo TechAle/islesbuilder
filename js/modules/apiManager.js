@@ -164,15 +164,15 @@ export class ApiManager {
                 statsObj["Normal Attack"] = gear.normalAttack;
             }
             if (gear.damageType !== undefined) statsObj["Damage Type"] = gear.damageType;
-            if (gear.slot !== undefined) {
+            if (gear.slot !== undefined && typeof gear.slot === 'string') {
                 statsObj["Weapon Type"] = WEAPON_SLOT_TO_WEAPON_TYPE[gear.slot.toLowerCase()];
             }
 
             if (toolTip !== null && toolTip !== undefined && toolTip.length > 1) {
-                const firstRow = toolTip[1].extra;
-                if (firstRow.length > 1) {
-                    const elementalRow = firstRow[0].text;
-                    if (elementalRow.length > 9) {
+                const firstRow = toolTip[1]?.extra;
+                if (Array.isArray(firstRow) && firstRow.length > 1) {
+                    const elementalRow = firstRow[0]?.text;
+                    if (typeof elementalRow === 'string' && elementalRow.length > 9) {
                         statsObj["element"] = ELEMENT_CHAR_TO_NAME[elementalRow[10]];
                     }
                 }
@@ -232,8 +232,9 @@ export class ApiManager {
 
             // 4. Smistamento e formattazione
             allFetchedItems.forEach(item => {
+                if (!item) return;
                 const rawSlot = item.gear?.slot;
-                if (!rawSlot) return;
+                if (typeof rawSlot !== 'string' || !rawSlot) return;
 
                 const normalizedSlot = rawSlot.toLowerCase();
                 const targetCategory = SLOT_TO_ITEM_CATEGORY[normalizedSlot];
