@@ -48,7 +48,7 @@ export class DpsManager {
         // Infected è uno stacking debuff: su un target che muore presto non
         // arriva a tutti gli stack. Se conosciamo la vita del target,
         // stimiamo il TTK e ricalcoliamo gli stack fino a convergenza.
-        if (targetHealth > 0 && steps.augmentFinal?.hasInfected) {
+        if (!baseSettings.firstHit && targetHealth > 0 && steps.augmentFinal?.hasInfected) {
             let estimatedTtk = Infinity;
 
             for (let i = 0; i < 4; i++) {
