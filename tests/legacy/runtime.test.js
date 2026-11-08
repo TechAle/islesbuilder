@@ -1837,7 +1837,7 @@ test('the avatar: +10% Elemental Power per livello', () => {
             element: 'thunder'
         }
     });
-    equippedStore.setEquipSlot('ring1', { stats: { 'Thunder Damage': '10%' } });
+    equippedStore.setEquipSlot('ring1', { name: 'Test Ring', stats: { 'Thunder Damage': '10%' } });
 
     const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
     const steps = new DpsManager().recalculate({

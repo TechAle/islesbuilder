@@ -295,6 +295,7 @@ export function getEquippedAugments(build) {
     const equipped = [];
 
     Object.entries(build?.activeEquip ?? {}).forEach(([slot, item]) => {
+        if (!String(item?.name ?? '').trim()) return;
         const kind = slot === 'weapon' ? 'weapon' : 'armor';
 
         (item?.augments ?? []).slice(0, MAX_AUGMENTS_PER_ITEM).forEach(raw => {

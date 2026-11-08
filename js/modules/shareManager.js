@@ -98,13 +98,15 @@ export class ShareManager {
                     const currentSlot = reconstructedEquip[equipSlot];
                     if (!currentSlot || !savedItem || typeof savedItem !== 'object') return;
 
+                    const savedAugments = Array.isArray(savedItem.augments)
+                        ? savedItem.augments.slice(0, MAX_AUGMENTS_PER_ITEM)
+                        : currentSlot.augments;
                     const item = {
                         ...currentSlot,
                         ...savedItem,
                         stats: { ...(savedItem.stats || {}) },
-                        augments: Array.isArray(savedItem.augments)
-                            ? savedItem.augments.slice(0, MAX_AUGMENTS_PER_ITEM)
-                            : currentSlot.augments,
+                        augments: [...savedAugments, ...Array(MAX_AUGMENTS_PER_ITEM).fill('')]
+                            .slice(0, MAX_AUGMENTS_PER_ITEM),
                         upgradeLevel: Number(savedItem.upgradeLevel) || 0
                     };
 
@@ -154,7 +156,9 @@ export class ShareManager {
                 newState.treeLevels = treeLevels;
             }
 
-            if (state.currentClass) newState.currentClass = state.currentClass;
+            if (state.currentClass && CLASS_KEYS.includes(state.currentClass)) {
+                newState.currentClass = state.currentClass;
+            }
             if (typeof state.sharedPoints === 'number') newState.sharedPoints = state.sharedPoints;
 
             this.equippedStore.setState(newState, 'all');

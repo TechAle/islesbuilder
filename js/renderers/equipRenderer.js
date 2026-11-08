@@ -119,12 +119,12 @@ export class EquipRenderer {
                 upgradeInput.disabled = !item.name;
             }
 
-            (item.augments || []).slice(0, MAX_AUGMENTS_PER_ITEM).forEach((value, index) => {
+            for (let index = 0; index < MAX_AUGMENTS_PER_ITEM; index++) {
                 const augmentInput = /** @type {HTMLInputElement|null} */ (
                     this.root.querySelector(`input[data-augment-slot="${slot}"][data-aug-index="${index}"]`)
                 );
-                if (augmentInput) augmentInput.value = value || '';
-            });
+                if (augmentInput) augmentInput.value = item.augments?.[index] || '';
+            }
         });
     }
 

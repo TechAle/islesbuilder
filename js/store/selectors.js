@@ -55,7 +55,7 @@ export function selectStats(catalog, build) {
     const skillValues = createSkillValues();
 
     Object.values(build.activeEquip).forEach(item => {
-        if (!item.stats) return;
+        if (!String(item?.name ?? '').trim() || !item.stats) return;
 
         const upgradeLevel = clampUpgradeLevel(item, item.upgradeLevel ?? 0);
         const upgradeMultiplier = 1 + upgradeLevel * ITEM_UPGRADE_STAT_PER_LEVEL;
