@@ -1,7 +1,7 @@
-import { getCrystalCombustionEffects } from '../../classes/mage.js';
+import { getCrystalCombustionEffects } from '../../../classes/mage.js';
 
-/** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
-/** @typedef {import('../../../data/types.js').CrystalCombustionStepResult} CrystalCombustionStepResult */
+/** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
+/** @typedef {import('../../../../data/types.js').CrystalCombustionStepResult} CrystalCombustionStepResult */
 
 /**
  * Step 8 — Crystal Combustion.
@@ -10,7 +10,7 @@ import { getCrystalCombustionEffects } from '../../classes/mage.js';
  * I drop di Recover Crystal e Power Crystal sono indipendenti e limitati
  * da un cooldown di 0.5s ciascuno.
  *
- * @type {import('../../../data/types.js').DamageStep}
+ * @type {import('../../../../data/types.js').DamageStep}
  */
 export const crystalCombustionStep = {
     id: 'crystalCombustion',
@@ -74,7 +74,7 @@ export const crystalCombustionStep = {
 
     /**
      * @param {CrystalCombustionStepResult} result
-     * @returns {import('../../../data/types.js').DamageResult[]}
+     * @returns {import('../../../../data/types.js').DamageResult[]}
      */
     toResults(result) {
         if (!result || !result.enabled) return [];

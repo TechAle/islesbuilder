@@ -1,7 +1,7 @@
-import { getSupportOrbEffects } from '../../classes/mage.js';
+import { getSupportOrbEffects } from '../../../classes/mage.js';
 
-/** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
-/** @typedef {import('../../../data/types.js').SupportOrbsStepResult} SupportOrbsStepResult */
+/** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
+/** @typedef {import('../../../../data/types.js').SupportOrbsStepResult} SupportOrbsStepResult */
 
 /**
  * Step 9 — Support Orbs (RED orb).
@@ -10,7 +10,7 @@ import { getSupportOrbEffects } from '../../classes/mage.js';
  * al secondo per la loro durata. Ogni hit dell'orb infligge `c%` dell'Average
  * Damage.
  *
- * @type {import('../../../data/types.js').DamageStep}
+ * @type {import('../../../../data/types.js').DamageStep}
  */
 export const supportOrbsStep = {
     id: 'supportOrbs',
@@ -82,7 +82,7 @@ export const supportOrbsStep = {
 
     /**
      * @param {SupportOrbsStepResult} result
-     * @returns {import('../../../data/types.js').DamageResult[]}
+     * @returns {import('../../../../data/types.js').DamageResult[]}
      */
     toResults(result) {
         if (!result || !result.enabled) return [];

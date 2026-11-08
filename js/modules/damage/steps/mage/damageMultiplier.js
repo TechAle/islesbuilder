@@ -3,11 +3,11 @@ import {
     getGriefInflictionEffects,
     getLastSorrowEffects,
     getFocusStacksEffects
-} from '../../classes/mage.js';
-import { applyAdditiveMultipliers } from '../applyMultipliers.js';
+} from '../../../classes/mage.js';
+import { applyAdditiveMultipliers } from '../../applyMultipliers.js';
 
-/** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
-/** @typedef {import('../../../data/types.js').DamageMultiplierStepResult} DamageMultiplierStepResult */
+/** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
+/** @typedef {import('../../../../data/types.js').DamageMultiplierStepResult} DamageMultiplierStepResult */
 
 /**
  * Step 3 — Damage Multiplier.
@@ -22,7 +22,7 @@ import { applyAdditiveMultipliers } from '../applyMultipliers.js';
  *
  * Esempio: 9% + 15% → +24%, non 1.09 × 1.15.
  *
- * @type {import('../../../data/types.js').DamageStep}
+ * @type {import('../../../../data/types.js').DamageStep}
  */
 export const damageMultiplierStep = {
     id: 'damageMultiplier',
@@ -86,12 +86,12 @@ export const damageMultiplierStep = {
 
     /**
      * @param {DamageMultiplierStepResult} result
-     * @returns {import('../../../data/types.js').DamageResult[]}
+     * @returns {import('../../../../data/types.js').DamageResult[]}
      */
     toResults(result) {
         if (!result || result.baseDamage <= 0) return [];
 
-        /** @type {import('../../../data/types.js').DamageResult[]} */
+        /** @type {import('../../../../data/types.js').DamageResult[]} */
         const rows = [];
 
         if (result.elementalKnowledge > 0) {

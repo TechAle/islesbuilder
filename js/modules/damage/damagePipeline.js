@@ -1,14 +1,14 @@
 import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
-import { damageMultiplierStep } from './steps/damageMultiplier.js';
+import { damageMultiplierStep } from './steps/mage/damageMultiplier.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
 import { augmentFinalStep } from './steps/augmentFinal.js';
 import { specialAttacksStep } from './steps/specialAttacks.js';
 import { augmentDamageStep } from './steps/augmentDamage.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
 import { burstStep } from './steps/burst.js';
-import { crystalCombustionStep } from './steps/crystalCombustion.js';
-import { supportOrbsStep } from './steps/supportOrbs.js';
+import { crystalCombustionStep } from './steps/mage/crystalCombustion.js';
+import { supportOrbsStep } from './steps/mage/supportOrbs.js';
 
 /** @typedef {import('../../data/types.js').BuildState} BuildState */
 /** @typedef {import('../../data/types.js').ClassKey} ClassKey */
