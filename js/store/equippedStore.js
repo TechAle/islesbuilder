@@ -201,4 +201,15 @@ export class BuildStore extends ObservableStore {
             state.sharedPoints = sharedPoints;
         }, 'skills');
     }
+
+    /**
+     * Imposta manualmente i punti skill disponibili.
+     * @param {number} value
+     */
+    setSharedPoints(value) {
+        const parsed = Number.isFinite(value) ? Math.trunc(value) : 0;
+        this.update(state => {
+            state.sharedPoints = Math.max(0, parsed);
+        }, 'skills');
+    }
 }

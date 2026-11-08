@@ -93,6 +93,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         getNodeInfo: id => skillTreeManager.getNodeInfo(id)
     });
 
+    const pointsInput = /** @type {HTMLInputElement|null} */ (document.getElementById('points'));
+    pointsInput?.addEventListener('change', () => {
+        const parsed = Number.parseInt(pointsInput.value, 10);
+        equippedStore.setSharedPoints(Number.isFinite(parsed) ? parsed : 0);
+    });
+
     const statsRenderer = new StatsRenderer({
         root: document.getElementById('detailed-stats-container')
     });
@@ -202,6 +208,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             skillTrees: dataStore.data.skillTrees,
             settings: damageSettings
         });
+
+        // Primo colpo: stessi modificatori del calcolo normale, ma senza gli
+        // effetti che si attivano solo dopo aver colpito (es. Royal Praise).
+        firstHitDpsManager.recalculate({
+            statsValues,
+            skillValues,
+            build: equippedStore.state,
+            skillTrees: dataStore.data.skillTrees,
+            settings: { ...damageSettings, firstHit: true }
+        });
+
+        const firstHitDamage = firstHitDpsManager.getSteps().criticalDamage?.averageDamage ?? 0;
+        const attackStep = dpsManager.getSteps().attackSpeed;
+        if (attackStep) attackStep.firstHitDamage = firstHitDamage;
+
         damageRenderer.render(dpsManager.getStepGroups(), dpsManager.getDps());
         damageBreakdownRenderer.render(dpsManager.getDamageBreakdown());
 
@@ -249,16 +270,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
 
         // --- Enemy Simulator ------------------------------------------
-        firstHitDpsManager.recalculate({
-            statsValues,
-            skillValues,
-            build: equippedStore.state,
-            skillTrees: dataStore.data.skillTrees,
-            settings: { ...damageSettings, firstHit: true }
-        });
-
-        const firstHitDamage = firstHitDpsManager.getSteps().criticalDamage?.averageDamage ?? 0;
-        const attackStep = dpsManager.getSteps().attackSpeed;
         const energyPerSecond = attackStep?.energyPerSecondAttackBurstSpecial
             ?? attackStep?.energyPerSecondAttackBurst
             ?? attackStep?.energyPerSecond

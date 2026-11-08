@@ -384,6 +384,18 @@ body {
 .class-btn { flex: 1; padding: 8px; font-weight: 800; font-size: 13px; color: var(--text-muted); background: linear-gradient(#34373d, #222428); border: 1px solid var(--border-color); border-radius: 5px; cursor: pointer; text-transform: uppercase; }
 .class-btn.active { background: linear-gradient(#f4c47a, #dba45b); border-color: #ffe0a1; color: #2c2017; box-shadow: 0 0 8px #e7a322aa; }
 
+.points-input {
+    width: 70px;
+    margin-left: 4px;
+    padding: 3px 6px;
+    font-weight: 800;
+    color: var(--gold);
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-align: center;
+}
+
 .tree-viewport { position: relative; width: 100%; aspect-ratio: 1.62; background: linear-gradient(145deg, #2a2730, #1c1a21); border: 2px solid var(--border-color); border-radius: 6px; overflow: hidden; }
 svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; }
 .wire { fill: none; stroke: #141318; stroke-width: 5; }

@@ -321,6 +321,7 @@
  * @property {number} damage - Danno medio per colpo
  * @property {number} attackInterval - Secondi per attacco
  * @property {number} attacksPerSecond - Attacchi al secondo
+ * @property {number} [firstHitDamage] - Danno di un singolo colpo, senza DPS di passive/abilità
  * @property {number} dps - Danno al secondo
  * @property {number} [dpsAll] - DPS totale: attack + burst + combustion + orb + special attack
  * @property {number} passiveDps - Danno al secondo dalle passive

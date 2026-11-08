@@ -106,7 +106,13 @@ export class SkillTreeRenderer {
             root.appendChild(button);
         });
 
-        if (this.pointsEl) this.pointsEl.textContent = String(view.sharedPoints);
+        if (this.pointsEl) {
+            if (this.pointsEl instanceof HTMLInputElement) {
+                this.pointsEl.value = String(view.sharedPoints);
+            } else {
+                this.pointsEl.textContent = String(view.sharedPoints);
+            }
+        }
 
         this.classButtons.forEach(button => {
             button.classList.toggle('active', button.dataset.class === view.currentClass);

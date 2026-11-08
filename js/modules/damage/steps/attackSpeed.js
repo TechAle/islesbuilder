@@ -145,6 +145,13 @@ export const attackSpeedStep = {
         const rows = [
             { label: 'Attack Interval', value: result.attackInterval, unit: 's' },
             { label: 'Attacks per Second', value: result.attacksPerSecond, unit: '/s' },
+            ...(typeof result.firstHitDamage === 'number'
+                ? [{
+                    label: 'First Hit',
+                    value: result.firstHitDamage,
+                    help: 'Danno di un singolo colpo con tutti i modificatori, senza DPS di passive o abilità.'
+                }]
+                : []),
             ...(result.passiveDps > 0
                 ? result.passiveBreakdown.flatMap(passive => [
                     { label: `${passive.name} DPS`, value: passive.dps },
