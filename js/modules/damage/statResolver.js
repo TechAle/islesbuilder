@@ -1,3 +1,5 @@
+import { findStat } from './statLookup.js';
+
 /** @typedef {import('../../data/types.js').StatTotals} StatTotals */
 
 /**
@@ -27,7 +29,7 @@ export function readNumber(value) {
  * @returns {number}
  */
 export function getStatFlat(statsValues, statName) {
-    return statsValues[statName]?.flat ?? 0;
+    return findStat(statsValues, statName)?.flat ?? 0;
 }
 
 /**
@@ -37,7 +39,7 @@ export function getStatFlat(statsValues, statName) {
  * @returns {number}
  */
 export function getStatPercent(statsValues, statName) {
-    return statsValues[statName]?.percent ?? 0;
+    return findStat(statsValues, statName)?.percent ?? 0;
 }
 
 /**
@@ -51,7 +53,7 @@ export function getStatPercent(statsValues, statName) {
  * @returns {number}
  */
 export function resolveStat(statsValues, statName) {
-    const totals = statsValues[statName];
+    const totals = findStat(statsValues, statName);
     if (!totals) return 0;
 
     return totals.flat * (1 + totals.percent / 100);

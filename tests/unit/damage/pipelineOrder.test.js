@@ -106,6 +106,20 @@ describe('damage pipeline edge cases', () => {
         expect(manager.getDps()).toBeNull();
     });
 
+    it('reads the damage stat case-insensitively', () => {
+        const build = makeBuild({ weapon: makeArcaneWeapon() });
+        const steps = new DpsManager().recalculate({
+            statsValues: { 'arcane damage': { flat: 100, percent: 0 } },
+            skillValues: {},
+            build,
+            settings: makeSettings()
+        });
+
+        expect(steps.baseDamage.statName).toBe('Arcane Damage');
+        expect(steps.baseDamage.damageStat).toBe(100);
+        expect(steps.baseDamage.baseDamage).toBe(100);
+    });
+
     it('handles a weapon without default attack', () => {
         const build = makeBuild({
             weapon: {
