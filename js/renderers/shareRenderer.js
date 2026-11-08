@@ -24,9 +24,18 @@ export class ShareRenderer {
 
     /** @param {string} url */
     copyLink(url) {
-        navigator.clipboard.writeText(url).then(() => {
-            alert('Link di condivisione copiato negli appunti!');
-        });
+        if (!navigator.clipboard?.writeText) {
+            alert('Copia manuale: seleziona e copia il link dalla barra degli indirizzi.');
+            return;
+        }
+
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                alert('Link di condivisione copiato negli appunti!');
+            })
+            .catch(() => {
+                alert('Impossibile copiare automaticamente. Copia il link dalla barra degli indirizzi.');
+            });
     }
 
     /** @returns {string|null} */

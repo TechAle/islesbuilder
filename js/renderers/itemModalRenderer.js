@@ -75,13 +75,30 @@ export class ItemModalRenderer {
 
         const row = document.createElement('div');
         row.className = 'stat-edit-row';
-        row.innerHTML = `
-      <input type="text" class="stat-name-input" list="stat-suggestions" placeholder="Statistica" value="${statName}">
-      <input type="text" class="stat-val-input" placeholder="Valore (es. 10 o 35%)" value="${statVal}">
-      <button class="btn-delete" type="button">🗑️</button>
-    `;
 
-        row.querySelector('.btn-delete')?.addEventListener('click', () => row.remove());
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'stat-name-input';
+        nameInput.setAttribute('list', 'stat-suggestions');
+        nameInput.placeholder = 'Statistica';
+        nameInput.value = statName;
+
+        const valueInput = document.createElement('input');
+        valueInput.type = 'text';
+        valueInput.className = 'stat-val-input';
+        valueInput.placeholder = 'Valore (es. 10 o 35%)';
+        valueInput.value = statVal;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn-delete';
+        deleteButton.textContent = '🗑️';
+
+        row.appendChild(nameInput);
+        row.appendChild(valueInput);
+        row.appendChild(deleteButton);
+
+        deleteButton.addEventListener('click', () => row.remove());
         container.appendChild(row);
     }
 

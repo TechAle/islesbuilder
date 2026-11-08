@@ -38,7 +38,17 @@ export class StatsRenderer {
 
             const row = document.createElement('div');
             row.className = 'stat-row';
-            row.innerHTML = `<span class="stat-label">${stat}:</span><span class="stat-val">${parts.join(' / ')}</span>`;
+
+            const label = document.createElement('span');
+            label.className = 'stat-label';
+            label.textContent = `${stat}:`;
+
+            const value = document.createElement('span');
+            value.className = 'stat-val';
+            value.textContent = parts.join(' / ');
+
+            row.appendChild(label);
+            row.appendChild(value);
             root.appendChild(row);
         });
     }
