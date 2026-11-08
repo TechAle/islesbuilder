@@ -322,6 +322,7 @@ export function getEquippedAugments(build) {
 export function getAugmentStatBonuses(build) {
     /** @type {Array<{stat: string, value: number, percent: boolean}>} */
     const bonuses = [];
+    let natureBlessFlat = 0;
 
     getEquippedAugments(build).forEach(({ augment, level }) => {
         if (augment.effect.type === 'stat' && augment.effect.stat) {
@@ -333,13 +334,17 @@ export function getAugmentStatBonuses(build) {
         }
 
         if (augment.effect.type === 'natureBless') {
-            bonuses.push({
-                stat: 'Elemental Power',
-                value: level.value,
-                percent: false
-            });
+            natureBlessFlat = Math.max(natureBlessFlat, level.value);
         }
     });
+
+    if (natureBlessFlat > 0) {
+        bonuses.push({
+            stat: 'Elemental Power',
+            value: natureBlessFlat,
+            percent: false
+        });
+    }
 
     return bonuses;
 }
@@ -444,7 +449,8 @@ export function getAugmentEffects(context) {
                 effects.prosecutionPercent += level.value * prosecutionHp;
                 break;
             case 'natureBless':
-                effects.natureBlessFlat += level.value;
+                // Nature's Bless non si stacka: vale solo la copia più forte.
+                effects.natureBlessFlat = Math.max(effects.natureBlessFlat, level.value);
                 break;
             default:
                 break;
