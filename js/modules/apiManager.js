@@ -160,7 +160,7 @@ export class ApiManager {
                 if (gear.normalAttack.max !== undefined) {
                     statsObj["Normal Attack"] = gear.normalAttack.max;
                 }
-            } else if (gear.normalAttack !== undefined) {
+            } else if (gear.normalAttack !== undefined && gear.normalAttack !== null) {
                 statsObj["Normal Attack"] = gear.normalAttack;
             }
             if (gear.damageType !== undefined) statsObj["Damage Type"] = gear.damageType;
@@ -257,7 +257,30 @@ export class ApiManager {
                     itemsCopy[targetCategory] = [];
                 }
 
-                itemsCopy[targetCategory].push({
+                // L'API può restituire più voci con lo stesso nome: una
+                // "template" con range e un'istanza concreta. Preferiamo
+                // l'istanza concreta (quella con Normal Attack).
+                const categoryItems = itemsCopy[targetCategory];
+                const nameKey = String(name ?? '').trim().toLowerCase();
+                const existingIndex = categoryItems.findIndex(existing => (
+                    String(existing.name ?? '').trim().toLowerCase() === nameKey
+                ));
+
+                if (existingIndex >= 0) {
+                    const existing = categoryItems[existingIndex];
+                    const existingHasNormalAttack = typeof existing.stats?.['Normal Attack'] === 'number';
+                    const hasNormalAttack = typeof statsObj['Normal Attack'] === 'number';
+
+                    if (!existingHasNormalAttack && hasNormalAttack) {
+                        categoryItems[existingIndex] = {
+                            name: name,
+                            stats: statsObj
+                        };
+                    }
+                    return;
+                }
+
+                categoryItems.push({
                     name: name,
                     stats: statsObj
                 });

@@ -193,6 +193,23 @@ describe('ApiManager updates with mocked fetch', () => {
         }).name).toBe('Whirlwind-Tempest');
     });
 
+    it('prefers concrete weapon instances over same-name range templates', async () => {
+        const { manager, dataStore } = makeManager();
+        vi.stubGlobal('fetch', vi.fn(async url => {
+            if (url.includes('category=weapons')) return jsonResponse(ITEMS_API_FIXTURE.weapons);
+            if (url.includes('category=armor')) return jsonResponse([]);
+            if (url.includes('category=accessories')) return jsonResponse([]);
+            throw new Error(`Unexpected URL: ${url}`);
+        }));
+
+        await manager.updateItems();
+
+        const drizzlers = dataStore.data.items.weapon.filter(item => item.name === 'The Drizzler');
+        expect(drizzlers).toHaveLength(1);
+        expect(drizzlers[0].stats['Arcane Damage']).toBe(46.2);
+        expect(drizzlers[0].stats['Normal Attack']).toBe(69.3);
+    });
+
     it('updates augments and every registered augment has six levels', async () => {
         const { manager, dataStore } = makeManager();
         vi.stubGlobal('fetch', vi.fn(async url => {
