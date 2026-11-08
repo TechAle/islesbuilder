@@ -36,8 +36,14 @@ export const damageMultiplierStep = {
         const previous = context.results.damageModifiers?.damage ?? 0;
 
         const knowledge = getElementalKnowledge(context);
-        const grief = getGriefInflictionEffects(context, context.settings?.griefUptime ?? 100);
-        const lastSorrow = getLastSorrowEffects(context, context.settings?.lastSorrowUptime ?? 100);
+        const grief = getGriefInflictionEffects(
+            context,
+            context.settings?.firstHit ? 0 : (context.settings?.griefUptime ?? 100)
+        );
+        const lastSorrow = getLastSorrowEffects(
+            context,
+            context.settings?.firstHit ? 0 : (context.settings?.lastSorrowUptime ?? 100)
+        );
         const focus = getFocusStacksEffects(context, context.settings?.focusStacks ?? 0);
 
         const applied = applyAdditiveMultipliers(previous, [

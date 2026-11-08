@@ -217,12 +217,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderCombat = () => {
         const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
         statsRenderer.render(withBaseStats(statsValues));
+
+        const { health, defense, damagePercent } = enemySimulatorRenderer.getInputs();
+        const combatSettings = {
+            ...damageSettings,
+            targetHealth: health,
+            targetDefense: defense
+        };
+
         dpsManager.recalculate({
             statsValues,
             skillValues,
             build: equippedStore.state,
             skillTrees: dataStore.data.skillTrees,
-            settings: damageSettings
+            settings: combatSettings
         });
 
         // Primo colpo: stessi modificatori del calcolo normale, ma senza gli
@@ -232,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             skillValues,
             build: equippedStore.state,
             skillTrees: dataStore.data.skillTrees,
-            settings: { ...damageSettings, firstHit: true }
+            settings: { ...combatSettings, firstHit: true }
         });
 
         const firstHitDamage = firstHitDpsManager.getSteps().augmentFinal?.damage
@@ -308,7 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             ?? 0;
         const element = dpsManager.getSteps().damageModifiers?.element ?? null;
         enemySimulatorRenderer.syncElement(element);
-        const { health, defense, damagePercent } = enemySimulatorRenderer.getInputs();
 
         enemySimulatorRenderer.render(simulateEnemy({
             health,

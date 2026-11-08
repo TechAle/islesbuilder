@@ -1,9 +1,11 @@
 import { createDamageContext, runDamagePipeline, DAMAGE_STEPS } from './damage/damagePipeline.js';
 import { computeEnergyState, getSustainLabel } from './damage/energy.js';
+import { applyDefenseDamage } from './enemySimulator.js';
 import { SpecialAbilityManager } from './specialAbilityManager.js';
 
 /** @typedef {import('../data/types.js').DamageResult} DamageResult */
 /** @typedef {import('../data/types.js').DamageContext} DamageContext */
+/** @typedef {import('../data/types.js').DamageSettings} DamageSettings */
 
 /**
  * Logica del calcolo danni/DPS. Non tocca il DOM: la visualizzazione sarà
@@ -36,6 +38,62 @@ export class DpsManager {
      * @returns {DamageContext['results']}
      */
     recalculate({ statsValues, skillValues, build, skillTrees, settings }) {
+        const baseSettings = /** @type {DamageSettings} */ (settings ?? {});
+        const targetHealth = Number(baseSettings.targetHealth) || 0;
+        const targetDefense = Number(baseSettings.targetDefense) || 0;
+        const options = { statsValues, skillValues, build, skillTrees };
+
+        let steps = this.runOnce({ ...options, settings: baseSettings });
+
+        // Infected è uno stacking debuff: su un target che muore presto non
+        // arriva a tutti gli stack. Se conosciamo la vita del target,
+        // stimiamo il TTK e ricalcoliamo gli stack fino a convergenza.
+        if (targetHealth > 0 && steps.augmentFinal?.hasInfected) {
+            let estimatedTtk = Infinity;
+
+            for (let i = 0; i < 4; i++) {
+                const dps = this.getDpsFromSteps(steps);
+                const realDps = applyDefenseDamage(dps, targetDefense);
+                if (!Number.isFinite(realDps) || realDps <= 0) break;
+
+                const nextTtk = targetHealth / realDps;
+                if (Number.isFinite(estimatedTtk) && Math.abs(nextTtk - estimatedTtk) < 0.01) {
+                    estimatedTtk = nextTtk;
+                    break;
+                }
+
+                estimatedTtk = nextTtk;
+                steps = this.runOnce({
+                    ...options,
+                    settings: { ...baseSettings, estimatedTimeToKill: estimatedTtk }
+                });
+            }
+
+            if (Number.isFinite(estimatedTtk)) {
+                steps = this.runOnce({
+                    ...options,
+                    settings: { ...baseSettings, estimatedTimeToKill: estimatedTtk }
+                });
+            }
+        }
+
+        this.steps = steps;
+        this.applyEnergySummary();
+        this.results = this.buildResults();
+        return this.steps;
+    }
+
+    /**
+     * Esegue una singola passata della pipeline senza toccare lo stato pubblico.
+     * @param {Object} options
+     * @param {DamageContext['statsValues']} options.statsValues
+     * @param {DamageContext['skillValues']} options.skillValues
+     * @param {DamageContext['build']} options.build
+     * @param {DamageContext['skillTrees']} [options.skillTrees]
+     * @param {DamageContext['settings']} [options.settings]
+     * @returns {DamageContext['results']}
+     */
+    runOnce({ statsValues, skillValues, build, skillTrees, settings }) {
         const context = createDamageContext({
             statsValues,
             skillValues,
@@ -44,10 +102,17 @@ export class DpsManager {
             settings,
             specialAbilityManager: this.specialAbilityManager
         });
-        this.steps = runDamagePipeline(context);
-        this.applyEnergySummary();
-        this.results = this.buildResults();
-        return this.steps;
+        return runDamagePipeline(context);
+    }
+
+    /**
+     * DPS totale calcolato da un set di step già eseguiti.
+     * @param {DamageContext['results']} steps
+     * @returns {number}
+     */
+    getDpsFromSteps(steps) {
+        return this.getDpsPartsFromSteps(steps)
+            .reduce((sum, part) => sum + part.dps, 0);
     }
 
 

@@ -44,6 +44,10 @@ export function getCrystalInsights(context) {
  * @returns {number}
  */
 export function getCrystalInsightsElementalPowerPercent(context, critChancePercent, attackInterval) {
+    // Il first hit non può avere Crystal Shard attivi: sono generati dai critici
+    // precedenti.
+    if (context.settings?.firstHit) return 0;
+
     const insights = getCrystalInsights(context);
 
     if (insights.chancePercent <= 0 || insights.elementalPowerPercent <= 0) return 0;

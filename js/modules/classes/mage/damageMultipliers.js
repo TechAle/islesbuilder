@@ -19,7 +19,7 @@ export function getGriefInflictionPercent(context) {
  */
 export function getGriefInflictionEffects(context, uptimePercent) {
     const griefInflictionPercent = getGriefInflictionPercent(context);
-    const griefUptime = Math.min(100, Math.max(1, uptimePercent));
+    const griefUptime = Math.min(100, Math.max(0, uptimePercent));
     const griefDamagePercent = griefInflictionPercent * (griefUptime / 100);
 
     return { griefInflictionPercent, griefUptime, griefDamagePercent };
@@ -42,7 +42,7 @@ export function getLastSorrowPercent(context) {
  */
 export function getLastSorrowEffects(context, uptimePercent) {
     const lastSorrowPercent = getLastSorrowPercent(context);
-    const lastSorrowUptime = Math.min(100, Math.max(1, uptimePercent));
+    const lastSorrowUptime = Math.min(100, Math.max(0, uptimePercent));
     const lastSorrowDamagePercent = lastSorrowPercent * (lastSorrowUptime / 100);
 
     return { lastSorrowPercent, lastSorrowUptime, lastSorrowDamagePercent };

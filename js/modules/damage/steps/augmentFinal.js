@@ -29,10 +29,14 @@ export const augmentFinalStep = {
 
         const totalHitsPerSecond = getCrystalCombustionEffects(context).totalHitsPerSecond;
         const infectedHitOverride = Number(context.settings?.infectedHitsOverride) || 0;
+        const estimatedTtk = Number(context.settings?.estimatedTimeToKill);
         const infectedPercent = context.settings?.firstHit
             ? 0
             : effects.infected.reduce((sum, effect) => {
-                const autoHits = totalHitsPerSecond * effect.duration;
+                const activeDuration = Number.isFinite(estimatedTtk) && estimatedTtk > 0
+                    ? Math.min(effect.duration, estimatedTtk)
+                    : effect.duration;
+                const autoHits = totalHitsPerSecond * activeDuration;
                 const hits = infectedHitOverride > 0
                     ? Math.min(effect.maxHits, infectedHitOverride)
                     : Math.min(effect.maxHits, autoHits);
