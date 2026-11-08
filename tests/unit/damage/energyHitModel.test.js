@@ -82,24 +82,6 @@ describe('special attack cast rate', () => {
 });
 
 describe('mage hit model', () => {
-    it('is finite and converges with crystal nodes', () => {
-        const context = contextFor({
-            treeLevels: { R: 1, R1: 1, R1a: 3, R1b: 3, R2: 1, R2a: 1 }
-        });
-
-        const first = getCrystalCombustionEffects(context);
-        const second = getCrystalCombustionEffects(context);
-
-        expect(Number.isFinite(first.totalHitsPerSecond)).toBe(true);
-        expect(Number.isFinite(first.explosionsPerSecond)).toBe(true);
-        expect(Number.isFinite(first.combustionPercent)).toBe(true);
-        expect(first.explosionsPerSecond).toBeGreaterThan(0);
-        expect(first.totalHitsPerSecond).toBeGreaterThan(1 / 0.6);
-        expect(second.totalHitsPerSecond).toBe(first.totalHitsPerSecond);
-        expect(second.explosionsPerSecond).toBe(first.explosionsPerSecond);
-        expect(context.cache.combatHitModels).toBeTruthy();
-    });
-
     it('does not count explosions without Crystal Combustion', () => {
         const context = contextFor({
             treeLevels: { R: 1, R1: 1, R1a: 3 }

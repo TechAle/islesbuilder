@@ -3,6 +3,8 @@ import { DpsManager } from '../../../js/modules/dpsManager.js';
 import { CLASS_SKILL_TREES } from '../../../js/data/skillTrees.js';
 import { makeBuild, makeSettings } from '../../helpers/build.js';
 
+const BASE_INTERVAL = 0.6;
+
 function makeArcherBuild(treeLevels = {}) {
     const build = makeBuild({ currentClass: 'archer' });
     build.treeLevels.archer = new Map(
@@ -32,44 +34,50 @@ function run(build, killsPerSecond) {
 }
 
 describe('Calculated Strike', () => {
-    it('reads the archer node value', () => {
-        const steps = run(makeArcherBuild({ UL: 5 }), 0);
-
-        expect(steps.attackSpeed.calculatedStrikePercent).toBeCloseTo(50, 10);
-    });
-
     it('has no effect with zero kills per second', () => {
         const steps = run(makeArcherBuild({ UL: 5 }), 0);
 
-        expect(steps.attackSpeed.attackInterval).toBeCloseTo(0.6, 10);
+        expect(steps.attackSpeed.calculatedStrikeExtraAttacksPerSecond).toBe(0);
+        expect(steps.attackSpeed.attackInterval).toBeCloseTo(BASE_INTERVAL, 10);
     });
 
-    it('reduces attack cooldown proportionally to kills/s', () => {
-        // 50% × 1 kill/s = -50% cooldown → 0.6 × 0.5 = 0.3s.
+    it('adds one extra attack per reset, not a flat cooldown reduction', () => {
+        // 50% × 1 kill/s = 0.5 attacchi extra/s.
+        const steps = run(makeArcherBuild({ UL: 5 }), 1);
+        const baseAttacksPerSecond = 1 / BASE_INTERVAL;
+        const expectedAttacksPerSecond = baseAttacksPerSecond + 0.5;
+
+        expect(steps.attackSpeed.calculatedStrikeExtraAttacksPerSecond).toBeCloseTo(0.5, 10);
+        expect(steps.attackSpeed.attacksPerSecond).toBeCloseTo(expectedAttacksPerSecond, 10);
+        expect(steps.attackSpeed.attackInterval).toBeCloseTo(1 / expectedAttacksPerSecond, 10);
+        expect(steps.attackSpeed.calculatedStrikeAttackSpeedPercent).toBeCloseTo(30, 10);
+    });
+
+    it('scales the DPS bonus with kills/s', () => {
+        const noKills = run(makeArcherBuild({ UL: 5 }), 0);
         const oneKill = run(makeArcherBuild({ UL: 5 }), 1);
-        // 50% × 0.2 kill/s = -10% cooldown → 0.6 × 0.9 = 0.54s.
         const slowKills = run(makeArcherBuild({ UL: 5 }), 0.2);
 
-        expect(oneKill.attackSpeed.calculatedStrikeCooldownReduction).toBeCloseTo(50, 10);
-        expect(oneKill.attackSpeed.attackInterval).toBeCloseTo(0.3, 10);
-        expect(oneKill.attackSpeed.attacksPerSecond).toBeCloseTo(1 / 0.3, 10);
+        expect(oneKill.attackSpeed.dps / noKills.attackSpeed.dps).toBeCloseTo(1.3, 10);
+        expect(oneKill.attackSpeed.calculatedStrikeAttackSpeedPercent).toBeCloseTo(30, 10);
 
-        expect(slowKills.attackSpeed.calculatedStrikeCooldownReduction).toBeCloseTo(10, 10);
-        expect(slowKills.attackSpeed.attackInterval).toBeCloseTo(0.54, 10);
+        // 50% × 0.2 = 0.1 attacchi extra/s → +6% attack speed.
+        expect(slowKills.attackSpeed.calculatedStrikeExtraAttacksPerSecond).toBeCloseTo(0.1, 10);
+        expect(slowKills.attackSpeed.calculatedStrikeAttackSpeedPercent).toBeCloseTo(6, 10);
     });
 
     it('does nothing when the node is not leveled', () => {
         const steps = run(makeArcherBuild({}), 4);
 
         expect(steps.attackSpeed.calculatedStrikePercent).toBe(0);
-        expect(steps.attackSpeed.attackInterval).toBeCloseTo(0.6, 10);
+        expect(steps.attackSpeed.attackInterval).toBeCloseTo(BASE_INTERVAL, 10);
     });
 
     it('clamps the slider to 0-4 kills per second', () => {
         const capped = run(makeArcherBuild({ UL: 5 }), 10);
 
         expect(capped.attackSpeed.calculatedStrikeKillsPerSecond).toBe(4);
-        // 50% × 4 = -200% → l'intervallo resta al minimo difensivo.
-        expect(capped.attackSpeed.attackInterval).toBeCloseTo(0.05, 10);
+        expect(capped.attackSpeed.calculatedStrikeExtraAttacksPerSecond).toBeCloseTo(2, 10);
+        expect(capped.attackSpeed.attackInterval).toBeCloseTo(1 / (1 / BASE_INTERVAL + 2), 10);
     });
 });

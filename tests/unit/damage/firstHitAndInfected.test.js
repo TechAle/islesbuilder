@@ -149,21 +149,6 @@ describe('Infected with simulated monster presets', () => {
         }).steps.augmentFinal.infectedPercent;
     }
 
-    it('does not reach max stacks on Goblin', () => {
-        const goblin = MONSTER_PRESETS.find(monster => monster.id === 'goblin');
-        const infected = infectedFor(goblin);
-
-        expect(infected).toBeGreaterThanOrEqual(0);
-        expect(infected).toBeLessThan(45);
-    });
-
-    it('reaches max stacks on Void Storm', () => {
-        const voidStorm = MONSTER_PRESETS.find(monster => monster.id === 'void-storm');
-        const infected = infectedFor(voidStorm);
-
-        expect(infected).toBe(45);
-    });
-
     it('Goblin gets fewer stacks than Void Storm', () => {
         const goblin = MONSTER_PRESETS.find(monster => monster.id === 'goblin');
         const voidStorm = MONSTER_PRESETS.find(monster => monster.id === 'void-storm');

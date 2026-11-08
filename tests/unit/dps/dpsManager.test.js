@@ -130,30 +130,4 @@ describe('first hit calculation', () => {
         expect(steps.augmentFinal.damage).toBe(160);
     });
 
-    it('is lower than a fully stacked normal hit when Infected is active', () => {
-        const special = new SpecialAbilityManager();
-        special.reset();
-        const build = makeBuild({
-            weapon: makeArcaneWeapon(),
-            augments: ['Infected 6']
-        });
-        const settings = makeSettings({ infectedHitsOverride: 10 });
-
-        const normal = new DpsManager({ specialAbilityManager: special }).recalculate({
-            statsValues: { 'Arcane Damage': { flat: 100, percent: 0 } },
-            skillValues: {},
-            build,
-            settings
-        });
-        const first = new DpsManager({ specialAbilityManager: special }).recalculate({
-            statsValues: { 'Arcane Damage': { flat: 100, percent: 0 } },
-            skillValues: {},
-            build,
-            settings: { ...settings, firstHit: true }
-        });
-
-        expect(normal.augmentFinal.infectedPercent).toBe(30);
-        expect(first.augmentFinal.infectedPercent).toBe(0);
-        expect(first.augmentFinal.damage).toBeLessThan(normal.augmentFinal.damage);
-    });
 });

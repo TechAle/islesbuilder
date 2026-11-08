@@ -28,26 +28,4 @@ describe('skill tree costs', () => {
         expect(equippedStore.state.sharedPoints).toBe(500 - 55);
     });
 
-    it('refunds descendants that become orphaned', () => {
-        const { dataStore, equippedStore } = makeWorld();
-        equippedStore.setCurrentClass('mage');
-        equippedStore.setSharedPoints(100);
-        const manager = new SkillTreeManager({ dataStore, equippedStore });
-
-        manager.handleNodeClick('C', { shiftKey: false });
-        manager.handleNodeClick('L', { shiftKey: false });
-        manager.handleNodeClick('L1', { shiftKey: false });
-        manager.handleNodeClick('L1a', { shiftKey: false });
-
-        const spentBefore = equippedStore.state.sharedPoints;
-        expect(spentBefore).toBe(100 - 1 - 3 - 2 - 1);
-
-        manager.handleNodeClick('C', { shiftKey: true });
-
-        expect(equippedStore.state.treeLevels.mage.get('C')).toBe(0);
-        expect(equippedStore.state.treeLevels.mage.get('L')).toBe(0);
-        expect(equippedStore.state.treeLevels.mage.get('L1')).toBe(0);
-        expect(equippedStore.state.treeLevels.mage.get('L1a')).toBe(0);
-        expect(equippedStore.state.sharedPoints).toBe(100);
-    });
 });

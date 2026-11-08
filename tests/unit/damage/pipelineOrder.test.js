@@ -43,6 +43,7 @@ describe('damage pipeline order', () => {
             'attackSpeed',
             'burst',
             'specialAttacks',
+            'ricochet',
             'augmentDamage',
             'crystalCombustion',
             'supportOrbs'

@@ -5,7 +5,7 @@ import {
 } from '../../../data/constants.js';
 import { computeEnergyState, getEnergyRegen, getSustainLabel } from '../energy.js';
 import { getEnergyCostMultiplier } from '../energyCost.js';
-import { getAttackInterval } from '../attackTiming.js';
+import { getAttackInterval, getBaseAttackInterval } from '../attackTiming.js';
 import { getCalculatedStrikeEffects } from '../../classes/archer.js';
 import { getPassiveHitStats } from '../../classes/mage.js';
 import { findFlat, findPercentMultiplier } from '../statLookup.js';
@@ -42,6 +42,10 @@ export const attackSpeedStep = {
             context,
             context.settings?.calculatedStrikeKillsPerSecond ?? 0
         );
+        const baseAttacksPerSecond = 1 / getBaseAttackInterval(context);
+        const calculatedStrikeAttackSpeedPercent = baseAttacksPerSecond > 0
+            ? (calculatedStrike.extraAttacksPerSecond / baseAttacksPerSecond) * 100
+            : 0;
 
         if (damage <= 0) {
             return {
@@ -62,7 +66,8 @@ export const attackSpeedStep = {
                 potionSustainable: true,
                 calculatedStrikePercent: calculatedStrike.calculatedStrikePercent,
                 calculatedStrikeKillsPerSecond: calculatedStrike.killsPerSecond,
-                calculatedStrikeCooldownReduction: calculatedStrike.attackCooldownReduction
+                calculatedStrikeExtraAttacksPerSecond: calculatedStrike.extraAttacksPerSecond,
+                calculatedStrikeAttackSpeedPercent
             };
         }
 
@@ -115,7 +120,8 @@ export const attackSpeedStep = {
             ...energyState,
             calculatedStrikePercent: calculatedStrike.calculatedStrikePercent,
             calculatedStrikeKillsPerSecond: calculatedStrike.killsPerSecond,
-            calculatedStrikeCooldownReduction: calculatedStrike.attackCooldownReduction
+            calculatedStrikeExtraAttacksPerSecond: calculatedStrike.extraAttacksPerSecond,
+            calculatedStrikeAttackSpeedPercent
         };
     },
 
@@ -160,8 +166,8 @@ export const attackSpeedStep = {
                 ? [
                     { label: 'Calculated Strike', value: result.calculatedStrikePercent ?? 0, unit: '%' },
                     {
-                        label: 'Calculated Strike Cooldown',
-                        value: result.calculatedStrikeCooldownReduction ?? 0,
+                        label: 'Calculated Strike Attack Speed',
+                        value: result.calculatedStrikeAttackSpeedPercent ?? 0,
                         unit: '%'
                     }
                 ]

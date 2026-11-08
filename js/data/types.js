@@ -341,6 +341,23 @@
  */
 
 /**
+ * Risultato dello step "Ricochet".
+ * @typedef {Object} RicochetStepResult
+ * @property {number} ricochetPercent - Valore del nodo Ricochet
+ * @property {number} procChance - Probabilità per attacco (0-1)
+ * @property {number} attacksPerSecond - Attacchi ranged al secondo
+ * @property {number} maxProcsPerSecond - Limite dato dal cooldown di 2s
+ * @property {number} procsPerSecond - Proc effettivi al secondo
+ * @property {number} reverseMultiplier - 100 / Default Attack
+ * @property {number} abilityDamagePercent - Bonus `Ability Damage%`
+ * @property {number} damagePerProc - Danno della singola freccia
+ * @property {number} dps - DPS aggiunto da Ricochet
+ * @property {number} hitsPerSecond - Hit al secondo aggiunti
+ * @property {boolean} enabled - Richiede arma ranged e nodo attivo
+ * @property {string|null} reason - Motivo per cui non è attivo
+ */
+
+/**
  * Risultato dello step "Special Attacks".
  * @typedef {Object} SpecialAttackStepResult
  * @property {boolean} visible
@@ -414,7 +431,8 @@
  * @property {boolean} potionSustainable - True se il cooldown delle pozioni basta
  * @property {number} [calculatedStrikePercent] - Valore del nodo Calculated Strike
  * @property {number} [calculatedStrikeKillsPerSecond] - Kill al secondo usate per Calculated Strike
- * @property {number} [calculatedStrikeCooldownReduction] - Riduzione cooldown da Calculated Strike
+ * @property {number} [calculatedStrikeExtraAttacksPerSecond] - Attacchi extra/s da Calculated Strike
+ * @property {number} [calculatedStrikeAttackSpeedPercent] - Aumento equivalente di attack speed
  */
 
 /**

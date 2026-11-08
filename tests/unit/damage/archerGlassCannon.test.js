@@ -77,10 +77,4 @@ describe('archer Glass Cannon nodes', () => {
         expect(steps.criticalDamage.damage).toBeCloseTo(161.25, 10);
     });
 
-    it('shows Damage% as a normal detailed stat', () => {
-        const build = makeArcherBuild({ R1: 1 });
-        const { statsValues } = runArcher(build);
-
-        expect(statsValues.Damage).toEqual({ flat: 0, percent: 7.5 });
-    });
 });

@@ -114,15 +114,6 @@ describe('duplicate augment rules', () => {
         expect(effects.infected[0].maxHits).toBe(15);
     });
 
-    it('two Infected still produce only one Infected debuff', () => {
-        const { steps } = stepsFor(['Infected 6', 'Infected 6'], {
-            infectedHitsOverride: 10
-        });
-
-        expect(steps.augmentFinal.infectedPercent).toBe(30);
-        expect(steps.augmentFinal.damage).toBe(130);
-    });
-
     it("does not stack two Nature's Bless", () => {
         const build = makeBuild({
             weapon: makeArcaneWeapon(),

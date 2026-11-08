@@ -4,6 +4,7 @@ import { damageMultiplierStep } from './steps/mage/damageMultiplier.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
 import { augmentFinalStep } from './steps/augmentFinal.js';
 import { specialAttacksStep } from './steps/specialAttacks.js';
+import { ricochetStep } from './steps/archer/ricochet.js';
 import { augmentDamageStep } from './steps/augmentDamage.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
 import { burstStep } from './steps/burst.js';
@@ -31,6 +32,7 @@ export const DAMAGE_STEPS = [
     attackSpeedStep,
     burstStep,
     specialAttacksStep,
+    ricochetStep,
     augmentDamageStep,
     crystalCombustionStep,
     supportOrbsStep
