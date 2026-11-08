@@ -58,12 +58,14 @@ export const augmentFinalStep = {
 
         // Nature's Bless aggiunge Elemental Power flat. Applicato alla fine,
         // equivale a ricalcolare il moltiplicatore elementale con EP aumentato.
+        // Sul first hit non è ancora attivo: richiede un colpo elementale precedente.
+        const natureBlessFlat = context.settings?.firstHit ? 0 : effects.natureBlessFlat;
         const damageModifiers = context.results.damageModifiers;
         const elementalPower = damageModifiers?.elementalPower ?? 0;
         const elementalPowerPercent = damageModifiers?.elementalPowerPercent ?? 0;
         const elementalDamagePercent = damageModifiers?.elementalDamagePercent ?? 0;
         const natureBlessMultiplier = getNatureBlessMultiplier(
-            effects.natureBlessFlat,
+            natureBlessFlat,
             elementalPower,
             elementalPowerPercent,
             elementalDamagePercent
@@ -93,7 +95,7 @@ export const augmentFinalStep = {
             augmentPercent,
             damageType,
             damageStatPercent,
-            natureBlessFlat: effects.natureBlessFlat,
+            natureBlessFlat,
             natureBlessMultiplier,
             infectedPercent,
             enragedPercent: effects.enragedPercent,

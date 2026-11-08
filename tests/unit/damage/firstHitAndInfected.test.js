@@ -3,6 +3,7 @@ import { DpsManager } from '../../../js/modules/dpsManager.js';
 import { SpecialAbilityManager } from '../../../js/modules/specialAbilityManager.js';
 import { registerAugments } from '../../../js/modules/augmentManager.js';
 import { CLASS_SKILL_TREES } from '../../../js/data/skillTrees.js';
+import { selectStats } from '../../../js/store/selectors.js';
 import { MONSTER_PRESETS } from '../../../js/data/monsters.js';
 import { AUGMENT_API_FIXTURE } from '../../fixtures/augments.js';
 import { makeArcaneWeapon, makeBuild, makeSettings } from '../../helpers/build.js';
@@ -168,5 +169,49 @@ describe('Infected with simulated monster presets', () => {
         const voidStorm = MONSTER_PRESETS.find(monster => monster.id === 'void-storm');
 
         expect(infectedFor(goblin)).toBeLessThan(infectedFor(voidStorm));
+    });
+});
+
+describe('first hit procs', () => {
+    it('does not apply the blue orb debuff on the first hit', () => {
+        const treeLevels = { C: 1, R: 1, R2: 5, R2a: 3 };
+        const normal = run({ treeLevels }).steps;
+        const first = run({ treeLevels, settings: { firstHit: true } }).steps;
+
+        expect(normal.damageModifiers.blueDamageMultiplier).toBeGreaterThan(1);
+        expect(first.damageModifiers.blueDamageMultiplier).toBe(1);
+        expect(first.damageModifiers.blueDamagePercent).toBe(0);
+        expect(first.damageModifiers.blueOrbs).toBe(0);
+    });
+
+    it("does not apply Nature's Bless on the first hit", () => {
+        const build = makeBuild({
+            weapon: makeArcaneWeapon({
+                element: 'nature',
+                'Nature Damage': '50%'
+            }),
+            augments: ["Nature's Bless 6"]
+        });
+        const { statsValues, skillValues } = selectStats({ skillTrees: CLASS_SKILL_TREES }, build);
+
+        const normal = new DpsManager().recalculate({
+            statsValues,
+            skillValues,
+            build,
+            skillTrees: CLASS_SKILL_TREES,
+            settings: makeSettings()
+        });
+        const first = new DpsManager().recalculate({
+            statsValues,
+            skillValues,
+            build,
+            skillTrees: CLASS_SKILL_TREES,
+            settings: makeSettings({ firstHit: true })
+        });
+
+        expect(normal.augmentFinal.natureBlessFlat).toBe(20);
+        expect(normal.augmentFinal.natureBlessMultiplier).toBeGreaterThan(1);
+        expect(first.augmentFinal.natureBlessFlat).toBe(0);
+        expect(first.augmentFinal.natureBlessMultiplier).toBe(1);
     });
 });

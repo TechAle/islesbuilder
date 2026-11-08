@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const firstHitDamage = firstHitDpsManager.getSteps().augmentFinal?.damage
             ?? firstHitDpsManager.getSteps().criticalDamage?.damage
             ?? 0;
-        const firstStrikePercent = firstHitDpsManager.getSteps().damageMultiplier?.firstStrikePercent ?? 0;
+        const firstStrikePercent = firstHitDpsManager.getSteps().augmentFinal?.firstStrikePercent ?? 0;
         const attackStep = dpsManager.getSteps().attackSpeed;
         if (attackStep) attackStep.firstHitDamage = firstHitDamage;
 

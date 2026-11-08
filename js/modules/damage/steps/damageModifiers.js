@@ -173,8 +173,10 @@ export const damageModifiersStep = {
         const masteryBonus = damageBeforeMastery * (masteryPercent / 100);
 
         // Le BLUE orb aumentano il danno subito dal nemico.
+        // Sul first hit non possono essere attive: richiedono hit precedenti.
+        const firstHit = context.settings?.firstHit === true;
         const supportOrbs = getSupportOrbEffects(context);
-        const blueDamageMultiplier = supportOrbs.blueDamageMultiplier;
+        const blueDamageMultiplier = firstHit ? 1 : supportOrbs.blueDamageMultiplier;
 
         const damage = Math.max(0,
             (damageBeforeMastery + masteryBonus)
@@ -202,7 +204,7 @@ export const damageModifiersStep = {
             elementalSynergyFlat: elementalSynergy.elementalPowerFlat,
             elementalDamagePercent,
             effectiveElementalPercent,
-            blueOrbs: supportOrbs.activeBlueOrbs,
+            blueOrbs: firstHit ? 0 : supportOrbs.activeBlueOrbs,
             blueDamageMultiplier,
             blueDamagePercent: (blueDamageMultiplier - 1) * 100,
             damage,
