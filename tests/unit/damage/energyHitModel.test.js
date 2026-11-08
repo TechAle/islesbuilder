@@ -100,6 +100,30 @@ describe('mage hit model', () => {
         expect(context.cache.combatHitModels).toBeTruthy();
     });
 
+    it('does not count explosions without Crystal Combustion', () => {
+        const context = contextFor({
+            treeLevels: { R: 1, R1: 1, R1a: 3 }
+        });
+        const effects = getCrystalCombustionEffects(context);
+
+        expect(effects.combustionPercent).toBe(0);
+        expect(effects.explosionsPerSecond).toBe(0);
+        expect(effects.maxExplosions).toBe(0);
+        expect(effects.totalHitsPerSecond).toBeCloseTo(1 / 0.6, 10);
+    });
+
+    it('counts explosions when Crystal Combustion is active', () => {
+        const context = contextFor({
+            treeLevels: { R: 1, R1: 1, R1a: 3, R1b: 3 }
+        });
+        const effects = getCrystalCombustionEffects(context);
+
+        expect(effects.combustionPercent).toBeGreaterThan(0);
+        expect(effects.explosionsPerSecond).toBeGreaterThan(0);
+        expect(effects.maxExplosions).toBeGreaterThan(0);
+        expect(effects.totalHitsPerSecond).toBeGreaterThan(1 / 0.6);
+    });
+
     it('produces no explosions without crystal nodes', () => {
         const context = contextFor();
         const effects = getCrystalCombustionEffects(context);

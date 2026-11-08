@@ -269,10 +269,13 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     const orbConfig = getSupportOrbConfig(context);
     const manager = context.specialAbilityManager;
     const specialAttackHits = manager ? manager.getOnClickHitsPerSecond(context) : 0;
+    const combustionPercent = getMageNodeValue(context, MAGE_NODES.crystalCombustion);
+    const maxExplosions = combustionPercent > 0 ? crystalConfig.maxExplosions : 0;
+    const effectiveCrystalConfig = { ...crystalConfig, maxExplosions };
 
     const override = !!context.settings?.crystalExplosionOverride;
     const fixedExplosions = Math.min(
-        crystalConfig.maxExplosions,
+        maxExplosions,
         Math.max(0, context.settings?.crystalExplosionsPerSecond ?? 0)
     );
 
@@ -297,7 +300,7 @@ function getCombatHitModel(context, baseHitsPerSecond) {
 
         const nextExplosions = override
             ? fixedExplosions
-            : Math.min(crystalConfig.maxExplosions, drops.crystalsPerSecond);
+            : Math.min(maxExplosions, drops.crystalsPerSecond);
         const nextRedOrbHits = orbs.totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
         const nextPassiveHits = passive.hitsPerSecond;
 
@@ -337,7 +340,7 @@ function getCombatHitModel(context, baseHitsPerSecond) {
         passiveHitsPerSecond: passive.hitsPerSecond,
         passiveBreakdown: passive.applied ?? [],
         drops,
-        crystalConfig,
+        crystalConfig: effectiveCrystalConfig,
         orbConfig
     };
 

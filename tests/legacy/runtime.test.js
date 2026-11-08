@@ -2098,16 +2098,24 @@ test('crystal combustion: l override dello slider sostituisce le esplosioni calc
 });
 
 test('crystal insights: le esplosioni contano come hit e crit', () => {
+    const baseBuild = {
+        currentClass: 'mage',
+        treeLevels: { mage: new Map([['UL1', 5], ['R1', 5], ['R1a', 5]]) }
+    };
+
+    // Senza Crystal Combustion i cristalli non esplodono e non contano come hit.
+    const noCombustion = { build: baseBuild, skillTrees: CLASS_SKILL_TREES };
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(noCombustion, 50, 0.6) - 50) < 1e-9);
+
+    // Con Crystal Combustion: hit base 1.6667 + esplosioni 1.3636 = 3.0303 hit/s
+    // 50% crit → 1.515 crit/s → 3.030 shard medi → 90.909% EP
     const context = {
         build: {
             currentClass: 'mage',
-            treeLevels: { mage: new Map([['UL1', 5], ['R1', 5], ['R1a', 5]]) }
+            treeLevels: { mage: new Map([['UL1', 5], ['R1', 5], ['R1a', 5], ['R1b', 5]]) }
         },
         skillTrees: CLASS_SKILL_TREES
     };
-
-    // hit base 1.6667 + esplosioni 1.3636 = 3.0303 hit/s
-    // 50% crit → 1.515 crit/s → 3.030 shard medi → 90.909% EP
     assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 90.9090909090909) < 1e-9);
 
     context.settings = { crystalExplosionOverride: true, crystalExplosionsPerSecond: 0 };
