@@ -131,7 +131,8 @@ export function selectStats(catalog, build) {
                 if (node.isDirect) {
                     addStat(statsValues, finalStatKey, value, isPercent);
                 } else {
-                    skillValues[classKey][finalStatKey] = value;
+                    skillValues[classKey][finalStatKey] =
+                        (skillValues[classKey][finalStatKey] ?? 0) + value;
                 }
             }
         });

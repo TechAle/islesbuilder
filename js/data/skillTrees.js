@@ -435,24 +435,24 @@ export const CLASS_SKILL_TREES = {
             'R1': {
                 x: 82, y: 32, max: 5, costBase: 2,
                 name: "Glass cannon max health",
-                statKey: "{level} Glass cannon max health",
-                isDirect: false,
+                statKey: "{val}% Damage",
+                isDirect: true,
                 description: "Max Health by -{a}%, but increase your damage by {val}%.",
                 parameters: { val: { base: 7.5, increase: 7.5 }, a: { base: 30, increase: 10 } }
             },
             'R1a': {
                 x: 92, y: 22, max: 5, costBase: 1,
                 name: "Glass cannon health regen",
-                statKey: "{level} Glass cannon health regen",
-                isDirect: false,
+                statKey: "{val}% Damage",
+                isDirect: true,
                 description: "Health Regen by -{a}%, but increase your damage by {val}%.",
                 parameters: { val: { base: 2.5, increase: 2.5 }, a: { base: 40, increase: 15 } }
             },
             'R1b': {
                 x: 92, y: 42, max: 5, costBase: 1,
                 name: "Glass cannon defense",
-                statKey: "{level} Glass cannon defense",
-                isDirect: false,
+                statKey: "{val}% Damage",
+                isDirect: true,
                 description: "Base Defense by {a}%, but increase your damage by {val}%.",
                 parameters: { val: { base: 6.0, increase: 6.0 }, a: { base: 20, increase: 10 } }
             },

@@ -90,6 +90,7 @@ export const damageModifiersStep = {
                 blueOrbs: 0,
                 blueDamageMultiplier: 1,
                 blueDamagePercent: 0,
+                genericDamagePercent: 0,
                 damage: 0,
                 modifiers: []
             };
@@ -118,6 +119,9 @@ export const damageModifiersStep = {
         const masteryPercent = weaponClass
             ? findPercent(context.statsValues, `${capitalize(weaponClass)} Damage`)
             : 0;
+        // `Damage` è il bonus generico (es. Glass Cannon dell'arciere): vale
+        // per qualsiasi tipo di danno, indipendentemente dall'arma.
+        const genericDamagePercent = findPercent(context.statsValues, 'Damage');
 
         // Elemental channeling (Mage) aggiunge il suo valore a qualsiasi elemento.
         const elementalChanneling = getElementalChannelingPercent(context);
@@ -181,7 +185,7 @@ export const damageModifiersStep = {
         const damage = Math.max(0,
             (damageBeforeMastery + masteryBonus)
             * blueDamageMultiplier
-        );
+        ) * (1 + genericDamagePercent / 100);
 
         return {
             baseDamage,
@@ -207,6 +211,7 @@ export const damageModifiersStep = {
             blueOrbs: firstHit ? 0 : supportOrbs.activeBlueOrbs,
             blueDamageMultiplier,
             blueDamagePercent: (blueDamageMultiplier - 1) * 100,
+            genericDamagePercent,
             damage,
             modifiers
         };
@@ -223,6 +228,10 @@ export const damageModifiersStep = {
         const rows = [
             { label: 'Damage Modifiers', value: result.percent, unit: '%' }
         ];
+
+        if (result.genericDamagePercent !== 0) {
+            rows.push({ label: 'Damage%', value: result.genericDamagePercent, unit: '%' });
+        }
 
         const hasElementalDamage = result.elementalDamagePercent !== 0;
         if (hasElementalDamage) {

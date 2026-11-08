@@ -261,6 +261,7 @@
  * @property {number} blueOrbs - BLUE orb medie attive
  * @property {number} blueDamageMultiplier - Moltiplicatore danno dato dalle BLUE orb
  * @property {number} blueDamagePercent - Bonus percentuale delle BLUE orb
+ * @property {number} genericDamagePercent - Bonus `Damage%` generico (es. Glass Cannon)
  */
 
 /**
