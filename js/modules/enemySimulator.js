@@ -46,6 +46,7 @@ export function applyDefenseDamage(damage, defense) {
  * @param {number} input.energyPerSecond
  * @param {number} input.maxEnergy
  * @param {number} [input.damagePercent] - Danno percentuale extra (es. resistenza elementale)
+ * @param {number} [input.firstStrikePercent] - Bonus First Strike sul primo colpo
  * @param {EnemySimulationAbility[]} [input.abilities]
  * @returns {{
  *   health: number,
@@ -55,6 +56,7 @@ export function applyDefenseDamage(damage, defense) {
  *   realFirstHitDamage: number,
  *   dps: number,
  *   realDps: number,
+ *   firstStrikePercent: number,
  *   oneshot: boolean,
  *   timeToKill: number,
  *   potionsNeeded: number,
@@ -70,6 +72,7 @@ export function simulateEnemy({
     energyPerSecond,
     maxEnergy,
     damagePercent = 0,
+    firstStrikePercent = 0,
     abilities = []
 }) {
     const safeHealth = Math.max(0, Number(health) || 0);
@@ -86,9 +89,10 @@ export function simulateEnemy({
         ? 0
         : Math.max(0, safeHealth - realFirstHitDamage);
 
+    const firstStrikeBonusTime = Number(firstStrikePercent) > 0 ? 0.6 : 0;
     const timeToKill = oneshot
         ? 0
-        : (realDps > 0 ? remainingHealth / realDps : Infinity);
+        : (realDps > 0 ? remainingHealth / realDps + firstStrikeBonusTime : Infinity);
 
     const deficit = Math.max(0, -(Number(energyPerSecond) || 0));
     const energyAtEnd = Number.isFinite(timeToKill)
@@ -126,6 +130,7 @@ export function simulateEnemy({
         realFirstHitDamage,
         dps: adjustedDps,
         realDps,
+        firstStrikePercent: Math.max(0, Number(firstStrikePercent) || 0),
         oneshot,
         timeToKill,
         potionsNeeded,

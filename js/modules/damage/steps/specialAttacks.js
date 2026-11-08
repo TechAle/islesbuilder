@@ -29,7 +29,7 @@ export const specialAttacksStep = {
      * @returns {SpecialAttackStepResult}
      */
     run(context) {
-        const baseDamage = context.results.criticalDamage?.baseDamage ?? 0;
+        const baseDamage = context.results.augmentFinal?.baseDamage ?? context.results.criticalDamage?.baseDamage ?? 0;
         const attack = context.results.attackSpeed;
         const burst = context.results.burst;
         const baseDps = burst?.enabled ? burst.totalDps : (attack?.dps ?? 0);

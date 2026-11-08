@@ -2,7 +2,9 @@ import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
 import { damageMultiplierStep } from './steps/damageMultiplier.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
+import { augmentFinalStep } from './steps/augmentFinal.js';
 import { specialAttacksStep } from './steps/specialAttacks.js';
+import { augmentDamageStep } from './steps/augmentDamage.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
 import { burstStep } from './steps/burst.js';
 import { crystalCombustionStep } from './steps/crystalCombustion.js';
@@ -25,9 +27,11 @@ export const DAMAGE_STEPS = [
     damageModifiersStep,
     damageMultiplierStep,
     criticalDamageStep,
+    augmentFinalStep,
     attackSpeedStep,
     burstStep,
     specialAttacksStep,
+    augmentDamageStep,
     crystalCombustionStep,
     supportOrbsStep
 ];
@@ -71,7 +75,12 @@ export function createDamageContext({
             disabledSpecialAttacks: [],
             abilityCooldownOverrides: {},
             abilityHitCountOverrides: {},
-            abilityDamageOverrides: {}
+            abilityDamageOverrides: {},
+            executionHpPercent: 50,
+            prosecutionHpPercent: 50,
+            enragedHpPercent: 50,
+            infectedHitsOverride: 0,
+            deathburstKillsPerSecond: 0.2
         },
         results: {},
         cache: {}

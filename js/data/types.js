@@ -26,6 +26,47 @@
  */
 
 /**
+ * Livello di un augment.
+ * @typedef {Object} AugmentLevel
+ * @property {number} level
+ * @property {number} value
+ * @property {Record<string, number>} [params]
+ */
+
+/**
+ * Effetto di un augment.
+ * @typedef {Object} AugmentEffect
+ * @property {string} type
+ * @property {string} [stat]
+ * @property {boolean} [percent]
+ * @property {'missing'|'current'|'currentEnemy'} [hpBasis]
+ * @property {number} [baseCoefficient]
+ * @property {number} [growthCoefficient]
+ */
+
+/**
+ * Override di effetto dichiarato in data/augments.js.
+ * @typedef {Object} AugmentEffectOverride
+ * @property {string} type
+ * @property {string} [stat]
+ * @property {boolean} [percent]
+ * @property {'missing'|'current'|'currentEnemy'} [hpBasis]
+ * @property {number} [baseCoefficient]
+ * @property {number} [growthCoefficient]
+ */
+
+/**
+ * Definizione completa di un augment (API + override).
+ * @typedef {Object} AugmentDefinition
+ * @property {string} name
+ * @property {'weapon'|'armor'} goesIn
+ * @property {string} group
+ * @property {string} rarity
+ * @property {AugmentEffect} effect
+ * @property {AugmentLevel[]} levels
+ */
+
+/**
  * Abilità speciale o passive di un'arma.
  * @typedef {Object} SpecialAbility
  * @property {string} name - `NomeAbilità-NomeArma`
@@ -119,7 +160,7 @@
  * Dati globali di riferimento gestiti dal DataStore.
  * @typedef {Object} DomainData
  * @property {Record<string, ItemPreset[]>} items
- * @property {Augment[]} augments
+ * @property {AugmentDefinition[]} augments
  * @property {Elixir[]} elixirsConfig
  * @property {Record<ClassKey, SkillTreeClass>} skillTrees
  */
@@ -209,6 +250,7 @@
  * @property {number} damage - Danno finale
  * @property {Array<{label: string, percent: number}>} modifiers - Dettaglio dei modificatori
  * @property {number} elementalPower - Elemental Power totale
+ * @property {number} elementalPowerPercent - Elemental Power% totale (abilità, Crystal Insights)
  * @property {number} crystalInsightsPercent - EP% medio stimato da Crystal Insights
  * @property {number} naturalDistillationPercent - Percentuale di Crit Damage convertita
  * @property {number} distilledCritDamagePercent - Crit Damage percentuale rimosso
@@ -251,6 +293,34 @@
  * @property {number} multiplierPercent - Aumento percentuale totale
  * @property {number} multiplier - Moltiplicatore applicato
  * @property {number} damage - Danno dopo il moltiplicatore
+ */
+
+/**
+ * Risultato dello step finale "Augments".
+ * @typedef {Object} AugmentFinalStepResult
+ * @property {boolean} enabled
+ * @property {boolean} hasExecution
+ * @property {boolean} hasProsecution
+ * @property {boolean} hasHunter
+ * @property {boolean} hasEnraged
+ * @property {boolean} hasInfected
+ * @property {boolean} hasFirstStrike
+ * @property {number} baseDamageBefore
+ * @property {number} damageBefore
+ * @property {number} augmentPercent
+ * @property {string|null} damageType
+ * @property {number} damageStatPercent
+ * @property {number} natureBlessFlat
+ * @property {number} natureBlessMultiplier
+ * @property {number} infectedPercent
+ * @property {number} enragedPercent
+ * @property {number} executionPercent
+ * @property {number} hunterPercent
+ * @property {number} prosecutionPercent
+ * @property {number} firstStrikePercent
+ * @property {number} multiplier
+ * @property {number} baseDamage
+ * @property {number} damage
  */
 
 /**
@@ -359,6 +429,11 @@
  * @property {Record<string, number>} [abilityCooldownOverrides] - Cooldown override per abilità
  * @property {Record<string, number>} [abilityHitCountOverrides] - Numero hit per abilità
  * @property {Record<string, number>} [abilityDamageOverrides] - Danno % per abilità
+ * @property {number} [executionHpPercent] - HP attuali del nemico per Execution (0-100)
+ * @property {number} [prosecutionHpPercent] - HP attuali del nemico per Prosecution (0-100)
+ * @property {number} [enragedHpPercent] - HP attuali del player per Enraged (0-100)
+ * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)
+ * @property {number} [deathburstKillsPerSecond] - Kill al secondo per Deathburst
  * @property {boolean} [firstHit] - Se true, esclude gli effetti che richiedono un colpo precedente
  */
 
@@ -441,6 +516,35 @@
  * @property {number} orbDamage
  * @property {number} orbDps
  * @property {number} totalDps
+ */
+
+/**
+ * Risultato dello step "Augments".
+ * @typedef {Object} AugmentDamageStepResult
+ * @property {boolean} enabled
+ * @property {boolean} hasAny
+ * @property {boolean} hasHpAugments
+ * @property {boolean} hasEnemyHpAugments
+ * @property {boolean} hasExecution
+ * @property {boolean} hasProsecution
+ * @property {boolean} hasHunter
+ * @property {boolean} hasEnraged
+ * @property {boolean} hasInfected
+ * @property {boolean} hasFirstStrike
+ * @property {number} firstStrikePercent
+ * @property {number} averageDamage
+ * @property {number} reverseMultiplier
+ * @property {number} augmentBaseDamage
+ * @property {number} totalHitsPerSecond
+ * @property {number} critsPerSecond
+ * @property {number} killsPerSecond
+ * @property {number} comboDps
+ * @property {number} chainLightningDps
+ * @property {number} deathburstDps
+ * @property {number} totalDps
+ * @property {boolean} hasCombo
+ * @property {boolean} hasChainLightning
+ * @property {boolean} hasDeathburst
  */
 
 /**

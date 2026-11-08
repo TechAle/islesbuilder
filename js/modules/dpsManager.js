@@ -95,11 +95,43 @@ export class DpsManager {
      * @returns {Array<{id: string, label: string, results: DamageResult[]}>}
      */
     getStepGroups() {
+        const augmentStep = DAMAGE_STEPS.find(step => step.id === 'augmentDamage');
+        const augmentResult = this.steps.augmentDamage;
+        const augmentRows = augmentResult && augmentStep?.toResults
+            ? augmentStep.toResults(augmentResult)
+            : [];
+
+        const augmentFinalStep = DAMAGE_STEPS.find(step => step.id === 'augmentFinal');
+        const augmentFinalResult = this.steps.augmentFinal;
+        const augmentFinalRows = augmentFinalResult && augmentFinalStep?.toResults
+            ? augmentFinalStep.toResults(augmentFinalResult)
+            : [];
+
         return DAMAGE_STEPS
-            .filter(step => !step.isVisible || step.isVisible(this.steps[step.id]))
+            .filter(step => step.id !== 'augmentDamage' && step.id !== 'augmentFinal')
+            .filter(step => {
+                const visible = !step.isVisible || step.isVisible(this.steps[step.id]);
+                if (step.id === 'damageMultiplier') {
+                    return visible || augmentRows.length > 0 || augmentFinalRows.length > 0;
+                }
+                return visible;
+            })
             .map(step => {
                 const result = this.steps[step.id];
-                const rows = result && step.toResults ? step.toResults(result) : [];
+                let rows = result && step.toResults ? step.toResults(result) : [];
+
+                if (step.id === 'damageMultiplier') {
+                    const finalLabels = new Set(['Damage Multiplier', 'Damage']);
+                    const head = rows.filter(row => !finalLabels.has(row.label));
+                    const tail = rows.filter(row => finalLabels.has(row.label));
+                    rows = [...head, ...augmentFinalRows, ...augmentRows, ...tail];
+
+                    if (augmentFinalResult && Number.isFinite(augmentFinalResult.damage)) {
+                        rows = rows.map(row => row.label === 'Damage'
+                            ? { ...row, value: augmentFinalResult.damage }
+                            : row);
+                    }
+                }
 
                 return { id: step.id, label: step.label, results: rows };
             });

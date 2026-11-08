@@ -28,6 +28,8 @@ export class EquipRenderer {
 
     /** Collega gli eventi degli input equipaggiamento. */
     mount() {
+        this.applyAugmentLists();
+
         this.root.querySelectorAll('.btn-edit').forEach(button => {
             button.addEventListener('click', event => {
                 const target = /** @type {HTMLElement} */ (event.currentTarget);
@@ -115,6 +117,45 @@ export class EquipRenderer {
                 option.value = name;
                 datalist.appendChild(option);
             });
+        });
+    }
+
+    /**
+     * @param {{weapon: string[], armor: string[]}} suggestions
+     */
+    renderAugmentDatalists(suggestions) {
+        /** @type {Record<'weapon'|'armor', string[]>} */
+        const lists = {
+            weapon: suggestions.weapon,
+            armor: suggestions.armor
+        };
+
+        Object.entries(lists).forEach(([kind, names]) => {
+            const datalist = this.getElementById(`list-augments-${kind}`);
+            if (!datalist) return;
+
+            datalist.innerHTML = '';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        });
+
+        this.applyAugmentLists();
+    }
+
+    /** Assegna a ogni input la datalist weapon/armor corretta. */
+    applyAugmentLists() {
+        this.root.querySelectorAll('.augment-input').forEach(input => {
+            const target = /** @type {HTMLInputElement} */ (input);
+            const slot = /** @type {EquipSlot|undefined} */ (target.dataset.augmentSlot);
+            if (!slot) return;
+
+            target.setAttribute(
+                'list',
+                slot === 'weapon' ? 'list-augments-weapon' : 'list-augments-armor'
+            );
         });
     }
 

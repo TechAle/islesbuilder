@@ -22,7 +22,7 @@ export const supportOrbsStep = {
      */
     run(context) {
         const effects = getSupportOrbEffects(context);
-        const averageDamage = context.results.criticalDamage?.damage ?? 0;
+        const averageDamage = context.results.augmentFinal?.damage ?? context.results.criticalDamage?.damage ?? 0;
         const orbDamage = averageDamage * (effects.damagePercent / 100);
         const orbDps = effects.orbHitsPerSecond * orbDamage;
 

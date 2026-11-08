@@ -28,6 +28,7 @@ import { AUGMENT_DATABASE } from './data/augments.js';
 import { INITIAL_ELIXIRS } from './data/elixirs.js';
 import { CLASS_SKILL_TREES } from './data/skillTrees.js';
 import { MONSTER_PRESETS } from './data/monsters.js';
+import { getAugmentSuggestions } from './modules/augmentManager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- Store ---------------------------------------------------------
@@ -137,7 +138,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         disabledSpecialAttacks: [],
         abilityCooldownOverrides: {},
         abilityHitCountOverrides: {},
-        abilityDamageOverrides: {}
+        abilityDamageOverrides: {},
+        executionHpPercent: 50,
+        prosecutionHpPercent: 50,
+        enragedHpPercent: 50,
+        infectedHitsOverride: 0,
+        deathburstKillsPerSecond: 0.2
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -157,6 +163,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         crystalExplosionOverride: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosion-override')),
         crystalExplosions: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosions')),
         crystalExplosionsValue: document.getElementById('crystal-explosions-value'),
+        executionHp: /** @type {HTMLInputElement|null} */ (document.getElementById('execution-hp')),
+        executionHpValue: document.getElementById('execution-hp-value'),
+        prosecutionHp: /** @type {HTMLInputElement|null} */ (document.getElementById('prosecution-hp')),
+        prosecutionHpValue: document.getElementById('prosecution-hp-value'),
+        enragedHp: /** @type {HTMLInputElement|null} */ (document.getElementById('enraged-hp')),
+        enragedHpValue: document.getElementById('enraged-hp-value'),
+        infectedHits: /** @type {HTMLInputElement|null} */ (document.getElementById('infected-hits')),
+        infectedHitsValue: document.getElementById('infected-hits-value'),
+        deathburstKills: /** @type {HTMLInputElement|null} */ (document.getElementById('deathburst-kills')),
+        deathburstKillsValue: document.getElementById('deathburst-kills-value'),
         specialAttacksRow: document.getElementById('setting-special-attacks'),
         specialAttacksContainer: document.getElementById('setting-special-attack-list'),
         onChange: settings => {
@@ -219,7 +235,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             settings: { ...damageSettings, firstHit: true }
         });
 
-        const firstHitDamage = firstHitDpsManager.getSteps().criticalDamage?.averageDamage ?? 0;
+        const firstHitDamage = firstHitDpsManager.getSteps().augmentFinal?.damage
+            ?? firstHitDpsManager.getSteps().criticalDamage?.damage
+            ?? 0;
+        const firstStrikePercent = firstHitDpsManager.getSteps().damageMultiplier?.firstStrikePercent ?? 0;
         const attackStep = dpsManager.getSteps().attackSpeed;
         if (attackStep) attackStep.firstHitDamage = firstHitDamage;
 
@@ -269,6 +288,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             crystalCombustion?.enabled === true
         );
 
+        const augmentStep = dpsManager.getSteps().augmentDamage;
+        const augmentFinalStep = dpsManager.getSteps().augmentFinal;
+        damageSettingsRenderer.placeAugmentControls(
+            damageRenderer.getStepContent('damageMultiplier'),
+            {
+                executionHp: augmentFinalStep?.hasExecution === true,
+                prosecutionHp: augmentFinalStep?.hasProsecution === true,
+                enragedHp: augmentFinalStep?.hasEnraged === true,
+                infected: augmentFinalStep?.hasInfected === true,
+                deathburst: augmentStep?.hasDeathburst === true
+            }
+        );
+
         // --- Enemy Simulator ------------------------------------------
         const energyPerSecond = attackStep?.energyPerSecondAttackBurstSpecial
             ?? attackStep?.energyPerSecondAttackBurst
@@ -282,6 +314,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             health,
             defense,
             damagePercent,
+            firstStrikePercent,
             firstHitDamage,
             dps: dpsManager.getDps() ?? 0,
             energyPerSecond,
@@ -301,10 +334,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     dataStore.subscribe('items', () => {
         equipRenderer.renderDatalists(itemManager.getItemNamesBySlot());
         equipRenderer.renderStatSuggestions(itemManager.getStatSuggestions());
+        equipRenderer.renderAugmentDatalists({
+            weapon: getAugmentSuggestions('weapon'),
+            armor: getAugmentSuggestions('armor')
+        });
     });
 
     dataStore.subscribe('elixirs', () => {
         equippedStore.syncElixirs(dataStore.data.elixirsConfig);
+    });
+
+    dataStore.subscribe('augments', () => {
+        equipRenderer.renderAugmentDatalists({
+            weapon: getAugmentSuggestions('weapon'),
+            armor: getAugmentSuggestions('armor')
+        });
+        renderCombat();
     });
 
     equippedStore.subscribe('equip', () => {
@@ -333,6 +378,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAll();
     equipRenderer.renderDatalists(itemManager.getItemNamesBySlot());
     equipRenderer.renderStatSuggestions(itemManager.getStatSuggestions());
+    equipRenderer.renderAugmentDatalists({
+        weapon: getAugmentSuggestions('weapon'),
+        armor: getAugmentSuggestions('armor')
+    });
 
     await apiManager.update();
 

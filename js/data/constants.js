@@ -9,6 +9,7 @@ export const API_ITEM_ENDPOINTS = [
 ];
 
 export const API_ELIXIRS_ENDPOINT = "/elixirs";
+export const API_AUGMENTS_ENDPOINT = "/augments";
 export const API_REQUEST_TIMEOUT_MS = 10000;
 export const API_MAX_ATTEMPTS = 2;
 

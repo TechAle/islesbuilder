@@ -20,6 +20,16 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLInputElement|null} crystalExplosionOverride
  * @property {HTMLInputElement|null} crystalExplosions
  * @property {HTMLElement|null} crystalExplosionsValue
+ * @property {HTMLInputElement|null} executionHp
+ * @property {HTMLElement|null} executionHpValue
+ * @property {HTMLInputElement|null} prosecutionHp
+ * @property {HTMLElement|null} prosecutionHpValue
+ * @property {HTMLInputElement|null} enragedHp
+ * @property {HTMLElement|null} enragedHpValue
+ * @property {HTMLInputElement|null} infectedHits
+ * @property {HTMLElement|null} infectedHitsValue
+ * @property {HTMLInputElement|null} deathburstKills
+ * @property {HTMLElement|null} deathburstKillsValue
  * @property {HTMLElement|null} specialAttacksRow
  * @property {HTMLElement|null} specialAttacksContainer
  * @property {(settings: DamageSettings) => void} onChange
@@ -57,6 +67,11 @@ export class DamageSettingsRenderer {
         this.focusControl = /** @type {HTMLElement|null} */ (options.focusStacks?.closest('.damage-uptime') ?? null);
         this.potentialChargeControl = /** @type {HTMLElement|null} */ (options.potentialChargeKills?.closest('.damage-uptime') ?? null);
         this.crystalExplosionsControl = /** @type {HTMLElement|null} */ (options.crystalExplosions?.closest('.damage-uptime') ?? null);
+        this.executionHpControl = /** @type {HTMLElement|null} */ (options.executionHp?.closest('.damage-uptime') ?? null);
+        this.prosecutionHpControl = /** @type {HTMLElement|null} */ (options.prosecutionHp?.closest('.damage-uptime') ?? null);
+        this.enragedHpControl = /** @type {HTMLElement|null} */ (options.enragedHp?.closest('.damage-uptime') ?? null);
+        this.infectedHitsControl = /** @type {HTMLElement|null} */ (options.infectedHits?.closest('.damage-uptime') ?? null);
+        this.deathburstKillsControl = /** @type {HTMLElement|null} */ (options.deathburstKills?.closest('.damage-uptime') ?? null);
         this.slowAttackControl = /** @type {HTMLElement|null} */ (options.slowAttack?.closest('.setting-row') ?? null);
         this.burstControl = /** @type {HTMLElement|null} */ (options.useBurst?.closest('.setting-row') ?? null);
 
@@ -89,13 +104,48 @@ export class DamageSettingsRenderer {
             valueEl: options.crystalExplosionsValue,
             onChange: emit
         });
+        this.executionHpSlider = new SliderControl({
+            input: options.executionHp,
+            valueEl: options.executionHpValue,
+            onChange: emit,
+            format: value => `${value}%`
+        });
+        this.prosecutionHpSlider = new SliderControl({
+            input: options.prosecutionHp,
+            valueEl: options.prosecutionHpValue,
+            onChange: emit,
+            format: value => `${value}%`
+        });
+        this.enragedHpSlider = new SliderControl({
+            input: options.enragedHp,
+            valueEl: options.enragedHpValue,
+            onChange: emit,
+            format: value => `${value}%`
+        });
+        this.infectedHitsSlider = new SliderControl({
+            input: options.infectedHits,
+            valueEl: options.infectedHitsValue,
+            onChange: emit,
+            format: value => value > 0 ? String(value) : 'Auto'
+        });
+        this.deathburstKillsSlider = new SliderControl({
+            input: options.deathburstKills,
+            valueEl: options.deathburstKillsValue,
+            onChange: emit,
+            format: value => String(value)
+        });
 
         this.sliders = [
             this.griefSlider,
             this.lastSorrowSlider,
             this.focusSlider,
             this.potentialChargeSlider,
-            this.crystalExplosionSlider
+            this.crystalExplosionSlider,
+            this.executionHpSlider,
+            this.prosecutionHpSlider,
+            this.enragedHpSlider,
+            this.infectedHitsSlider,
+            this.deathburstKillsSlider
         ];
 
         this.checkboxes = [
@@ -208,6 +258,20 @@ export class DamageSettingsRenderer {
      */
     placeCrystalExplosionsControl(container, visible) {
         this.placeControl(this.crystalExplosionsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {{executionHp: boolean, prosecutionHp: boolean, enragedHp: boolean, infected: boolean, deathburst: boolean}} visible
+     */
+    placeAugmentControls(container, visible) {
+        // placeControl usa prepend: inseriamo in ordine inverso per ottenere
+        // Execution HP%, Prosecution HP%, Enraged HP%, Infected, Deathburst.
+        this.placeControl(this.deathburstKillsControl, container, visible.deathburst);
+        this.placeControl(this.infectedHitsControl, container, visible.infected);
+        this.placeControl(this.enragedHpControl, container, visible.enragedHp);
+        this.placeControl(this.prosecutionHpControl, container, visible.prosecutionHp);
+        this.placeControl(this.executionHpControl, container, visible.executionHp);
     }
 
     /**
@@ -436,7 +500,12 @@ export class DamageSettingsRenderer {
             disabledSpecialAttacks: [...this.disabledSpecialAttacks],
             abilityCooldownOverrides: Object.fromEntries(this.abilityCooldownOverrides),
             abilityHitCountOverrides: Object.fromEntries(this.abilityHitCountOverrides),
-            abilityDamageOverrides: Object.fromEntries(this.abilityDamageOverrides)
+            abilityDamageOverrides: Object.fromEntries(this.abilityDamageOverrides),
+            executionHpPercent: this.executionHpSlider.value,
+            prosecutionHpPercent: this.prosecutionHpSlider.value,
+            enragedHpPercent: this.enragedHpSlider.value,
+            infectedHitsOverride: this.infectedHitsSlider.value,
+            deathburstKillsPerSecond: this.deathburstKillsSlider.value
         };
     }
 

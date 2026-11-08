@@ -295,6 +295,31 @@
                 <input type="range" class="damage-uptime-slider" id="crystal-explosions" min="0" max="4" step="0.1" value="0">
                 <span class="damage-uptime-value" id="crystal-explosions-value">0 / 4</span>
             </div>
+            <div class="damage-uptime" id="execution-hp-control" hidden>
+                <label class="damage-uptime-label" for="execution-hp">Execution HP %</label>
+                <input type="range" class="damage-uptime-slider" id="execution-hp" min="0" max="100" step="1" value="50">
+                <span class="damage-uptime-value" id="execution-hp-value">50%</span>
+            </div>
+            <div class="damage-uptime" id="prosecution-hp-control" hidden>
+                <label class="damage-uptime-label" for="prosecution-hp">Prosecution HP %</label>
+                <input type="range" class="damage-uptime-slider" id="prosecution-hp" min="0" max="100" step="1" value="50">
+                <span class="damage-uptime-value" id="prosecution-hp-value">50%</span>
+            </div>
+            <div class="damage-uptime" id="enraged-hp-control" hidden>
+                <label class="damage-uptime-label" for="enraged-hp">Enraged HP %</label>
+                <input type="range" class="damage-uptime-slider" id="enraged-hp" min="0" max="100" step="1" value="50">
+                <span class="damage-uptime-value" id="enraged-hp-value">50%</span>
+            </div>
+            <div class="damage-uptime" id="infected-hits-control" hidden>
+                <label class="damage-uptime-label" for="infected-hits">Infected hits</label>
+                <input type="range" class="damage-uptime-slider" id="infected-hits" min="0" max="30" step="1" value="0">
+                <span class="damage-uptime-value" id="infected-hits-value">Auto</span>
+            </div>
+            <div class="damage-uptime" id="deathburst-kills-control" hidden>
+                <label class="damage-uptime-label" for="deathburst-kills">Kills / s</label>
+                <input type="range" class="damage-uptime-slider" id="deathburst-kills" min="0" max="0.2" step="0.01" value="0.2">
+                <span class="damage-uptime-value" id="deathburst-kills-value">0.5</span>
+            </div>
             <div id="damage-settings" hidden>
                 <div class="setting-row" id="setting-slow-attack-row">
                     <div class="setting-main">
@@ -392,12 +417,10 @@
 <datalist id="stat-suggestions">
 </datalist>
 
-<datalist id="list-augments">
-    <option value="Minor Health Runes (+30 HP)">
-    <option value="Major Defense Gem (+15 Def)">
-    <option value="Feather Emblem (+10 Speed)">
-    <option value="Power Shard (+8 Strength)">
-    <option value="Sharpness Rune (+4% Crit)">
+<datalist id="list-augments-weapon">
+</datalist>
+
+<datalist id="list-augments-armor">
 </datalist>
 
 <div id="global-tooltip" class="global-tooltip" hidden></div>

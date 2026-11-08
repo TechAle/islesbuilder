@@ -69,7 +69,7 @@ export const burstStep = {
             return inactive;
         }
 
-        const damage = context.results.criticalDamage?.damage ?? 0;
+        const damage = context.results.augmentFinal?.damage ?? context.results.criticalDamage?.damage ?? 0;
         const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
         const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
         const burstDamagePerHit = damage

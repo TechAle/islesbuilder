@@ -22,7 +22,7 @@ export const crystalCombustionStep = {
      */
     run(context) {
         const effects = getCrystalCombustionEffects(context);
-        const averageDamage = context.results.criticalDamage?.damage ?? 0;
+        const averageDamage = context.results.augmentFinal?.damage ?? context.results.criticalDamage?.damage ?? 0;
         const damagePerCrystal = averageDamage * (effects.combustionPercent / 100);
         const combustionDps = effects.explosionsPerSecond * damagePerCrystal;
 

@@ -94,6 +94,9 @@ export function selectStats(catalog, build) {
         }
     });
 
+    // Gli augment non vengono applicati qui: sono l'ultimo passo del calcolo
+    // del danno, dopo critici, blue orb e ogni altro moltiplicatore.
+
     for (const classKey of CLASS_KEYS) {
         const nodes = catalog.skillTrees[classKey].nodes;
         const levels = build.treeLevels[classKey];

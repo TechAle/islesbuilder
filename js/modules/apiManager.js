@@ -2,6 +2,7 @@ import {
     API_URL,
     API_ITEM_ENDPOINTS,
     API_ELIXIRS_ENDPOINT,
+    API_AUGMENTS_ENDPOINT,
     API_MAX_ATTEMPTS,
     API_REQUEST_TIMEOUT_MS,
     DEFAULT_ELIXIR_LEVEL,
@@ -10,6 +11,8 @@ import {
     WEAPON_SLOT_TO_WEAPON_TYPE
 } from "../data/constants.js";
 import { applyItemOverride } from "./itemOverrides.js";
+import { registerAugments } from './augmentManager.js';
+import { AUGMENT_DATABASE } from '../data/augments.js';
 
 /** @typedef {import('../data/types.js').ItemStats} ItemStats */
 
@@ -69,11 +72,12 @@ export class ApiManager {
         this.specialAbilityManager = specialAbilityManager;
     }
 
-    /** Aggiorna in parallelo oggetti ed elisir dall'API. */
+    /** Aggiorna in parallelo oggetti, elisir e augment dall'API. */
     async update() {
         await Promise.all([
             this.updateItems(),
-            this.updateElixirs()
+            this.updateElixirs(),
+            this.updateAugments()
         ]);
     }
 
@@ -241,6 +245,17 @@ export class ApiManager {
 
         } catch (error) {
             console.error("Errore durante il fetch delle categorie API:", error);
+        }
+    }
+
+    /** Recupera gli augment dall'API e popola il database runtime. */
+    async updateAugments() {
+        try {
+            const rawAugments = await this.fetchJson(API_AUGMENTS_ENDPOINT);
+            registerAugments(rawAugments);
+            this.dataStore.updateData({ augments: [...AUGMENT_DATABASE] }, 'augments');
+        } catch (error) {
+            console.error("Errore durante il fetch degli augment:", error);
         }
     }
 

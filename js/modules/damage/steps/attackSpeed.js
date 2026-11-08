@@ -35,7 +35,7 @@ export const attackSpeedStep = {
      * @returns {AttackSpeedStepResult}
      */
     run(context) {
-        const previous = context.results.criticalDamage;
+        const previous = context.results.augmentFinal ?? context.results.criticalDamage;
         const damage = previous?.damage ?? 0;
 
         if (damage <= 0) {
