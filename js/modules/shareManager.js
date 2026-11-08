@@ -148,9 +148,53 @@ export class ShareManager {
 
                 CLASS_KEYS.forEach(classKey => {
                     const savedLevels = state.treeLevels[classKey];
-                    treeLevels[classKey] = savedLevels
-                        ? new Map(savedLevels)
-                        : this.equippedStore.state.treeLevels[classKey];
+                    const nodes = this.dataStore.data.skillTrees[classKey]?.nodes ?? {};
+
+                    if (!savedLevels) {
+                        treeLevels[classKey] = this.equippedStore.state.treeLevels[classKey];
+                        return;
+                    }
+
+                    const sanitized = new Map();
+                    for (const [id, rawLevel] of savedLevels) {
+                        const node = nodes[id];
+                        if (!node) continue;
+
+                        const level = Math.min(
+                            node.max,
+                            Math.max(0, Math.trunc(Number(rawLevel) || 0))
+                        );
+                        if (level > 0) sanitized.set(id, level);
+                    }
+
+                    // Rimuove i nodi non più raggiungibili dal centro.
+                    const edges = this.dataStore.data.skillTrees[classKey]?.edges ?? [];
+                    const parents = new Map();
+                    edges.forEach(([parent, child]) => {
+                        if (!parents.has(child)) parents.set(child, parent);
+                    });
+                    const center = Object.keys(nodes).find(id => nodes[id].center);
+
+                    if (!center || !sanitized.get(center)) {
+                        sanitized.clear();
+                    } else {
+                        for (const id of [...sanitized.keys()]) {
+                            if (id === center) continue;
+
+                            let current = id;
+                            let reachable = true;
+                            while (current) {
+                                if (!sanitized.get(current)) {
+                                    reachable = false;
+                                    break;
+                                }
+                                current = parents.get(current);
+                            }
+                            if (!reachable) sanitized.delete(id);
+                        }
+                    }
+
+                    treeLevels[classKey] = sanitized;
                 });
 
                 newState.treeLevels = treeLevels;
@@ -159,7 +203,10 @@ export class ShareManager {
             if (state.currentClass && CLASS_KEYS.includes(state.currentClass)) {
                 newState.currentClass = state.currentClass;
             }
-            if (typeof state.sharedPoints === 'number') newState.sharedPoints = state.sharedPoints;
+            const savedPoints = Number(state.sharedPoints);
+            if (Number.isFinite(savedPoints)) {
+                newState.sharedPoints = Math.max(0, Math.trunc(savedPoints));
+            }
 
             this.equippedStore.setState(newState, 'all');
             return true;

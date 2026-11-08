@@ -72,4 +72,45 @@ describe('ShareManager', () => {
         expect(share.loadFromHash(hash)).toBe(true);
         expect(world.equippedStore.state.currentClass).toBe(before);
     });
-});
+
+    it('clamps shared tree levels to node maxima and ignores unknown nodes', () => {
+        const world = makeWorld();
+        const share = shareFor(world);
+        const hash = hashFor({
+            equip: {},
+            elixirs: [],
+            treeLevels: {
+                warrior: [],
+                archer: [],
+                mage: [['C', 99], ['NOPE', 5]]
+            },
+            currentClass: 'mage',
+            sharedPoints: -5
+        });
+
+        expect(share.loadFromHash(hash)).toBe(true);
+        expect(world.equippedStore.state.treeLevels.mage.get('C')).toBe(10);
+        expect(world.equippedStore.state.treeLevels.mage.has('NOPE')).toBe(false);
+        expect(world.equippedStore.state.sharedPoints).toBe(0);
+    });
+ 
+    it('drops shared skill nodes whose prerequisites are missing', () => {
+        const world = makeWorld();
+        const share = shareFor(world);
+        const hash = hashFor({
+            equip: {},
+            elixirs: [],
+            treeLevels: {
+                warrior: [],
+                archer: [],
+                mage: [['C', 1], ['DR1', 5]]
+            },
+            currentClass: 'mage',
+            sharedPoints: 80
+        });
+
+        expect(share.loadFromHash(hash)).toBe(true);
+        expect(world.equippedStore.state.treeLevels.mage.get('C')).toBe(1);
+        expect(world.equippedStore.state.treeLevels.mage.has('DR1')).toBe(false);
+    });
+ });
