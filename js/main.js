@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
         statsRenderer.render(withBaseStats(statsValues));
 
-        const { health, defense, damagePercent } = enemySimulatorRenderer.getInputs();
+        const { health, defense } = enemySimulatorRenderer.getInputs();
         const combatSettings = {
             ...damageSettings,
             targetHealth: health,
@@ -317,10 +317,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const element = dpsManager.getSteps().damageModifiers?.element ?? null;
         enemySimulatorRenderer.syncElement(element);
 
+        // Rilegge i valori dopo syncElement: il Damage% può essere stato
+        // aggiornato in base all'elemento dell'arma corrente.
+        const enemyInputs = enemySimulatorRenderer.getInputs();
+
         enemySimulatorRenderer.render(simulateEnemy({
-            health,
-            defense,
-            damagePercent,
+            health: enemyInputs.health,
+            defense: enemyInputs.defense,
+            damagePercent: enemyInputs.damagePercent,
             firstStrikePercent,
             firstHitDamage,
             dps: dpsManager.getDps() ?? 0,
