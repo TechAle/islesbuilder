@@ -344,7 +344,7 @@
  * @typedef {Object} SpecialAttackStepResult
  * @property {boolean} visible
  * @property {boolean} enabled
- * @property {number} baseDamage
+ * @property {number} averageDamage
  * @property {number} reverseMultiplier
  * @property {number} energyRegen
  * @property {number} baseDps
@@ -434,6 +434,9 @@
  * @property {number} [enragedHpPercent] - HP attuali del player per Enraged (0-100)
  * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)
  * @property {number} [deathburstKillsPerSecond] - Kill al secondo per Deathburst
+ * @property {number} [targetHealth] - Vita del target, usata per stimare gli stack di Infected
+ * @property {number} [targetDefense] - Difesa del target, usata per stimare il TTK
+ * @property {number} [estimatedTimeToKill] - TTK stimato interno per gli stack di Infected
  * @property {boolean} [firstHit] - Se true, esclude gli effetti che richiedono un colpo precedente
  */
 

@@ -39,7 +39,16 @@ export function getWeaponDefaultAttackPercent(weapon) {
  * dell'arma. Esempio: Default Attack 85% → 100 / 85 = 1.17647.
  *
  * Le abilità e le passive usano il danno base dell'arma, non quello già
- * scalato dal Default Attack.
+ * scalato dal Default Attack. Poiché tutti i modificatori del danno sono
+ * moltiplicativi rispetto a quel danno scalato, dividere per DefaultAttack%
+ * equivale ad applicare gli stessi modificatori al danno base:
+ *
+ *   dannoScalato = base × (DA / 100) × modificatori
+ *   dannoBase    = dannoScalato × (100 / DA)
+ *                = base × modificatori
+ *
+ * Non è quindi `1 + (100 - DA) / 100`: quella formula aggiungerebbe un bonus
+ * diverso e non riporterebbe al danno base.
  *
  * @param {EquipSlotData|null|undefined} weapon
  * @returns {number}

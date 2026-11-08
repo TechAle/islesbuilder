@@ -29,7 +29,9 @@ export const specialAttacksStep = {
      * @returns {SpecialAttackStepResult}
      */
     run(context) {
-        const baseDamage = context.results.augmentFinal?.baseDamage ?? context.results.criticalDamage?.baseDamage ?? 0;
+        const averageDamage = context.results.augmentFinal?.damage
+            ?? context.results.criticalDamage?.damage
+            ?? 0;
         const attack = context.results.attackSpeed;
         const burst = context.results.burst;
         const baseDps = burst?.enabled ? burst.totalDps : (attack?.dps ?? 0);
@@ -41,7 +43,7 @@ export const specialAttacksStep = {
         const manager = context.specialAbilityManager;
         /** @type {{reverseMultiplier: number, energyRegen: number, abilities: Array<any>}} */
         const effects = manager
-            ? manager.getOnClickEffects(context, baseDamage)
+            ? manager.getOnClickEffects(context, averageDamage)
             : { reverseMultiplier: 0, energyRegen: 0, abilities: [] };
 
         /**
@@ -81,7 +83,7 @@ export const specialAttacksStep = {
         return {
             visible,
             enabled,
-            baseDamage,
+            averageDamage,
             reverseMultiplier: effects.reverseMultiplier,
             energyRegen: effects.energyRegen,
             baseDps,
