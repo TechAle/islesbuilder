@@ -215,3 +215,85 @@ describe('first hit procs', () => {
         expect(first.augmentFinal.natureBlessMultiplier).toBe(1);
     });
 });
+
+describe('first hit optional effects', () => {
+    it('keeps Focus stacks on the first hit', () => {
+        const { steps } = run({
+            treeLevels: { C: 1, L: 1, L1: 5, L1a: 5 },
+            settings: { firstHit: true, focusStacks: 3 }
+        });
+
+        expect(steps.damageMultiplier.focusStacks).toBe(3);
+        expect(steps.damageMultiplier.focusDamagePercent).toBeGreaterThan(0);
+    });
+
+    it('keeps Toxic Gas damage taken increase on the first hit', () => {
+        const special = new SpecialAbilityManager();
+        special.reset();
+        special.registerAbilities('Sporeheart Orb', [{
+            kind: 'ability',
+            name: 'Toxic Gas',
+            energy: 20,
+            text: 'Create a toxic cloud. Enemies inside take +25% damage.',
+            key: 'Right click'
+        }]);
+
+        const build = makeBuild({
+            weapon: {
+                name: 'Sporeheart Orb',
+                stats: {
+                    'Damage Type': 'Arcane',
+                    'Default Attack': 100,
+                    'Weapon Type': 'magic',
+                    'Arcane Damage': 100,
+                    'Ability 1': 'Toxic Gas'
+                }
+            }
+        });
+
+        const steps = new DpsManager({ specialAbilityManager: special }).recalculate({
+            statsValues: { 'Arcane Damage': { flat: 100, percent: 0 } },
+            skillValues: {},
+            build,
+            skillTrees: CLASS_SKILL_TREES,
+            settings: makeSettings({ firstHit: true })
+        });
+
+        expect(steps.damageMultiplier.damageTakenIncreasePercent).toBe(25);
+    });
+
+    it('keeps Soil Infestation damage taken increase on the first hit', () => {
+        const special = new SpecialAbilityManager();
+        special.reset();
+        special.registerAbilities('Gloomfang Mace', [{
+            kind: 'ability',
+            name: 'Soil Infestation',
+            energy: 20,
+            text: 'Enemies take +25% damage.',
+            key: 'Right click'
+        }]);
+
+        const build = makeBuild({
+            weapon: {
+                name: 'Gloomfang Mace',
+                stats: {
+                    'Damage Type': 'Arcane',
+                    'Default Attack': 100,
+                    'Weapon Type': 'magic',
+                    'Arcane Damage': 100,
+                    'Ability 1': 'Soil Infestation'
+                }
+            }
+        });
+
+        const steps = new DpsManager({ specialAbilityManager: special }).recalculate({
+            statsValues: { 'Arcane Damage': { flat: 100, percent: 0 } },
+            skillValues: {},
+            build,
+            skillTrees: CLASS_SKILL_TREES,
+            settings: makeSettings({ firstHit: true })
+        });
+
+        expect(steps.damageMultiplier.damageTakenIncreasePercent).toBe(25);
+    });
+});

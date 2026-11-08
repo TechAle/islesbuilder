@@ -78,9 +78,7 @@ describe('full mage build', () => {
                 deathburstKillsPerSecond: 0,
                 executionHpPercent: 50,
                 prosecutionHpPercent: 50,
-                enragedHpPercent: 50,
-                targetHealth: 101562,
-                targetDefense: 110
+                enragedHpPercent: 50
             })
         });
 

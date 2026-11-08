@@ -218,19 +218,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
         statsRenderer.render(withBaseStats(statsValues));
 
-        const { health, defense } = enemySimulatorRenderer.getInputs();
-        const combatSettings = {
-            ...damageSettings,
-            targetHealth: health,
-            targetDefense: defense
-        };
-
         dpsManager.recalculate({
             statsValues,
             skillValues,
             build: equippedStore.state,
             skillTrees: dataStore.data.skillTrees,
-            settings: combatSettings
+            settings: damageSettings
         });
 
         // Primo colpo: stessi modificatori del calcolo normale, ma senza gli
@@ -240,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             skillValues,
             build: equippedStore.state,
             skillTrees: dataStore.data.skillTrees,
-            settings: { ...combatSettings, firstHit: true }
+            settings: { ...damageSettings, firstHit: true }
         });
 
         const firstHitDamage = firstHitDpsManager.getSteps().augmentFinal?.damage
