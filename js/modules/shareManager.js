@@ -1,4 +1,4 @@
-import { CLASS_KEYS, getItemCategoryForSlot, MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
+import { CLASS_KEYS, getItemCategoryForSlot, MAX_AUGMENTS_PER_ITEM, MAX_ELIXIR_LEVEL } from '../data/constants.js';
 import { clampUpgradeLevel } from './itemUpgrade.js';
 
 /** @typedef {import('../data/types.js').BuildState} BuildState */
@@ -138,7 +138,14 @@ export class ShareManager {
             if (state.elixirs) {
                 newState.elixirs = this.equippedStore.state.elixirs.map(elixir => {
                     const match = state.elixirs.find(saved => saved.id === elixir.id);
-                    return match ? { ...elixir, val: match.val } : elixir;
+                    if (!match) return elixir;
+
+                    const parsed = Number(match.val);
+                    const val = Number.isFinite(parsed)
+                        ? Math.min(MAX_ELIXIR_LEVEL, Math.max(0, Math.trunc(parsed)))
+                        : 0;
+
+                    return { ...elixir, val };
                 });
             }
 

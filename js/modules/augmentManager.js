@@ -44,9 +44,11 @@ import { MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
  * @param {any[]|null|undefined} apiAugments
  */
 export function registerAugments(apiAugments) {
+    if (!Array.isArray(apiAugments)) return;
+
     AUGMENT_DATABASE.length = 0;
 
-    (apiAugments ?? []).forEach(raw => {
+    apiAugments.forEach(raw => {
         const definition = buildAugmentDefinition(raw);
         if (definition) AUGMENT_DATABASE.push(definition);
     });

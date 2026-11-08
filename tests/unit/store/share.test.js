@@ -113,4 +113,22 @@ describe('ShareManager', () => {
         expect(world.equippedStore.state.treeLevels.mage.get('C')).toBe(1);
         expect(world.equippedStore.state.treeLevels.mage.has('DR1')).toBe(false);
     });
+ 
+    it('clamps shared elixir levels to the configured maximum', () => {
+        const world = makeWorld();
+        world.equippedStore.syncElixirs([
+            { id: 'test', name: 'Test', stat: 'Arcane Damage', val: 0, perLevel: 1, percent: true }
+        ]);
+        const share = shareFor(world);
+        const hash = hashFor({
+            equip: {},
+            elixirs: [{ id: 'test', val: 999 }],
+            treeLevels: {},
+            currentClass: 'mage',
+            sharedPoints: 80
+        });
+
+        expect(share.loadFromHash(hash)).toBe(true);
+        expect(world.equippedStore.state.elixirs[0].val).toBe(5);
+    });
  });

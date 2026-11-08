@@ -56,6 +56,15 @@ describe('augment metadata', () => {
         expect(parseAugment("Nature's Bless 6").level.value).toBe(20);
     });
 
+    it('ignores malformed API payloads without wiping the database', () => {
+        const before = AUGMENT_API_FIXTURE.length;
+        registerAugments({ not: 'an array' });
+        expect(getAugmentSuggestions('weapon').length).toBeGreaterThan(0);
+        registerAugments(AUGMENT_API_FIXTURE);
+        expect(getAugmentSuggestions('weapon').length).toBeGreaterThan(0);
+        expect(AUGMENT_API_FIXTURE.length).toBe(before);
+    });
+
     it('suggests only augments for the requested slot', () => {
         const weapon = getAugmentSuggestions('weapon');
         const armor = getAugmentSuggestions('armor');

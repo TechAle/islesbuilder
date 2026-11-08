@@ -61,17 +61,23 @@ export class ElixirRenderer {
         elixirs.forEach((elixir, index) => {
             const card = document.createElement('div');
             card.className = 'elixir-card';
-            card.innerHTML = `
-        <span class="elixir-name">${elixir.name}</span>
-        <input type="number" class="elixir-input" min="0" max="${MAX_ELIXIR_LEVEL}" value="${elixir.val}">
-      `;
 
-            const input = /** @type {HTMLInputElement|null} */ (card.querySelector('.elixir-input'));
-            if (input) {
-                input.addEventListener('change', () => this.onValueChange(index, input.value));
-                this.inputs.push(input);
-            }
+            const nameEl = document.createElement('span');
+            nameEl.className = 'elixir-name';
+            nameEl.textContent = elixir.name;
 
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'elixir-input';
+            input.min = '0';
+            input.max = String(MAX_ELIXIR_LEVEL);
+            input.value = String(elixir.val);
+
+            input.addEventListener('change', () => this.onValueChange(index, input.value));
+            this.inputs.push(input);
+
+            card.appendChild(nameEl);
+            card.appendChild(input);
             root.appendChild(card);
         });
     }
