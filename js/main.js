@@ -143,7 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         prosecutionHpPercent: 50,
         enragedHpPercent: 50,
         infectedHitsOverride: 0,
-        deathburstKillsPerSecond: 0.2
+        deathburstKillsPerSecond: 0.2,
+        calculatedStrikeKillsPerSecond: 0
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -173,6 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         infectedHitsValue: document.getElementById('infected-hits-value'),
         deathburstKills: /** @type {HTMLInputElement|null} */ (document.getElementById('deathburst-kills')),
         deathburstKillsValue: document.getElementById('deathburst-kills-value'),
+        calculatedStrikeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('calculated-strike-kills')),
+        calculatedStrikeKillsValue: document.getElementById('calculated-strike-kills-value'),
         specialAttacksRow: document.getElementById('setting-special-attacks'),
         specialAttacksContainer: document.getElementById('setting-special-attack-list'),
         onChange: settings => {
@@ -252,6 +255,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         damageSettingsRenderer.placeSlowAttackControl(
             damageRenderer.getStepContent('attackSpeed')
+        );
+        damageSettingsRenderer.placeCalculatedStrikeControl(
+            damageRenderer.getStepContent('attackSpeed'),
+            (dpsManager.getSteps().attackSpeed?.calculatedStrikePercent ?? 0) > 0
         );
         damageSettingsRenderer.placeBurstControl(
             damageRenderer.getStepContent('burst')

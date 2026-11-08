@@ -30,6 +30,8 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLElement|null} infectedHitsValue
  * @property {HTMLInputElement|null} deathburstKills
  * @property {HTMLElement|null} deathburstKillsValue
+ * @property {HTMLInputElement|null} calculatedStrikeKills
+ * @property {HTMLElement|null} calculatedStrikeKillsValue
  * @property {HTMLElement|null} specialAttacksRow
  * @property {HTMLElement|null} specialAttacksContainer
  * @property {(settings: DamageSettings) => void} onChange
@@ -72,6 +74,7 @@ export class DamageSettingsRenderer {
         this.enragedHpControl = /** @type {HTMLElement|null} */ (options.enragedHp?.closest('.damage-uptime') ?? null);
         this.infectedHitsControl = /** @type {HTMLElement|null} */ (options.infectedHits?.closest('.damage-uptime') ?? null);
         this.deathburstKillsControl = /** @type {HTMLElement|null} */ (options.deathburstKills?.closest('.damage-uptime') ?? null);
+        this.calculatedStrikeKillsControl = /** @type {HTMLElement|null} */ (options.calculatedStrikeKills?.closest('.damage-uptime') ?? null);
         this.slowAttackControl = /** @type {HTMLElement|null} */ (options.slowAttack?.closest('.setting-row') ?? null);
         this.burstControl = /** @type {HTMLElement|null} */ (options.useBurst?.closest('.setting-row') ?? null);
 
@@ -134,6 +137,11 @@ export class DamageSettingsRenderer {
             onChange: emit,
             format: value => String(value)
         });
+        this.calculatedStrikeKillsSlider = new SliderControl({
+            input: options.calculatedStrikeKills,
+            valueEl: options.calculatedStrikeKillsValue,
+            onChange: emit
+        });
 
         this.sliders = [
             this.griefSlider,
@@ -145,7 +153,8 @@ export class DamageSettingsRenderer {
             this.prosecutionHpSlider,
             this.enragedHpSlider,
             this.infectedHitsSlider,
-            this.deathburstKillsSlider
+            this.deathburstKillsSlider,
+            this.calculatedStrikeKillsSlider
         ];
 
         this.checkboxes = [
@@ -279,6 +288,14 @@ export class DamageSettingsRenderer {
      */
     placeSlowAttackControl(container) {
         this.placeControl(this.slowAttackControl, container, true);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeCalculatedStrikeControl(container, visible) {
+        this.placeControl(this.calculatedStrikeKillsControl, container, visible);
     }
 
     /**
@@ -505,7 +522,8 @@ export class DamageSettingsRenderer {
             prosecutionHpPercent: this.prosecutionHpSlider.value,
             enragedHpPercent: this.enragedHpSlider.value,
             infectedHitsOverride: this.infectedHitsSlider.value,
-            deathburstKillsPerSecond: this.deathburstKillsSlider.value
+            deathburstKillsPerSecond: this.deathburstKillsSlider.value,
+            calculatedStrikeKillsPerSecond: this.calculatedStrikeKillsSlider.value
         };
     }
 

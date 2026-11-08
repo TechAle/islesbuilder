@@ -412,6 +412,9 @@
  * @property {boolean} sustain - True se l'energia rigenerata copre quella consumata
  * @property {number} potionInterval - Secondi tra una pozione e l'altra per mantenere l'energia
  * @property {boolean} potionSustainable - True se il cooldown delle pozioni basta
+ * @property {number} [calculatedStrikePercent] - Valore del nodo Calculated Strike
+ * @property {number} [calculatedStrikeKillsPerSecond] - Kill al secondo usate per Calculated Strike
+ * @property {number} [calculatedStrikeCooldownReduction] - Riduzione cooldown da Calculated Strike
  */
 
 /**
@@ -435,6 +438,7 @@
  * @property {number} [enragedHpPercent] - HP attuali del player per Enraged (0-100)
  * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)
  * @property {number} [deathburstKillsPerSecond] - Kill al secondo per Deathburst
+ * @property {number} [calculatedStrikeKillsPerSecond] - Kill al secondo per Calculated Strike (0-4)
  * @property {number} [targetHealth] - Vita del target, usata per stimare gli stack di Infected
  * @property {number} [targetDefense] - Difesa del target, usata per stimare il TTK
  * @property {number} [estimatedTimeToKill] - TTK stimato interno per gli stack di Infected

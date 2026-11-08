@@ -6,6 +6,7 @@ import {
 import { computeEnergyState, getEnergyRegen, getSustainLabel } from '../energy.js';
 import { getEnergyCostMultiplier } from '../energyCost.js';
 import { getAttackInterval } from '../attackTiming.js';
+import { getCalculatedStrikeEffects } from '../../classes/archer.js';
 import { getPassiveHitStats } from '../../classes/mage.js';
 import { findFlat, findPercentMultiplier } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
@@ -37,6 +38,10 @@ export const attackSpeedStep = {
     run(context) {
         const previous = context.results.augmentFinal ?? context.results.criticalDamage;
         const damage = previous?.damage ?? 0;
+        const calculatedStrike = getCalculatedStrikeEffects(
+            context,
+            context.settings?.calculatedStrikeKillsPerSecond ?? 0
+        );
 
         if (damage <= 0) {
             return {
@@ -54,7 +59,10 @@ export const attackSpeedStep = {
                 secondsToEmpty: Infinity,
                 sustain: true,
                 potionInterval: Infinity,
-                potionSustainable: true
+                potionSustainable: true,
+                calculatedStrikePercent: calculatedStrike.calculatedStrikePercent,
+                calculatedStrikeKillsPerSecond: calculatedStrike.killsPerSecond,
+                calculatedStrikeCooldownReduction: calculatedStrike.attackCooldownReduction
             };
         }
 
@@ -104,7 +112,10 @@ export const attackSpeedStep = {
             energyRegen,
             energyPerSecond,
             maxEnergy,
-            ...energyState
+            ...energyState,
+            calculatedStrikePercent: calculatedStrike.calculatedStrikePercent,
+            calculatedStrikeKillsPerSecond: calculatedStrike.killsPerSecond,
+            calculatedStrikeCooldownReduction: calculatedStrike.attackCooldownReduction
         };
     },
 
@@ -145,6 +156,16 @@ export const attackSpeedStep = {
         const rows = [
             { label: 'Attack Interval', value: result.attackInterval, unit: 's' },
             { label: 'Attacks per Second', value: result.attacksPerSecond, unit: '/s' },
+            ...((result.calculatedStrikePercent ?? 0) > 0
+                ? [
+                    { label: 'Calculated Strike', value: result.calculatedStrikePercent ?? 0, unit: '%' },
+                    {
+                        label: 'Calculated Strike Cooldown',
+                        value: result.calculatedStrikeCooldownReduction ?? 0,
+                        unit: '%'
+                    }
+                ]
+                : []),
             ...(typeof result.firstHitDamage === 'number'
                 ? [{
                     label: 'First Hit',

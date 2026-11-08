@@ -80,7 +80,8 @@ export function createDamageContext({
             prosecutionHpPercent: 50,
             enragedHpPercent: 50,
             infectedHitsOverride: 0,
-            deathburstKillsPerSecond: 0.2
+            deathburstKillsPerSecond: 0.2,
+            calculatedStrikeKillsPerSecond: 0
         },
         results: {},
         cache: {}

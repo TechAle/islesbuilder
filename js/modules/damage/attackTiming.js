@@ -1,4 +1,5 @@
 import { BASE_ATTACK_TIME } from '../../data/constants.js';
+import { getCalculatedStrikeEffects } from '../classes/archer.js';
 import { findPercent } from './statLookup.js';
 
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
@@ -11,7 +12,12 @@ import { findPercent } from './statLookup.js';
  */
 export function getAttackInterval(context) {
     const cooldownPercent = findPercent(context.statsValues, 'Attack Cooldown');
-    const computedInterval = BASE_ATTACK_TIME * (1 + cooldownPercent / 100);
+    const calculatedStrike = getCalculatedStrikeEffects(
+        context,
+        context.settings?.calculatedStrikeKillsPerSecond ?? 0
+    );
+    const totalCooldownPercent = cooldownPercent - calculatedStrike.attackCooldownReduction;
+    const computedInterval = BASE_ATTACK_TIME * (1 + totalCooldownPercent / 100);
 
     const override = context.settings?.slowAttack ? context.settings.attackInterval : null;
     const validOverride = typeof override === 'number' && Number.isFinite(override) && override > 0;
