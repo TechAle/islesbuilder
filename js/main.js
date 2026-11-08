@@ -349,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             weapon: getAugmentSuggestions('weapon'),
             armor: getAugmentSuggestions('armor')
         });
+        renderCombat();
     });
 
     dataStore.subscribe('elixirs', () => {
