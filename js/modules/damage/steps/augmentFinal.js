@@ -1,5 +1,5 @@
 import { getAugmentEffects, getAugmentStatBonuses } from '../../augmentManager.js';
-import { getCrystalCombustionEffects } from '../../classes/mage.js';
+import { getTotalHitsPerSecond } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').AugmentFinalStepResult} AugmentFinalStepResult */
@@ -27,7 +27,7 @@ export const augmentFinalStep = {
         const damageBefore = previous?.damage ?? 0;
         const effects = getAugmentEffects(context);
 
-        const totalHitsPerSecond = getCrystalCombustionEffects(context).totalHitsPerSecond;
+        const totalHitsPerSecond = getTotalHitsPerSecond(context);
         const infectedHitOverride = Number(context.settings?.infectedHitsOverride) || 0;
         const estimatedTtk = Number(context.settings?.estimatedTimeToKill);
         const infectedPercent = context.settings?.firstHit

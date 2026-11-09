@@ -1,6 +1,7 @@
 import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
 import { damageMultiplierStep } from './steps/mage/damageMultiplier.js';
+import { sharpshooterStep } from './steps/archer/sharpshooter.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
 import { augmentFinalStep } from './steps/augmentFinal.js';
 import { specialAttacksStep } from './steps/specialAttacks.js';
@@ -27,6 +28,7 @@ export const DAMAGE_STEPS = [
     baseDamageStep,
     damageModifiersStep,
     damageMultiplierStep,
+    sharpshooterStep,
     criticalDamageStep,
     augmentFinalStep,
     attackSpeedStep,

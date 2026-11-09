@@ -11,7 +11,7 @@ import { findPercent } from './statLookup.js';
  * @returns {number}
  */
 export function getBaseAttackInterval(context) {
-    const cooldownPercent = findPercent(context.statsValues, 'Attack Cooldown');
+    const cooldownPercent = findPercent(context.statsValues ?? {}, 'Attack Cooldown');
     return Math.max(0.05, BASE_ATTACK_TIME * (1 + cooldownPercent / 100));
 }
 

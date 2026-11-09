@@ -333,11 +333,39 @@
  * @property {number} critChanceOverflow - Quanto il crit chance supera 100
  * @property {number} critDamagePercent - Crit Damage totale (base + statistica)
  * @property {number} effectiveCritDamagePercent - Crit Damage dopo Natural Distillation
+ * @property {number} [sharpshooterCritChancePercent] - Crit Chance da Hot Streak
+ * @property {number} [sharpshooterCritDamagePercent] - Crit Damage da Hot Streak
  * @property {number} distillationPercent - Percentuale convertita da Natural Distillation
  * @property {number} convertedCritDamagePercent - Crit Damage convertito in Elemental Power
  * @property {number} criticalHit - Danno del colpo critico
  * @property {number} averageDamage - Danno medio pesato sul crit rate
  * @property {number} damage - Danno finale dello step
+ */
+
+/**
+ * Risultato dello step "Sharpshooter".
+ * @typedef {Object} SharpshooterStepResult
+ * @property {boolean} visible - Se il nodo o i suoi potenziamenti sono attivi
+ * @property {number} baseDamage - Danno prima del bonus Sharpshooter
+ * @property {number} damage - Danno dopo il bonus Sharpshooter
+ * @property {number} totalHitsPerSecond - Hit/s usati per stimare gli stack
+ * @property {number} ricochetHitsPerSecond - Hit/s aggiunti da Ricochet
+ * @property {number} stackValuePercent - Danno% per stack
+ * @property {number} capacity - Stack extra da Sharpshooter Capacity
+ * @property {number} maxStacks - Stack massimi (10 + capacity)
+ * @property {number} windowSeconds - Finestra entro cui un hit dà uno stack
+ * @property {number} gainCooldown - Cooldown tra i gain (0.2s)
+ * @property {number} stacksPerSecond - Gain rate effettivo
+ * @property {number} timeToMaxStacks - Secondi stimati per arrivare al cap
+ * @property {boolean} canGainStacks - Se gli hit sono abbastanza frequenti
+ * @property {number} stacks - Stack medi stimati
+ * @property {number} damagePercent - Bonus danno totale da Sharpshooter
+ * @property {number} hotStreakLevel - Livello del nodo Hot Streak
+ * @property {boolean} hotStreakActive - Se Hot Streak è attivo
+ * @property {number} hotStreakCritChancePercent - Crit Chance da Hot Streak
+ * @property {number} hotStreakCritDamagePercent - Crit Damage da Hot Streak
+ * @property {boolean} enabled - Se Sharpshooter Stacks è livellato
+ * @property {string|null} reason - Motivo per cui non è attivo
  */
 
 /**

@@ -1,5 +1,5 @@
 import { getAugmentEffects } from '../../augmentManager.js';
-import { getCrystalCombustionEffects } from '../../classes/mage.js';
+import { getTotalHitsPerSecond } from '../../classes/mage.js';
 import { getDefaultAttackReverseMultiplier } from '../weaponProps.js';
 import { findPercent } from '../statLookup.js';
 
@@ -29,7 +29,7 @@ export const augmentDamageStep = {
         );
         const augmentBaseDamage = averageDamage * reverseMultiplier;
         const effects = getAugmentEffects(context);
-        const totalHitsPerSecond = getCrystalCombustionEffects(context).totalHitsPerSecond;
+        const totalHitsPerSecond = getTotalHitsPerSecond(context);
         const critChance = Math.min(1, Math.max(0,
             findPercent(context.statsValues ?? {}, 'Crit Chance') / 100
         ));

@@ -29,6 +29,8 @@ export {
 export {
     getCrystalInsights,
     getCrystalInsightsElementalPowerPercent,
+    getCombatHits,
+    getTotalHitsPerSecond,
     getCrystalCombustionEffects,
     getSupportOrbEffects,
     getPassiveHitStats

@@ -38,6 +38,7 @@ describe('damage pipeline order', () => {
             'baseDamage',
             'damageModifiers',
             'damageMultiplier',
+            'sharpshooter',
             'criticalDamage',
             'augmentFinal',
             'attackSpeed',

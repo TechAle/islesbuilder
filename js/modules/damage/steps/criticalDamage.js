@@ -29,8 +29,11 @@ export const criticalDamageStep = {
      * @returns {CriticalDamageStepResult}
      */
     run(context) {
-        const previous = context.results.damageMultiplier ?? context.results.damageModifiers;
+        const previous = context.results.sharpshooter
+            ?? context.results.damageMultiplier
+            ?? context.results.damageModifiers;
         const baseDamage = previous?.damage ?? 0;
+        const sharpshooter = context.results.sharpshooter;
 
         if (baseDamage <= 0) {
             return {
@@ -40,6 +43,8 @@ export const criticalDamageStep = {
                 critChanceOverflow: 0,
                 critDamagePercent: BASE_CRIT_DAMAGE,
                 effectiveCritDamagePercent: BASE_CRIT_DAMAGE,
+                sharpshooterCritChancePercent: 0,
+                sharpshooterCritDamagePercent: 0,
                 distillationPercent: 0,
                 convertedCritDamagePercent: 0,
                 criticalHit: 0,
@@ -48,10 +53,16 @@ export const criticalDamageStep = {
             };
         }
 
-        const critChance = Math.max(0, findPercent(context.statsValues, 'Crit Chance'));
+        const sharpshooterCritChance = sharpshooter?.hotStreakCritChancePercent ?? 0;
+        const sharpshooterCritDamage = sharpshooter?.hotStreakCritDamagePercent ?? 0;
+        const critChance = Math.max(0,
+            findPercent(context.statsValues, 'Crit Chance') + sharpshooterCritChance
+        );
         const effectiveCritChance = Math.min(100, critChance);
         const critChanceOverflow = Math.max(0, critChance - 100);
-        let critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
+        let critDamagePercent = BASE_CRIT_DAMAGE
+            + findPercent(context.statsValues, 'Crit Damage')
+            + sharpshooterCritDamage;
         const critDamageRawPercent = critDamagePercent;
         const naturalDistillation = getNaturalDistillationEffects(context, critDamagePercent);
         const critDamageModifierNaturalDistillation = naturalDistillation.critDamageModifier;
@@ -72,6 +83,8 @@ export const criticalDamageStep = {
             critChanceOverflow,
             critDamagePercent: critDamageRawPercent,
             effectiveCritDamagePercent,
+            sharpshooterCritChancePercent: sharpshooterCritChance,
+            sharpshooterCritDamagePercent: sharpshooterCritDamage,
             distillationPercent,
             convertedCritDamagePercent,
             criticalHit,

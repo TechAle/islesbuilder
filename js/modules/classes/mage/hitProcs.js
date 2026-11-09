@@ -1,4 +1,5 @@
 import { getBurstHitsPerSecond } from './burst.js';
+import { getRicochetProcRate } from '../archer.js';
 import { getAttackInterval } from '../../damage/attackTiming.js';
 import { getHitStats } from '../../damage/hitStats.js';
 import { findPercent } from '../../damage/statLookup.js';
@@ -64,6 +65,31 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
 }
 
 /**
+ * Modello hit condiviso da tutti gli effetti on-hit.
+ *
+ * Include attacchi base, burst, special attacks, Ricochet, esplosioni dei
+ * cristalli, Support Orbs e passive. Tutti i consumer devono usare questa
+ * funzione (o `getTotalHitsPerSecond`) invece di ricalcolare gli hit.
+ *
+ * @param {DamageContext} context
+ * @returns {ReturnType<typeof getCombatHitModel> & {hitStats: ReturnType<typeof getHitStats>}}
+ */
+export function getCombatHits(context) {
+    const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
+    const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
+    return { ...model, hitStats };
+}
+
+/**
+ * Scorciatoia per i consumer che hanno bisogno solo del totale hit/s.
+ * @param {DamageContext} context
+ * @returns {number}
+ */
+export function getTotalHitsPerSecond(context) {
+    return getCombatHits(context).totalHitsPerSecond;
+}
+
+/**
  * Crystal Combustion: drop rate dei cristalli e percentuale di danno.
  * @param {DamageContext} context
  * @returns {{
@@ -73,6 +99,7 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
  *   crystalTypesActive: number,
  *   maxExplosions: number,
  *   hitStats: ReturnType<typeof getHitStats>,
+ *   ricochetHitsPerSecond: number,
  *   explosionsPerSecond: number,
  *   totalHitsPerSecond: number,
  *   recoverCrystalsPerSecond: number,
@@ -81,8 +108,7 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
  * }}
  */
 export function getCrystalCombustionEffects(context) {
-    const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
-    const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
+    const model = getCombatHits(context);
 
     return {
         recoverChancePercent: model.crystalConfig.recoverChancePercent,
@@ -90,7 +116,8 @@ export function getCrystalCombustionEffects(context) {
         combustionPercent: getMageNodeValue(context, MAGE_NODES.crystalCombustion),
         crystalTypesActive: model.crystalConfig.crystalTypesActive,
         maxExplosions: model.crystalConfig.maxExplosions,
-        hitStats,
+        hitStats: model.hitStats,
+        ricochetHitsPerSecond: model.ricochetHitsPerSecond,
         explosionsPerSecond: model.explosionsPerSecond,
         totalHitsPerSecond: model.totalHitsPerSecond,
         recoverCrystalsPerSecond: model.drops.recoverCrystalsPerSecond,
@@ -161,8 +188,7 @@ function getSupportOrbConfig(context) {
  */
 export function getSupportOrbEffects(context) {
     const config = getSupportOrbConfig(context);
-    const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
-    const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
+    const model = getCombatHits(context);
 
     const activeBlueOrbs = model.totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
     const blueUptime = Math.min(1, activeBlueOrbs);
@@ -170,7 +196,7 @@ export function getSupportOrbEffects(context) {
 
     return {
         ...config,
-        hitStats,
+        hitStats: model.hitStats,
         totalHitsPerSecond: model.totalHitsPerSecond,
         explosionsPerSecond: model.explosionsPerSecond,
         orbHitsPerSecond: model.redOrbHitsPerSecond,
@@ -251,6 +277,7 @@ function getCrystalDropRates(context, hitsPerSecond) {
  *   totalHitsPerSecond: number,
  *   nonPassiveHitsPerSecond: number,
  *   specialAttackHitsPerSecond: number,
+ *   ricochetHitsPerSecond: number,
  *   explosionsPerSecond: number,
  *   redOrbHitsPerSecond: number,
  *   totalActiveOrbs: number,
@@ -269,6 +296,11 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     const orbConfig = getSupportOrbConfig(context);
     const manager = context.specialAbilityManager;
     const specialAttackHits = manager ? manager.getOnClickHitsPerSecond(context) : 0;
+    // Ricochet fa parte del modello hit condiviso: così Infected, Combo,
+    // Chain Lightning, Smite, Crystal Insights e Sharpshooter lo contano
+    // senza doverlo aggiungere a mano in ogni punto.
+    const attacksPerSecond = 1 / getAttackInterval(context);
+    const ricochetHits = getRicochetProcRate(context, attacksPerSecond).procsPerSecond;
     const combustionPercent = getMageNodeValue(context, MAGE_NODES.crystalCombustion);
     const maxExplosions = combustionPercent > 0 ? crystalConfig.maxExplosions : 0;
     const effectiveCrystalConfig = { ...crystalConfig, maxExplosions };
@@ -280,7 +312,7 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     );
 
     const cache = context.cache ?? (context.cache = {});
-    const cacheKey = `${baseHitsPerSecond.toFixed(10)}|${specialAttackHits.toFixed(10)}|${override ? 1 : 0}|${fixedExplosions}`;
+    const cacheKey = `${baseHitsPerSecond.toFixed(10)}|${specialAttackHits.toFixed(10)}|${ricochetHits.toFixed(10)}|${override ? 1 : 0}|${fixedExplosions}`;
     const cached = cache.combatHitModels?.[cacheKey];
     if (cached) return cached;
 
@@ -290,7 +322,11 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     const critRate = Math.min(100, Math.max(0, findPercent(context.statsValues ?? {}, 'Crit Chance'))) / 100;
 
     for (let i = 0; i < 200; i++) {
-        const nonPassiveHits = baseHitsPerSecond + specialAttackHits + explosions + redOrbHits;
+        const nonPassiveHits = baseHitsPerSecond
+            + specialAttackHits
+            + ricochetHits
+            + explosions
+            + redOrbHits;
         const passive = manager
             ? manager.getPassiveHitsFromBase(context, nonPassiveHits)
             : { hitsPerSecond: 0 };
@@ -318,7 +354,11 @@ function getCombatHitModel(context, baseHitsPerSecond) {
         passiveHits = nextPassiveHits;
     }
 
-    const nonPassiveHits = baseHitsPerSecond + specialAttackHits + explosions + redOrbHits;
+    const nonPassiveHits = baseHitsPerSecond
+        + specialAttackHits
+        + ricochetHits
+        + explosions
+        + redOrbHits;
     const totalHits = nonPassiveHits + passiveHits;
     const passive = manager
         ? manager.getPassiveHitsFromBase(context, nonPassiveHits)
@@ -329,6 +369,7 @@ function getCombatHitModel(context, baseHitsPerSecond) {
     const model = {
         baseHitsPerSecond,
         specialAttackHitsPerSecond: specialAttackHits,
+        ricochetHitsPerSecond: ricochetHits,
         nonPassiveHitsPerSecond: nonPassiveHits,
         totalHitsPerSecond: totalHits,
         explosionsPerSecond: explosions,
@@ -362,8 +403,7 @@ function getCombatHitModel(context, baseHitsPerSecond) {
  * }}
  */
 export function getPassiveHitStats(context) {
-    const baseHits = (1 / getAttackInterval(context)) + getBurstHitsPerSecond(context);
-    const model = getCombatHitModel(context, baseHits);
+    const model = getCombatHits(context);
 
     return {
         hitsPerSecond: model.passiveHitsPerSecond,

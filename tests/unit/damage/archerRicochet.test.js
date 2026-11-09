@@ -116,6 +116,17 @@ describe('Ricochet', () => {
         expect(manager.getDamageBreakdown().sources.some(source => source.label === 'Ricochet')).toBe(true);
     });
 
+    it('feeds the shared hit model only for ranged weapons', () => {
+        const ranged = run({ treeLevels: { UL1: 5 } }).steps;
+        const magic = run({
+            treeLevels: { UL1: 5 },
+            weapon: { 'Weapon Type': 'magic' }
+        }).steps;
+
+        expect(ranged.crystalCombustion.hitsPerSecond).toBeCloseTo(1 / 0.6 + 0.5, 10);
+        expect(magic.crystalCombustion.hitsPerSecond).toBeCloseTo(1 / 0.6, 10);
+    });
+
     it('is hidden when the node is not leveled', () => {
         const { manager, steps } = run({ treeLevels: {} });
 
