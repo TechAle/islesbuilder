@@ -603,7 +603,8 @@
  * Risultato dello step "Burst DPS".
  * @typedef {Object} BurstStepResult
  * @property {boolean} visible - Se la sezione va mostrata
- * @property {boolean} available - Se il core Mage è equipaggiato
+ * @property {boolean} available - Se un core con burst (Mage/Archer) è equipaggiato
+ * @property {string|null} coreName - Nome del core che abilita la burst
  * @property {boolean} enabled - Se il burst è attivo
  * @property {number} burstDps
  * @property {number} burstDamagePerHit

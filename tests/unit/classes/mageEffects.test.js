@@ -433,7 +433,7 @@ test('crystal insights: senza Mage Core i critici burst non contano', () => {
         build: {
             currentClass: 'mage',
             treeLevels: { mage: new Map([['UL1', 5]]) },
-            activeEquip: { core: { name: 'Archer Core', stats: {} } }
+            activeEquip: { core: { name: 'Assassin Core', stats: {} } }
         },
         skillTrees: CLASS_SKILL_TREES,
         settings: { useBurst: true, potentialChargeKills: 0 }

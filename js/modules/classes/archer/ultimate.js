@@ -1,6 +1,6 @@
 import { ULTIMATE_BUFF_SECONDS } from '../../../data/constants.js';
 import { getBurstCycleEffects } from '../mage/burst.js';
-import { hasMageCore } from '../mage/shared.js';
+import { hasBurstCore } from '../core.js';
 import { ARCHER_NODES, getArcherNodeValue } from './shared.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -16,8 +16,8 @@ import { ARCHER_NODES, getArcherNodeValue } from './shared.js';
  * reset di Second Wind.
  *
  * Vale per qualunque burst/Ultimate, ma solo se la burst è effettivamente
- * attiva: servono sia il Mage Core sia `useBurst`. Senza Mage Core, o con la
- * burst spenta, il nodo non dà nulla.
+ * attiva: servono sia un core con burst (Mage Core o Archer Core) sia
+ * `useBurst`. Senza core, o con la burst spenta, il nodo non dà nulla.
  * Il buff dipende da quanto spesso viene castata l'Ultimate; la burst del Mage
  * resta l'unica di cui simuliamo il danno, ma il suo ciclo è lo stesso usato
  * per calcolare l'uptime del buff.
@@ -37,7 +37,7 @@ export function getUltimateEffects(context) {
     const visible = rawCritChancePercent > 0 || rawCritDamagePercent > 0;
 
     const burst = getBurstCycleEffects(context);
-    const burstImplemented = hasMageCore(context);
+    const burstImplemented = hasBurstCore(context);
     const burstActive = !!context.settings?.useBurst;
     const enabled = visible && burstImplemented && burstActive;
     const uptime = enabled && burst.burstCycle > 0
@@ -48,7 +48,7 @@ export function getUltimateEffects(context) {
     if (!visible) {
         reason = 'Requires Ultimatum Criterium or Vagrus';
     } else if (!burstImplemented) {
-        reason = 'Requires Mage Core';
+        reason = 'Requires Mage Core or Archer Core';
     } else if (!burstActive) {
         reason = 'Burst disabled';
     }

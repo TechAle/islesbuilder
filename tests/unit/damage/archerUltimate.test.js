@@ -82,7 +82,7 @@ describe('Ultimatum Criterium / Vagrus', () => {
         expect(steps.criticalDamage.critChance).toBeCloseTo(30, 10);
     });
 
-    it('does nothing without a Mage Core, even with the nodes leveled', () => {
+    it('does nothing without a burst core, even with the nodes leveled', () => {
         const { steps } = run({
             archerLevels: { UR1: 5, UR2: 5 },
             mageCore: false,
@@ -93,7 +93,7 @@ describe('Ultimatum Criterium / Vagrus', () => {
 
         expect(ultimate.visible).toBe(true);
         expect(ultimate.enabled).toBe(false);
-        expect(ultimate.reason).toBe('Requires Mage Core');
+        expect(ultimate.reason).toBe('Requires Mage Core or Archer Core');
         expect(ultimate.critChancePercent).toBe(0);
         expect(ultimate.critDamagePercent).toBe(0);
         expect(steps.criticalDamage.critChance).toBeCloseTo(30, 10);

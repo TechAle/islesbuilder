@@ -18,10 +18,10 @@ export const ITEM_OVERRIDES = {
         element: 'thunder'
     },
     "Pirate hat": {
-        "Blunt Damage": "10%",
-        "Heavy Damage": "10%",
-        "Crit Damage": "16%",
-        "Crit Chance": "9%",
+        "Blunt Damage": "9.78%",
+        "Heavy Damage": "9.83%",
+        "Crit Damage": "16.04%",
+        "Crit Chance": "9.07%",
         "Thunder Damage": "5%"
     },
     "Queen Bee Boots": {

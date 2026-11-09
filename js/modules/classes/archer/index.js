@@ -5,7 +5,8 @@ export {
     SHARPSHOOTER_GAIN_COOLDOWN,
     getArcherNodeValue,
     getArcherNodeLevel,
-    getArcherNodeParameter
+    getArcherNodeParameter,
+    hasArcherCore
 } from './shared.js';
 
 export { getCalculatedStrikeEffects } from './calculatedStrike.js';

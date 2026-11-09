@@ -1,26 +1,43 @@
 import {
     BURST_ACTIVE_SECONDS,
-    BURST_DAMAGE_PERCENT,
-    BURST_ENERGY_COST,
     BURST_HIT_INTERVAL,
     BURST_INTERVAL
 } from '../../../data/constants.js';
 import { computeEnergyState } from '../energy.js';
 import { getDefaultAttackReverseMultiplier } from '../weaponProps.js';
-import { getBurstCycleEffects, hasMageCore } from '../../classes/mage.js';
+import { getBurstCore } from '../../classes/core.js';
+import { getBurstCycleEffects } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').BurstStepResult} BurstStepResult */
 
 /**
+ * Danno di partenza della burst: è lo stesso valore usato dal Mage Core.
+ * Prende il danno dopo il critico (e dopo gli augment già applicati), poi lo
+ * step applica il reverse del Default Attack e la percentuale del core.
+ * @param {DamageContext} context
+ * @returns {number}
+ */
+function getBurstBaseDamage(context) {
+    return context.results.augmentFinal?.damage
+        ?? context.results.criticalDamage?.damage
+        ?? 0;
+}
+
+/**
  * Step 6 — Burst DPS.
  *
- * Con il Mage Core equipaggiato, ogni secondo per 10 secondi infligge il 75%
- * dell'Average Damage riportato al danno base dell'arma (reverse del
- * Default Attack). Poi ci sono 20 secondi di cooldown, quindi su 30 secondi
- * l'effetto è attivo solo per 10.
+ * Con Mage Core o Archer Core equipaggiato, durante i 10 secondi attivi ogni
+ * colpo infligge una percentuale del danno dopo il critico, riportato al danno
+ * base dell'arma (reverse del Default Attack):
  *
- * - Burst DPS = averageDamage × reverseDefaultAttack × 75% × 10 / 30
+ * - Mage Core: 75% per colpo.
+ * - Archer Core: 66% per freccia.
+ *
+ * Poi ci sono 20 secondi di cooldown, quindi su 30 secondi l'effetto è attivo
+ * solo per 10.
+ *
+ * - Burst DPS = postCritDamage × reverseDefaultAttack × core% × 10 / 30
  * - Costo energetico = 50 / 30 al secondo
  *
  * @type {import('../../../data/types.js').DamageStep}
@@ -36,7 +53,8 @@ export const burstStep = {
     run(context) {
         const attack = context.results.attackSpeed;
         const attackDps = attack?.dps ?? 0;
-        const available = hasMageCore(context);
+        const burstCore = getBurstCore(context);
+        const available = !!burstCore;
         const useBurst = !!context.settings?.useBurst;
         const visible = available || useBurst;
 
@@ -44,6 +62,7 @@ export const burstStep = {
         const inactive = {
             visible,
             available,
+            coreName: burstCore?.name ?? null,
             enabled: false,
             burstDps: 0,
             burstDamagePerHit: 0,
@@ -71,23 +90,23 @@ export const burstStep = {
             potionSustainable: attack?.potionSustainable ?? true
         };
 
-        if (!useBurst || !available || !attack || attack.damage <= 0) {
+        if (!useBurst || !burstCore || !attack || attack.damage <= 0) {
             return inactive;
         }
 
-        const damage = context.results.augmentFinal?.damage ?? context.results.criticalDamage?.damage ?? 0;
+        const damage = getBurstBaseDamage(context);
         const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
         const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
         const burstDamagePerHit = damage
             * reverseMultiplier
-            * (BURST_DAMAGE_PERCENT / 100);
+            * (burstCore.damagePercent / 100);
 
         const potentialCharge = getBurstCycleEffects(context);
 
         const burstHitsPerSecond = (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL)
             / potentialCharge.burstCycle;
         const burstDps = burstDamagePerHit * burstHitsPerSecond;
-        const burstEnergyPerSecond = BURST_ENERGY_COST / potentialCharge.burstCycle;
+        const burstEnergyPerSecond = burstCore.energyCost / potentialCharge.burstCycle;
         const energyPerSecondBurstOnly = -burstEnergyPerSecond;
 
         const totalDps = attackDps + burstDps;
@@ -97,6 +116,7 @@ export const burstStep = {
         return {
             visible: true,
             available: true,
+            coreName: burstCore.name,
             enabled: true,
             burstDps,
             burstDamagePerHit,
@@ -148,7 +168,7 @@ export const burstStep = {
         if (!result || !result.visible) return [];
 
         if (!result.available) {
-            return [{ label: 'Burst', value: 'Requires Mage Core' }];
+            return [{ label: 'Burst', value: 'Requires Mage Core or Archer Core' }];
         }
 
         if (!result.enabled) {
@@ -156,7 +176,10 @@ export const burstStep = {
         }
 
         return [
-            { label: 'Burst / Hit', value: result.burstDamagePerHit },
+            {
+                label: result.coreName === 'Archer Core' ? 'Burst / Arrow' : 'Burst / Hit',
+                value: result.burstDamagePerHit
+            },
             ...(result.potentialChargeSeconds > 0
                 ? [
                     { label: 'Cooldown Reduction', value: result.cooldownReduction, unit: 's' },

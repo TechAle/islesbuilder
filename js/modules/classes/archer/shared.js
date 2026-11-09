@@ -1,3 +1,5 @@
+import { hasArcherCore } from '../core.js';
+
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 
 /** Cooldown fisso di Ricochet, in secondi. */
@@ -96,3 +98,5 @@ export function getArcherNodeParameter(context, nodeId, parameterKey) {
 
     return parameter.base + parameter.increase * (level - 1);
 }
+
+export { hasArcherCore };

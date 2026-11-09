@@ -1,6 +1,7 @@
 import { BURST_ACTIVE_SECONDS, BURST_HIT_INTERVAL, BURST_INTERVAL } from '../../../data/constants.js';
 import { getAugmentEffects } from '../../augmentManager.js';
-import { getMageNodeValue, hasMageCore, MAGE_NODES } from './shared.js';
+import { getBurstCore, hasBurstCore } from '../core.js';
+import { getMageNodeValue, MAGE_NODES } from './shared.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 
@@ -58,11 +59,32 @@ export function getPotentialChargeEffects(context, kills) {
  * }}
  */
 export function getBurstCycleEffects(context) {
-    const potentialCharge = getPotentialChargeEffects(
-        context,
-        context.settings?.potentialChargeKills ?? 0
-    );
-    const augmentEffects = getAugmentEffects(context);
+    const burstCore = getBurstCore(context);
+    const isMageCore = burstCore?.key === 'mage';
+
+    // Potential Charge è un nodo del tree mago: vale solo con il Mage Core.
+    const potentialCharge = isMageCore
+        ? getPotentialChargeEffects(
+            context,
+            context.settings?.potentialChargeKills ?? 0
+        )
+        : {
+            potentialChargeSeconds: 0,
+            potentialChargeKills: 0,
+            cooldownReduction: 0,
+            burstCooldown: Math.max(0, BURST_INTERVAL - BURST_ACTIVE_SECONDS),
+            burstCycle: BURST_INTERVAL
+        };
+
+    // Second Wind resetta l'Ultimate del mago. L'Archer Core mantiene sempre
+    // il cooldown fisso di 30 secondi.
+    const augmentEffects = isMageCore
+        ? getAugmentEffects(context)
+        : {
+            secondWindChancePercent: 0,
+            secondWindCooldownSeconds: 0,
+            hasSecondWind: false
+        };
 
     const secondWindChancePercent = Math.max(
         0,
@@ -108,7 +130,7 @@ export function getBurstCycleEffects(context) {
  * @returns {number}
  */
 export function getBurstHitsPerSecond(context) {
-    if (!context.settings?.useBurst || !hasMageCore(context)) return 0;
+    if (!context.settings?.useBurst || !hasBurstCore(context)) return 0;
 
     const burstCycle = getBurstCycleEffects(context).burstCycle;
 

@@ -95,6 +95,9 @@ export const BURST_HIT_INTERVAL = 0.75;
 /** Burst: energia consumata da un burst. */
 export const BURST_ENERGY_COST = 50;
 
+/** Archer Core burst: percentuale del danno inflitta da ogni freccia. */
+export const ARCHER_BURST_DAMAGE_PERCENT = 66;
+
 /** Durata del buff Crit Chance/Crit Damage di Ultimatum Criterium/Vagrus. */
 export const ULTIMATE_BUFF_SECONDS = 5;
 

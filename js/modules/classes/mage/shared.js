@@ -1,3 +1,5 @@
+import { hasMageCore } from '../core.js';
+
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 
 /**
@@ -68,12 +70,4 @@ export function getMageNodeParameter(context, nodeId, parameterKey) {
     return parameter.base + parameter.increase * (level - 1);
 }
 
-/**
- * Verifica se il core equipaggiato è un Mage Core.
- * @param {DamageContext} context
- * @returns {boolean}
- */
-export function hasMageCore(context) {
-    const core = context.build?.activeEquip?.core;
-    return typeof core?.name === 'string' && core.name.toLowerCase().includes('mage');
-}
+export { hasMageCore };
