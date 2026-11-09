@@ -72,3 +72,46 @@ test('override oggetto: Tempest produce un modificatore Thunder', () => {
     assert.ok(Math.abs(steps.damageModifiers.effectiveElementalPercent - 10) < 1e-9);
     assert.ok(Math.abs(steps.damageModifiers.damage - 43.945) < 1e-9);
 });
+
+test('ApiManager classifica Royal Blowpipe come arma ranged', () => {
+    const manager = new ApiManager({ dataStore: {} });
+    const stats = manager.formatGearStats({
+        damageType: 'Heavy',
+        defaultAttack: 200,
+        slot: 'Blowpipe',
+        stats: [
+            { stat: 'Heavy Damage', max: 45.3, percent: false },
+            { stat: 'Crit Damage', max: 15, percent: true },
+            { stat: 'Crit Chance', max: 9, percent: true }
+        ]
+    }, 'weapon', null, 'Royal Blowpipe');
+
+    assert.equal(stats['Weapon Type'], 'ranged');
+    assert.equal(stats['Damage Type'], 'Heavy');
+    assert.equal(stats['Heavy Damage'], 45.3);
+    assert.equal(stats.element, 'thunder');
+});
+
+test('override oggetto: Blackrib aggiunge 5% Thunder Damage', () => {
+    const stats = applyItemOverride('Blackrib Helmet', {
+        'Heavy Damage': '9.8%'
+    }, ITEM_OVERRIDES);
+
+    assert.equal(stats['Thunder Damage'], '5%');
+    assert.equal(stats['Heavy Damage'], '9.8%');
+});
+
+test('override oggetto: Pirate hat usa i valori massimi aggiornati', () => {
+    const stats = applyItemOverride('Pirate hat', {
+        'Blunt Damage': '8%',
+        'Heavy Damage': '8.8%',
+        'Crit Damage': '19.4%',
+        'Crit Chance': '11.7%'
+    }, ITEM_OVERRIDES);
+
+    assert.equal(stats['Blunt Damage'], '9.78%');
+    assert.equal(stats['Heavy Damage'], '9.83%');
+    assert.equal(stats['Crit Damage'], '16.04%');
+    assert.equal(stats['Crit Chance'], '9.07%');
+    assert.equal(stats['Thunder Damage'], '5%');
+});

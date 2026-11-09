@@ -14,6 +14,16 @@ export const ITEM_OVERRIDES = {
     Tempest: {
         element: 'nature'
     },
+    "Royal Blowpipe": {
+        element: 'thunder'
+    },
+    "Pirate hat": {
+        "Blunt Damage": "10%",
+        "Heavy Damage": "10%",
+        "Crit Damage": "16%",
+        "Crit Chance": "9%",
+        "Thunder Damage": "5%"
+    },
     "Queen Bee Boots": {
         "Nature Damage": "5%",
         "Elemental Power": 31.9
@@ -45,5 +55,17 @@ export const ITEM_OVERRIDES = {
     },
     "Abyssal Blight Boots": {
         "Void Damage": "5%",
+    },
+    "Blackrib Helmet": {
+        "Thunder Damage": "5%"
+    },
+    "Blackrib Chestplate": {
+        "Thunder Damage": "5%"
+    },
+    "Blackrib Leggings": {
+        "Thunder Damage": "5%"
+    },
+    "Blackrib Boots": {
+        "Thunder Damage": "5%"
     },
 };

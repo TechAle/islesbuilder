@@ -159,7 +159,7 @@ export const WEAPON_SLOT_TO_WEAPON_TYPE = {
     "sword": "melee",
     "tome": "magic",
     "wand": "magic",
-    "blowpipe": "magic"
+    "blowpipe": "ranged"
 };
 
 /**
