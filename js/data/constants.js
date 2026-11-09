@@ -95,6 +95,9 @@ export const BURST_HIT_INTERVAL = 0.75;
 /** Burst: energia consumata da un burst. */
 export const BURST_ENERGY_COST = 50;
 
+/** Durata del buff Crit Chance/Crit Damage di Ultimatum Criterium/Vagrus. */
+export const ULTIMATE_BUFF_SECONDS = 5;
+
 /** Cooldown base di un'abilità onClick, in secondi. */
 export const DEFAULT_ABILITY_COOLDOWN = 1.6;
 

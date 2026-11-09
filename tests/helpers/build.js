@@ -94,6 +94,7 @@ export function makeSettings(overrides = {}) {
         lastSorrowUptime: 100,
         focusStacks: 0,
         potentialChargeKills: 0,
+        ultimateKillsPerSecond: 0.2,
         crystalExplosionOverride: false,
         crystalExplosionsPerSecond: 0,
         disabledSpecialAttacks: [],
@@ -105,6 +106,7 @@ export function makeSettings(overrides = {}) {
         enragedHpPercent: 100,
         infectedHitsOverride: 0,
         deathburstKillsPerSecond: 0.2,
+        sharpshooterResetsPerSecond: 0,
         ...overrides
     };
 }

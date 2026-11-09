@@ -325,6 +325,77 @@
  */
 
 /**
+ * Effetti medi di Deadeye, calcolati dentro Critical Damage.
+ * @typedef {Object} DeadeyeEffectsResult
+ * @property {boolean} visible - Se uno dei nodi Deadeye è livellato
+ * @property {boolean} enabled - Se la simulazione è stata eseguita
+ * @property {number} totalHitsPerSecond - Hit/s usati per generare critici
+ * @property {number} baseCritChancePercent - Crit Chance base + Hot Streak
+ * @property {number} critChancePerStackPercent - Crit Chance per stack
+ * @property {number} stackDurationSeconds - Durata degli stack
+ * @property {number} maxStacks - Stack massimi (3 + Capacity)
+ * @property {number} perfectChainLevel - Livello di Perfect Chain
+ * @property {number} perfectChainCritDamagePercent - Crit Damage del buff
+ * @property {number} averageStacks - Stack medi stimati
+ * @property {number} averageCritChancePercent - Crit Chance media stimata
+ * @property {number} critChanceBonusPercent - Bonus medio di Crit Chance
+ * @property {number} perfectChainUptime - Uptime medio del buff (0-1)
+ * @property {number} averagePerfectChainCritDamagePercent - Crit Damage medio
+ * @property {string|null} reason - Motivo per cui non è attivo
+ */
+
+/**
+ * Risultato di Elemental Burst.
+ * @typedef {Object} ElementalBurstEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} level
+ * @property {number} baseCritDamagePercent
+ * @property {boolean} elementalChannelingActive
+ * @property {number} elementalChannelingMultiplier
+ * @property {number} critDamageBonusPercent
+ * @property {string|null} reason
+ */
+
+/**
+ * Risultato medio di Critical Pity.
+ * @typedef {Object} CriticalPityEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} level
+ * @property {number} critChancePerStackPercent
+ * @property {number} maxStacks
+ * @property {number} durationSeconds
+ * @property {number} totalHitsPerSecond
+ * @property {number} averageCritChancePercent
+ * @property {number} missChancePercent
+ * @property {number} reachableStacks
+ * @property {number} expectedStacks
+ * @property {number} critChanceBonusPercent
+ * @property {string|null} reason
+ */
+
+/**
+ * Risultato medio di Ultimatum Criterium / Ultimatum Vagrus.
+ * @typedef {Object} UltimateEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} durationSeconds
+ * @property {number} burstCycle
+ * @property {number} burstCastsPerSecond
+ * @property {number} uptime
+ * @property {number} critChancePercent
+ * @property {number} critDamagePercent
+ * @property {number} rawCritChancePercent
+ * @property {number} rawCritDamagePercent
+ * @property {number} secondWindChancePercent
+ * @property {number} secondWindCooldownSeconds
+ * @property {number} secondWindResetsPerSecond
+ * @property {boolean} hasSecondWind
+ * @property {string|null} reason
+ */
+
+/**
  * Risultato dello step "Critical Damage".
  * @typedef {Object} CriticalDamageStepResult
  * @property {number} baseDamage - Danno non critico di partenza
@@ -335,6 +406,16 @@
  * @property {number} effectiveCritDamagePercent - Crit Damage dopo Natural Distillation
  * @property {number} [sharpshooterCritChancePercent] - Crit Chance da Hot Streak
  * @property {number} [sharpshooterCritDamagePercent] - Crit Damage da Hot Streak
+ * @property {DeadeyeEffectsResult} deadeye - Effetti medi di Deadeye
+ * @property {number} deadeyeCritChancePercent - Crit Chance media da Deadeye
+ * @property {number} deadeyeCritDamagePercent - Crit Damage medio da Perfect Chain
+ * @property {CriticalPityEffectsResult} criticalPity - Effetti medi di Critical Pity
+ * @property {number} criticalPityCritChancePercent - Crit Chance media da Critical Pity
+ * @property {ElementalBurstEffectsResult} elementalBurst - Effetti di Elemental Burst
+ * @property {number} elementalBurstCritDamagePercent - Crit Damage da Elemental Burst
+ * @property {UltimateEffectsResult} ultimate - Effetti medi di Ultimatum Criterium/Vagrus
+ * @property {number} ultimateCritChancePercent - Crit Chance media da Ultimatum Criterium
+ * @property {number} ultimateCritDamagePercent - Crit Damage medio da Ultimatum Vagrus
  * @property {number} distillationPercent - Percentuale convertita da Natural Distillation
  * @property {number} convertedCritDamagePercent - Crit Damage convertito in Elemental Power
  * @property {number} criticalHit - Danno del colpo critico
@@ -358,12 +439,17 @@
  * @property {number} stacksPerSecond - Gain rate effettivo
  * @property {number} timeToMaxStacks - Secondi stimati per arrivare al cap
  * @property {boolean} canGainStacks - Se gli hit sono abbastanza frequenti
+ * @property {number} sharpshooterResetsPerSecond - Reset di Sharpshooter al secondo (0-2)
+ * @property {number} stackUptime - Uptime stimato degli stack (0-1)
+ * @property {number} fightDurationSeconds - Durata stimata del fight (Infinity se non nota)
+ * @property {number} rampFactor - Fattore medio della fase di ramp (0-1)
  * @property {number} stacks - Stack medi stimati
  * @property {number} damagePercent - Bonus danno totale da Sharpshooter
  * @property {number} hotStreakLevel - Livello del nodo Hot Streak
  * @property {boolean} hotStreakActive - Se Hot Streak è attivo
- * @property {number} hotStreakCritChancePercent - Crit Chance da Hot Streak
- * @property {number} hotStreakCritDamagePercent - Crit Damage da Hot Streak
+ * @property {number} hotStreakUptime - Quota di fight con Hot Streak attivo (0-1)
+ * @property {number} hotStreakCritChancePercent - Crit Chance media da Hot Streak
+ * @property {number} hotStreakCritDamagePercent - Crit Damage medio da Hot Streak
  * @property {boolean} enabled - Se Sharpshooter Stacks è livellato
  * @property {string|null} reason - Motivo per cui non è attivo
  */
@@ -473,6 +559,7 @@
  * @property {number} lastSorrowUptime - Uptime di Last Sorrow (1-100)
  * @property {number} focusStacks - Stack medi di Focus (0-3+)
  * @property {number} potentialChargeKills - Kill medi per Potential Charge (0-30)
+ * @property {number} [ultimateKillsPerSecond] - Kill al secondo per Second Wind (0-4)
  * @property {boolean} crystalExplosionOverride - Se true, usa il valore dello slider
  * @property {number} crystalExplosionsPerSecond - Cristalli esplosi al secondo (override)
  * @property {string[]} [disabledSpecialAttacks] - Nomi delle abilità onClick disabilitate
@@ -485,6 +572,7 @@
  * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)
  * @property {number} [deathburstKillsPerSecond] - Kill al secondo per Deathburst
  * @property {number} [calculatedStrikeKillsPerSecond] - Kill al secondo per Calculated Strike (0-4)
+ * @property {number} [sharpshooterResetsPerSecond] - Reset di Sharpshooter al secondo (0-2)
  * @property {number} [targetHealth] - Vita del target, usata per stimare gli stack di Infected
  * @property {number} [targetDefense] - Difesa del target, usata per stimare il TTK
  * @property {number} [estimatedTimeToKill] - TTK stimato interno per gli stack di Infected
@@ -506,7 +594,13 @@
  * @property {number} potentialChargeKills
  * @property {number} cooldownReduction
  * @property {number} burstCooldown
+ * @property {number} effectiveBurstCooldown
  * @property {number} burstCycle
+ * @property {number} burstCastsPerSecond
+ * @property {number} secondWindChancePercent
+ * @property {number} secondWindCooldownSeconds
+ * @property {number} secondWindResetsPerSecond
+ * @property {boolean} hasSecondWind
  * @property {number} attackDps
  * @property {number} totalDps
  * @property {number} energyPerSecond

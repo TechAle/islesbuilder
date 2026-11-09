@@ -45,10 +45,12 @@ export class DpsManager {
 
         let steps = this.runOnce({ ...options, settings: baseSettings });
 
-        // Infected è uno stacking debuff: su un target che muore presto non
-        // arriva a tutti gli stack. Se conosciamo la vita del target,
-        // stimiamo il TTK e ricalcoliamo gli stack fino a convergenza.
-        if (!baseSettings.firstHit && targetHealth > 0 && steps.augmentFinal?.hasInfected) {
+        // Infected è uno stacking debuff e Sharpshooter ha una fase di ramp:
+        // entrambi dipendono dalla durata del fight. Se conosciamo la vita del
+        // target, stimiamo il TTK e ricalcoliamo fino a convergenza.
+        const needsTargetLifetime = steps.augmentFinal?.hasInfected
+            || steps.sharpshooter?.canGainStacks === true;
+        if (!baseSettings.firstHit && targetHealth > 0 && needsTargetLifetime) {
             let estimatedTtk = Infinity;
 
             for (let i = 0; i < 4; i++) {

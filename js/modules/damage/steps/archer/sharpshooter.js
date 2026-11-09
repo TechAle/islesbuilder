@@ -1,5 +1,6 @@
 import { getSharpshooterEffects } from '../../../classes/archer.js';
 import { getCombatHits } from '../../../classes/mage.js';
+import { getCritChancePercent } from '../../critStats.js';
 
 /** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../../data/types.js').SharpshooterStepResult} SharpshooterStepResult */
@@ -32,7 +33,10 @@ export const sharpshooterStep = {
 
         // Modello hit condiviso: attacchi base, burst, special attacks (anche
         // mage), Ricochet, esplosioni dei cristalli, support orbs e passive.
-        const combatHits = getCombatHits(context);
+        const combatHits = getCombatHits(
+            context,
+            getCritChancePercent(context)
+        );
         const totalHitsPerSecond = combatHits.totalHitsPerSecond;
 
         const effects = getSharpshooterEffects(context, totalHitsPerSecond);

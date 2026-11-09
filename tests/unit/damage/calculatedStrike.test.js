@@ -80,4 +80,26 @@ describe('Calculated Strike', () => {
         expect(capped.attackSpeed.calculatedStrikeExtraAttacksPerSecond).toBeCloseTo(2, 10);
         expect(capped.attackSpeed.attackInterval).toBeCloseTo(1 / (1 / BASE_INTERVAL + 2), 10);
     });
+
+    it('adds calculated strikes even with the Slow attack override', () => {
+        const build = makeArcherBuild({ UL: 5 });
+        const steps = new DpsManager().recalculate({
+            statsValues: { 'Arcane Damage': { flat: 100, percent: 0 } },
+            skillValues: {},
+            build,
+            skillTrees: CLASS_SKILL_TREES,
+            settings: makeSettings({
+                slowAttack: true,
+                attackInterval: BASE_INTERVAL,
+                calculatedStrikeKillsPerSecond: 1
+            })
+        });
+
+        // 1/0.6 + 0.5 = 2.1667 attacchi/s.
+        const expectedAttacksPerSecond = 1 / BASE_INTERVAL + 0.5;
+        expect(steps.attackSpeed.attacksPerSecond)
+            .toBeCloseTo(expectedAttacksPerSecond, 10);
+        expect(steps.attackSpeed.attackInterval)
+            .toBeCloseTo(1 / expectedAttacksPerSecond, 10);
+    });
 });

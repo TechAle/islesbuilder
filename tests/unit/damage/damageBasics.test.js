@@ -32,8 +32,12 @@ test('damage modifiers: somma tipo, classe arma ed elemento (case-insensitive)',
     assert.ok(Math.abs(steps.damageModifiers.effectiveElementalPercent - 15) < 1e-9);
     assert.ok(Math.abs(steps.damageModifiers.damage - 32.89) < 1e-9);
     assert.deepEqual(
-        manager.getResults().slice(0, 8).map(r => r.label),
-        ['Base Damage', 'Damage Modifiers', 'Elemental Power', 'Magic Mastery', 'Magic Mastery Damage', 'Damage', 'Critical Hit', 'Average Damage']
+        manager.getResults().slice(0, 10).map(r => r.label),
+        [
+            'Base Damage', 'Damage Modifiers', 'Elemental Power',
+            'Magic Mastery', 'Magic Mastery Damage', 'Damage',
+            'Crit Chance', 'Crit Damage', 'Critical Hit', 'Average Damage'
+        ]
     );
 });
 
@@ -179,7 +183,10 @@ test('getStepGroups raggruppa i risultati per step', () => {
     assert.deepEqual(groups.map(g => g.label), ['Base Damage', 'Damage Modifiers', 'Critical Damage', 'Attack Speed & Energy']);
     assert.deepEqual(groups[0].results.map(r => r.label), ['Base Damage']);
     assert.deepEqual(groups[1].results.map(r => r.label), ['Damage Modifiers', 'Damage']);
-    assert.deepEqual(groups[2].results.map(r => r.label), ['Critical Hit', 'Average Damage']);
+    assert.deepEqual(
+        groups[2].results.map(r => r.label),
+        ['Crit Chance', 'Crit Damage', 'Critical Hit', 'Average Damage']
+    );
     assert.deepEqual(groups[3].results.map(r => r.label), [
         'Attack Interval', 'Attacks per Second', 'DPS', 'DPS (all)',
         'Energy Regen', 'Energy per Second', 'Sustain', 'Time to 0 Energy'

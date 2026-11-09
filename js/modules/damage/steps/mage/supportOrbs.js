@@ -1,4 +1,5 @@
 import { getSupportOrbEffects } from '../../../classes/mage.js';
+import { getCritChancePercent } from '../../critStats.js';
 
 /** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../../data/types.js').SupportOrbsStepResult} SupportOrbsStepResult */
@@ -21,7 +22,10 @@ export const supportOrbsStep = {
      * @returns {SupportOrbsStepResult}
      */
     run(context) {
-        const effects = getSupportOrbEffects(context);
+        const effects = getSupportOrbEffects(
+            context,
+            getCritChancePercent(context)
+        );
         const averageDamage = context.results.augmentFinal?.damage ?? context.results.criticalDamage?.damage ?? 0;
         const orbDamage = averageDamage * (effects.damagePercent / 100);
         const orbDps = effects.orbHitsPerSecond * orbDamage;

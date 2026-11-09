@@ -8,6 +8,7 @@ import { getEnergyCostMultiplier } from '../energyCost.js';
 import { getAttackInterval, getBaseAttackInterval } from '../attackTiming.js';
 import { getCalculatedStrikeEffects } from '../../classes/archer.js';
 import { getPassiveHitStats } from '../../classes/mage.js';
+import { getCritChancePercent } from '../critStats.js';
 import { findFlat, findPercentMultiplier } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -75,7 +76,10 @@ export const attackSpeedStep = {
 
         const attacksPerSecond = 1 / attackInterval;
         const attackDps = damage * attacksPerSecond;
-        const passiveHits = getPassiveHitStats(context);
+        const passiveHits = getPassiveHitStats(
+            context,
+            getCritChancePercent(context)
+        );
         const passiveDamage = context.specialAbilityManager
             ? context.specialAbilityManager.applyDamagePassives(
                 context,

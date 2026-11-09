@@ -297,7 +297,7 @@ export const CLASS_SKILL_TREES = {
                 name: "Elemental Burst",
                 statKey: "{level} Elemental Burst",
                 isDirect: false,
-                description: "Gain {val} Crit Damage for every unique Elemental Damage.",
+                description: "Gain {val} Crit Damage. With Elemental Channeling, gain 9× this amount.",
                 parameters: { val: { base: 1.5, increase: 1.5 } }
             },
             'UR1': {
@@ -458,7 +458,7 @@ export const CLASS_SKILL_TREES = {
             },
             'R2': {
                 x: 82, y: 68, max: 5, costBase: 2,
-                name: "Crazy crits",
+                name: "Crazy crits (not implemented, it's too bad)",
                 statKey: "{level} Crazy crits",
                 isDirect: false,
                 description: "Any Crit Chance beyond 100% can land a CRAZY CRIT, increasing your damage by {val}%.",
@@ -522,7 +522,7 @@ export const CLASS_SKILL_TREES = {
                 name: "Natural Distillation",
                 statKey: "{level} Natural Distillation",
                 isDirect: false,
-                description: "Converts {val}% of your Crit Damage into Elemental Power.",
+                description: "Converts {val}% of your Crit Damage into Elemental Power at a 2× rate (1% Crit Damage → 2 Elemental Power).",
                 parameters: { val: { base: 5.0, increase: 5.0 } }
             },
 

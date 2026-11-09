@@ -31,10 +31,24 @@ describe('damage settings sliders', () => {
         expect(slider('focus-stacks').step).toBe('0.1');
     });
 
+    it('has the correct Sharpshooter resets range', () => {
+        expect(slider('sharpshooter-resets').min).toBe('0');
+        expect(slider('sharpshooter-resets').max).toBe('2');
+        expect(slider('sharpshooter-resets').step).toBe('0.1');
+        expect(slider('sharpshooter-resets').value).toBe('0');
+    });
+
     it('has the correct Potential Charge range', () => {
         expect(slider('potential-charge-kills').min).toBe('0');
         expect(slider('potential-charge-kills').max).toBe('30');
         expect(slider('potential-charge-kills').step).toBe('1');
+    });
+
+    it('has the correct Second Wind kills per second range', () => {
+        expect(slider('ultimate-kills').min).toBe('0');
+        expect(slider('ultimate-kills').max).toBe('4');
+        expect(slider('ultimate-kills').step).toBe('0.1');
+        expect(slider('ultimate-kills').value).toBe('0.2');
     });
 
     it('has the correct crystal explosion range', () => {

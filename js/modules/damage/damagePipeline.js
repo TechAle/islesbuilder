@@ -74,6 +74,7 @@ export function createDamageContext({
             lastSorrowUptime: 100,
             focusStacks: 0,
             potentialChargeKills: 0,
+            ultimateKillsPerSecond: 0.2,
             crystalExplosionOverride: false,
             crystalExplosionsPerSecond: 0,
             disabledSpecialAttacks: [],
@@ -85,7 +86,8 @@ export function createDamageContext({
             enragedHpPercent: 50,
             infectedHitsOverride: 0,
             deathburstKillsPerSecond: 0.2,
-            calculatedStrikeKillsPerSecond: 0
+            calculatedStrikeKillsPerSecond: 0,
+            sharpshooterResetsPerSecond: 0
         },
         results: {},
         cache: {}

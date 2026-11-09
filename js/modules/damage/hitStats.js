@@ -11,6 +11,7 @@ import { findPercent } from './statLookup.js';
  *
  * @param {DamageContext} context
  * @param {number} [extraHitsPerSecond]
+ * @param {number|null} [critChancePercentOverride] - Crit Chance effettiva (base + buff)
  * @returns {{
  *   normalHitsPerSecond: number,
  *   extraHitsPerSecond: number,
@@ -19,11 +20,17 @@ import { findPercent } from './statLookup.js';
  *   critsPerSecond: number
  * }}
  */
-export function getHitStats(context, extraHitsPerSecond = 0) {
+export function getHitStats(
+    context,
+    extraHitsPerSecond = 0,
+    critChancePercentOverride = null
+) {
     const normalHitsPerSecond = 1 / getAttackInterval(context);
     const extra = Math.max(0, extraHitsPerSecond);
     const totalHitsPerSecond = normalHitsPerSecond + extra;
-    const critChancePercent = Math.min(100, Math.max(0, findPercent(context.statsValues, 'Crit Chance')));
+    const critChancePercent = Number.isFinite(critChancePercentOverride)
+        ? Math.min(100, Math.max(0, /** @type {number} */ (critChancePercentOverride)))
+        : Math.min(100, Math.max(0, findPercent(context.statsValues ?? {}, 'Crit Chance')));
     const critsPerSecond = totalHitsPerSecond * (critChancePercent / 100);
 
     return {

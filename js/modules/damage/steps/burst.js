@@ -7,7 +7,7 @@ import {
 } from '../../../data/constants.js';
 import { computeEnergyState } from '../energy.js';
 import { getDefaultAttackReverseMultiplier } from '../weaponProps.js';
-import { getPotentialChargeEffects, hasMageCore } from '../../classes/mage.js';
+import { getBurstCycleEffects, hasMageCore } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').BurstStepResult} BurstStepResult */
@@ -54,7 +54,13 @@ export const burstStep = {
             potentialChargeKills: 0,
             cooldownReduction: 0,
             burstCooldown: 0,
+            effectiveBurstCooldown: 0,
             burstCycle: BURST_INTERVAL,
+            burstCastsPerSecond: 0,
+            secondWindChancePercent: 0,
+            secondWindCooldownSeconds: 0,
+            secondWindResetsPerSecond: 0,
+            hasSecondWind: false,
             attackDps,
             totalDps: attackDps,
             energyPerSecond: attack?.energyPerSecond ?? 0,
@@ -76,10 +82,7 @@ export const burstStep = {
             * reverseMultiplier
             * (BURST_DAMAGE_PERCENT / 100);
 
-        const potentialCharge = getPotentialChargeEffects(
-            context,
-            context.settings?.potentialChargeKills ?? 0
-        );
+        const potentialCharge = getBurstCycleEffects(context);
 
         const burstHitsPerSecond = (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL)
             / potentialCharge.burstCycle;
@@ -104,7 +107,13 @@ export const burstStep = {
             potentialChargeKills: potentialCharge.potentialChargeKills,
             cooldownReduction: potentialCharge.cooldownReduction,
             burstCooldown: potentialCharge.burstCooldown,
+            effectiveBurstCooldown: potentialCharge.effectiveBurstCooldown,
             burstCycle: potentialCharge.burstCycle,
+            burstCastsPerSecond: potentialCharge.burstCastsPerSecond,
+            secondWindChancePercent: potentialCharge.secondWindChancePercent,
+            secondWindCooldownSeconds: potentialCharge.secondWindCooldownSeconds,
+            secondWindResetsPerSecond: potentialCharge.secondWindResetsPerSecond,
+            hasSecondWind: potentialCharge.hasSecondWind,
             attackDps,
             totalDps,
             energyPerSecond,
@@ -152,6 +161,12 @@ export const burstStep = {
                 ? [
                     { label: 'Cooldown Reduction', value: result.cooldownReduction, unit: 's' },
                     { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
+                ]
+                : []),
+            ...(result.hasSecondWind
+                ? [
+                    { label: 'Second Wind', value: result.secondWindChancePercent, unit: '%' },
+                    { label: 'Ultimate Reset / s', value: result.secondWindResetsPerSecond }
                 ]
                 : []),
             { label: 'Burst DPS', value: result.burstDps },

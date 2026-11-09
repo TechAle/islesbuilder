@@ -52,6 +52,7 @@ export const AUGMENT_OVERRIDES = {
         Hunter: { type: 'hunter' },
         Infected: { type: 'infected' },
         "Nature's Bless": { type: 'natureBless' },
-        Prosecution: { type: 'prosecution' }
+        Prosecution: { type: 'prosecution' },
+        'Second Wind': { type: 'secondWind' }
     }
 };

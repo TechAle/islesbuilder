@@ -27,6 +27,8 @@ import { MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
  * @property {number} hunterPercent
  * @property {number} prosecutionPercent
  * @property {number} natureBlessFlat
+ * @property {number} secondWindChancePercent
+ * @property {number} secondWindCooldownSeconds
  * @property {boolean} hasCombo
  * @property {boolean} hasChainLightning
  * @property {boolean} hasDeathburst
@@ -36,6 +38,7 @@ import { MAX_AUGMENTS_PER_ITEM } from '../data/constants.js';
  * @property {boolean} hasFirstStrike
  * @property {boolean} hasHunter
  * @property {boolean} hasProsecution
+ * @property {boolean} hasSecondWind
  * @property {boolean} hasEffects
  */
 
@@ -147,6 +150,10 @@ function parseTier(rawTier, effectType) {
                 value: numberAfter(text, /by\s+([\d.,]+)/i) ?? rawValue,
                 params
             };
+        }
+        case 'secondWind': {
+            params.cooldown = numberAfter(text, /([\d.,]+)\s*s\s*cooldown/i) ?? 30;
+            return { tier: rawTier.tier, value: firstPercent(text) || rawValue, params };
         }
         default:
             return {
@@ -374,6 +381,8 @@ export function getAugmentEffects(context) {
         hunterPercent: 0,
         prosecutionPercent: 0,
         natureBlessFlat: 0,
+        secondWindChancePercent: 0,
+        secondWindCooldownSeconds: 0,
         hasCombo: false,
         hasChainLightning: false,
         hasDeathburst: false,
@@ -383,6 +392,7 @@ export function getAugmentEffects(context) {
         hasFirstStrike: false,
         hasHunter: false,
         hasProsecution: false,
+        hasSecondWind: false,
         hasEffects: false
     };
 
@@ -455,6 +465,17 @@ export function getAugmentEffects(context) {
                 // Nature's Bless non si stacka: vale solo la copia più forte.
                 effects.natureBlessFlat = Math.max(effects.natureBlessFlat, level.value);
                 break;
+            case 'secondWind': {
+                // Più copie sommano la chance di reset; il cooldown interno
+                // dell'augment resta condiviso e non scende sotto il minimo.
+                const cooldown = level.params?.cooldown ?? 30;
+                effects.hasSecondWind = true;
+                effects.secondWindChancePercent += level.value;
+                effects.secondWindCooldownSeconds = effects.secondWindCooldownSeconds > 0
+                    ? Math.min(effects.secondWindCooldownSeconds, cooldown)
+                    : cooldown;
+                break;
+            }
             default:
                 break;
         }
@@ -469,6 +490,7 @@ export function getAugmentEffects(context) {
         || effects.hasFirstStrike
         || effects.hasHunter
         || effects.hasProsecution
+        || effects.hasSecondWind
         || effects.natureBlessFlat !== 0;
 
     return effects;

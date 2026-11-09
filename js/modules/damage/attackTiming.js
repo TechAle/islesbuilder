@@ -26,16 +26,18 @@ export function getBaseAttackInterval(context) {
  * @returns {number}
  */
 export function getAttackInterval(context) {
-    const override = context.settings?.slowAttack ? context.settings.attackInterval : null;
-    const validOverride = typeof override === 'number' && Number.isFinite(override) && override > 0;
-
-    if (validOverride) return Math.max(0.05, override);
-
-    const baseInterval = getBaseAttackInterval(context);
     const calculatedStrike = getCalculatedStrikeEffects(
         context,
         context.settings?.calculatedStrikeKillsPerSecond ?? 0
     );
+    const override = context.settings?.slowAttack ? context.settings.attackInterval : null;
+    const validOverride = typeof override === 'number' && Number.isFinite(override) && override > 0;
+
+    // Anche con "Slow attack" Calculated Strike aggiunge attacchi extra:
+    // l'override fissa solo l'intervallo base, non disattiva i reset.
+    const baseInterval = validOverride
+        ? Math.max(0.05, override)
+        : getBaseAttackInterval(context);
     const attacksPerSecond = 1 / baseInterval + calculatedStrike.extraAttacksPerSecond;
 
     return Math.max(0.05, 1 / attacksPerSecond);

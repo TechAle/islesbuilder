@@ -36,6 +36,13 @@ export function getElementalKnowledge(context) {
 }
 
 /**
+ * Ogni 1% di Crit Damage convertito da Natural Distillation dà 2 Elemental
+ * Power. Non cambiare questo valore senza una nuova verifica in gioco.
+ * @type {number}
+ */
+export const NATURAL_DISTILLATION_EP_MULTIPLIER = 2;
+
+/**
  * Natural Distillation applicata a un dato Crit Damage totale.
  * @param {DamageContext} context
  * @param {number} critDamagePercent
@@ -49,7 +56,8 @@ export function getNaturalDistillationEffects(context, critDamagePercent) {
         distillationPercent,
         convertedCritDamagePercent,
         critDamageModifier: -convertedCritDamagePercent,
-        elementalPowerFlat: convertedCritDamagePercent * 2
+        elementalPowerFlat: convertedCritDamagePercent
+            * NATURAL_DISTILLATION_EP_MULTIPLIER
     };
 }
 

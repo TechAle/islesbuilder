@@ -1,4 +1,5 @@
 import { getCrystalCombustionEffects } from '../../../classes/mage.js';
+import { getCritChancePercent } from '../../critStats.js';
 
 /** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../../data/types.js').CrystalCombustionStepResult} CrystalCombustionStepResult */
@@ -21,7 +22,10 @@ export const crystalCombustionStep = {
      * @returns {CrystalCombustionStepResult}
      */
     run(context) {
-        const effects = getCrystalCombustionEffects(context);
+        const effects = getCrystalCombustionEffects(
+            context,
+            getCritChancePercent(context)
+        );
         const averageDamage = context.results.augmentFinal?.damage ?? context.results.criticalDamage?.damage ?? 0;
         const damagePerCrystal = averageDamage * (effects.combustionPercent / 100);
         const combustionDps = effects.explosionsPerSecond * damagePerCrystal;

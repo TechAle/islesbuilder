@@ -1,7 +1,7 @@
 import { getAugmentEffects } from '../../augmentManager.js';
-import { getTotalHitsPerSecond } from '../../classes/mage.js';
+import { getCritTotalHitsPerSecond } from '../critStats.js';
 import { getDefaultAttackReverseMultiplier } from '../weaponProps.js';
-import { findPercent } from '../statLookup.js';
+import { getCritChancePercent } from '../critStats.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').AugmentDamageStepResult} AugmentDamageStepResult */
@@ -29,10 +29,13 @@ export const augmentDamageStep = {
         );
         const augmentBaseDamage = averageDamage * reverseMultiplier;
         const effects = getAugmentEffects(context);
-        const totalHitsPerSecond = getTotalHitsPerSecond(context);
-        const critChance = Math.min(1, Math.max(0,
-            findPercent(context.statsValues ?? {}, 'Crit Chance') / 100
-        ));
+        const totalHitsPerSecond = getCritTotalHitsPerSecond(context);
+        // Chain Lightning procca sui CRIT: usa la funzione condivisa che somma
+        // base + Hot Streak + Deadeye, senza controlli opzionali sparsi.
+        const critChance = Math.min(
+            1,
+            Math.max(0, getCritChancePercent(context) / 100)
+        );
         const critsPerSecond = totalHitsPerSecond * critChance;
 
         const comboDps = effects.combo.reduce((sum, combo) => (

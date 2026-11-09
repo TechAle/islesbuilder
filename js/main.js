@@ -132,7 +132,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         griefUptime: 100,
         lastSorrowUptime: 100,
         focusStacks: 0,
+        sharpshooterResetsPerSecond: 0,
         potentialChargeKills: 0,
+        ultimateKillsPerSecond: 0.2,
         crystalExplosionOverride: false,
         crystalExplosionsPerSecond: 0,
         disabledSpecialAttacks: [],
@@ -159,8 +161,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         lastSorrowUptimeValue: document.getElementById('last-sorrow-uptime-value'),
         focusStacks: /** @type {HTMLInputElement|null} */ (document.getElementById('focus-stacks')),
         focusStacksValue: document.getElementById('focus-stacks-value'),
+        sharpshooterResets: /** @type {HTMLInputElement|null} */ (document.getElementById('sharpshooter-resets')),
+        sharpshooterResetsValue: document.getElementById('sharpshooter-resets-value'),
         potentialChargeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('potential-charge-kills')),
         potentialChargeKillsValue: document.getElementById('potential-charge-kills-value'),
+        ultimateKills: /** @type {HTMLInputElement|null} */ (document.getElementById('ultimate-kills')),
+        ultimateKillsValue: document.getElementById('ultimate-kills-value'),
         crystalExplosionOverride: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosion-override')),
         crystalExplosions: /** @type {HTMLInputElement|null} */ (document.getElementById('crystal-explosions')),
         crystalExplosionsValue: document.getElementById('crystal-explosions-value'),
@@ -221,12 +227,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { statsValues, skillValues } = selectStats(dataStore.data, equippedStore.state);
         statsRenderer.render(withBaseStats(statsValues));
 
+        // Il TTK del target serve a Sharpshooter (ramp) e Infected (stack).
+        const targetInputs = enemySimulatorRenderer.getInputs();
+        const combatSettings = {
+            ...damageSettings,
+            targetHealth: targetInputs.health,
+            targetDefense: targetInputs.defense
+        };
+
         dpsManager.recalculate({
             statsValues,
             skillValues,
             build: equippedStore.state,
             skillTrees: dataStore.data.skillTrees,
-            settings: damageSettings
+            settings: combatSettings
         });
 
         // Primo colpo: stessi modificatori del calcolo normale, ma senza gli
@@ -236,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             skillValues,
             build: equippedStore.state,
             skillTrees: dataStore.data.skillTrees,
-            settings: { ...damageSettings, firstHit: true }
+            settings: { ...combatSettings, firstHit: true }
         });
 
         const firstHitDamage = firstHitDpsManager.getSteps().augmentFinal?.damage
@@ -259,6 +273,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageSettingsRenderer.placeCalculatedStrikeControl(
             damageRenderer.getStepContent('attackSpeed'),
             (dpsManager.getSteps().attackSpeed?.calculatedStrikePercent ?? 0) > 0
+        );
+        damageSettingsRenderer.placeSharpshooterResetsControl(
+            damageRenderer.getStepContent('sharpshooter'),
+            dpsManager.getSteps().sharpshooter?.visible === true
         );
         damageSettingsRenderer.placeBurstControl(
             damageRenderer.getStepContent('burst')
@@ -285,6 +303,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageSettingsRenderer.placePotentialChargeControl(
             damageRenderer.getStepContent('burst'),
             potentialCharge > 0
+        );
+        damageSettingsRenderer.placeUltimateKillsControl(
+            damageRenderer.getStepContent('burst'),
+            dpsManager.getSteps().burst?.hasSecondWind === true
         );
 
         const crystalCombustion = dpsManager.getSteps().crystalCombustion;

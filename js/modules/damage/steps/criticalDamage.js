@@ -1,6 +1,13 @@
 import { BASE_CRIT_DAMAGE } from '../../../data/constants.js';
-import { getNaturalDistillationEffects } from '../../classes/mage.js';
-import { findPercent } from '../statLookup.js';
+import {
+    getCritChancePercent,
+    getCritDamagePercent,
+    getCriticalPityCritStats,
+    getDeadeyeCritStats,
+    getElementalBurstCritStats,
+    getSharpshooterCritStats,
+    getUltimateCritStats
+} from '../critStats.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').CriticalDamageStepResult} CriticalDamageStepResult */
@@ -33,7 +40,20 @@ export const criticalDamageStep = {
             ?? context.results.damageMultiplier
             ?? context.results.damageModifiers;
         const baseDamage = previous?.damage ?? 0;
-        const sharpshooter = context.results.sharpshooter;
+
+        // Funzioni di supporto condivise: Crit Chance e Crit Damage includono
+        // esplicitamente Hot Streak e Deadeye.
+        const sharpshooter = getSharpshooterCritStats(context);
+        const deadeye = getDeadeyeCritStats(context);
+        const criticalPity = getCriticalPityCritStats(context);
+        const elementalBurst = getElementalBurstCritStats(context);
+        const ultimate = getUltimateCritStats(context);
+        const sharpshooterCritChance = sharpshooter.hotStreakCritChancePercent;
+        const sharpshooterCritDamage = sharpshooter.hotStreakCritDamagePercent;
+        const deadeyeCritChance = deadeye.critChanceBonusPercent;
+        const deadeyeCritDamage = deadeye.averagePerfectChainCritDamagePercent;
+        const criticalPityCritChance = criticalPity.critChanceBonusPercent;
+        const elementalBurstCritDamage = elementalBurst.critDamageBonusPercent;
 
         if (baseDamage <= 0) {
             return {
@@ -45,6 +65,16 @@ export const criticalDamageStep = {
                 effectiveCritDamagePercent: BASE_CRIT_DAMAGE,
                 sharpshooterCritChancePercent: 0,
                 sharpshooterCritDamagePercent: 0,
+                deadeye,
+                deadeyeCritChancePercent: 0,
+                deadeyeCritDamagePercent: 0,
+                criticalPity,
+                criticalPityCritChancePercent: 0,
+                elementalBurst,
+                elementalBurstCritDamagePercent: 0,
+                ultimate,
+                ultimateCritChancePercent: 0,
+                ultimateCritDamagePercent: 0,
                 distillationPercent: 0,
                 convertedCritDamagePercent: 0,
                 criticalHit: 0,
@@ -53,23 +83,22 @@ export const criticalDamageStep = {
             };
         }
 
-        const sharpshooterCritChance = sharpshooter?.hotStreakCritChancePercent ?? 0;
-        const sharpshooterCritDamage = sharpshooter?.hotStreakCritDamagePercent ?? 0;
-        const critChance = Math.max(0,
-            findPercent(context.statsValues, 'Crit Chance') + sharpshooterCritChance
-        );
+        const critChance = Math.max(0, getCritChancePercent(context));
         const effectiveCritChance = Math.min(100, critChance);
         const critChanceOverflow = Math.max(0, critChance - 100);
-        let critDamagePercent = BASE_CRIT_DAMAGE
-            + findPercent(context.statsValues, 'Crit Damage')
-            + sharpshooterCritDamage;
+        let critDamagePercent = getCritDamagePercent(context);
         const critDamageRawPercent = critDamagePercent;
-        const naturalDistillation = getNaturalDistillationEffects(context, critDamagePercent);
-        const critDamageModifierNaturalDistillation = naturalDistillation.critDamageModifier;
-        critDamagePercent += critDamageModifierNaturalDistillation;
 
-        const distillationPercent = naturalDistillation.distillationPercent;
-        const convertedCritDamagePercent = naturalDistillation.convertedCritDamagePercent;
+        // Natural Distillation è già stata calcolata in Damage Modifiers sulla
+        // Crit Damage "di statistica" (base + Crit Damage%). Qui sottraiamo
+        // esattamente la stessa quantità: i bonus temporanei come Hot Streak e
+        // Perfect Chain non vengono distillati, così EP e riduzione restano
+        // coerenti e non si perde Crit Damage senza guadagnare EP.
+        const damageModifiers = context.results.damageModifiers;
+        const distillationPercent = damageModifiers?.naturalDistillationPercent ?? 0;
+        const convertedCritDamagePercent = damageModifiers?.distilledCritDamagePercent ?? 0;
+        critDamagePercent -= convertedCritDamagePercent;
+
         const effectiveCritDamagePercent = critDamagePercent;
 
         const criticalHit = baseDamage * (1 + effectiveCritDamagePercent / 100);
@@ -85,6 +114,16 @@ export const criticalDamageStep = {
             effectiveCritDamagePercent,
             sharpshooterCritChancePercent: sharpshooterCritChance,
             sharpshooterCritDamagePercent: sharpshooterCritDamage,
+            deadeye,
+            deadeyeCritChancePercent: deadeyeCritChance,
+            deadeyeCritDamagePercent: deadeyeCritDamage,
+            criticalPity,
+            criticalPityCritChancePercent: criticalPityCritChance,
+            elementalBurst,
+            elementalBurstCritDamagePercent: elementalBurstCritDamage,
+            ultimate,
+            ultimateCritChancePercent: ultimate.critChancePercent,
+            ultimateCritDamagePercent: ultimate.critDamagePercent,
             distillationPercent,
             convertedCritDamagePercent,
             criticalHit,
@@ -100,9 +139,141 @@ export const criticalDamageStep = {
     toResults(result) {
         if (!result || result.baseDamage <= 0) return [];
 
-        return [
+        /** @type {import('../../../data/types.js').DamageResult[]} */
+        const rows = [
+            { label: 'Crit Chance', value: result.critChance, unit: '%' },
+            { label: 'Crit Damage', value: result.critDamagePercent, unit: '%' }
+        ];
+
+        if (result.deadeye.visible) {
+            if (!result.deadeye.enabled) {
+                rows.push({
+                    label: 'Deadeye',
+                    value: result.deadeye.reason ?? 'Not active'
+                });
+            } else {
+                rows.push(
+                    { label: 'Deadeye Stacks', value: result.deadeye.averageStacks },
+                    {
+                        label: 'Deadeye Crit Chance',
+                        value: result.deadeyeCritChancePercent,
+                        unit: '%'
+                    }
+                );
+
+                if (result.deadeye.perfectChainLevel > 0) {
+                    rows.push(
+                        {
+                            label: 'Perfect Chain Uptime',
+                            value: result.deadeye.perfectChainUptime * 100,
+                            unit: '%'
+                        },
+                        {
+                            label: 'Perfect Chain Crit Damage',
+                            value: result.deadeyeCritDamagePercent,
+                            unit: '%'
+                        }
+                    );
+                }
+            }
+        }
+
+        if (result.criticalPity?.visible) {
+            if (!result.criticalPity.enabled) {
+                rows.push({
+                    label: 'Critical Pity',
+                    value: result.criticalPity.reason ?? 'Not active'
+                });
+            } else {
+                rows.push(
+                    {
+                        label: 'Pity Stacks',
+                        value: result.criticalPity.expectedStacks
+                    },
+                    {
+                        label: 'Pity Crit Chance',
+                        value: result.criticalPityCritChancePercent,
+                        unit: '%'
+                    }
+                );
+            }
+        }
+
+        if (result.elementalBurst?.visible) {
+            if (!result.elementalBurst.enabled) {
+                rows.push({
+                    label: 'Elemental Burst',
+                    value: result.elementalBurst.reason ?? 'Not active'
+                });
+            } else {
+                if (result.elementalBurst.elementalChannelingActive) {
+                    rows.push({
+                        label: 'Elemental Channeling',
+                        value: `×${result.elementalBurst.elementalChannelingMultiplier}`
+                    });
+                }
+                rows.push({
+                    label: 'Elemental Burst Crit Damage',
+                    value: result.elementalBurstCritDamagePercent,
+                    unit: '%'
+                });
+            }
+        }
+
+        if (result.ultimate?.visible) {
+            if (!result.ultimate.enabled) {
+                rows.push({
+                    label: 'Ultimatum',
+                    value: result.ultimate.reason ?? 'Not active'
+                });
+            } else {
+                rows.push(
+                    {
+                        label: 'Ultimate Uptime',
+                        value: result.ultimate.uptime * 100,
+                        unit: '%'
+                    }
+                );
+
+                if (result.ultimateCritChancePercent > 0) {
+                    rows.push({
+                        label: 'Ultimate Crit Chance',
+                        value: result.ultimateCritChancePercent,
+                        unit: '%'
+                    });
+                }
+
+                if (result.ultimateCritDamagePercent > 0) {
+                    rows.push({
+                        label: 'Ultimate Crit Damage',
+                        value: result.ultimateCritDamagePercent,
+                        unit: '%'
+                    });
+                }
+            }
+        }
+
+        if (result.distillationPercent > 0) {
+            rows.push(
+                {
+                    label: 'Natural Distillation',
+                    value: -result.convertedCritDamagePercent,
+                    unit: '%',
+                    help: `${result.distillationPercent}% del Crit Damage convertito in Elemental Power a 2×.`
+                },
+                {
+                    label: 'Effective Crit Damage',
+                    value: result.effectiveCritDamagePercent,
+                    unit: '%'
+                }
+            );
+        }
+
+        rows.push(
             { label: 'Critical Hit', value: result.criticalHit },
             { label: 'Average Damage', value: result.averageDamage }
-        ];
+        );
+
+        return rows;
     }
 };

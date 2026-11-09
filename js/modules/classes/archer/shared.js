@@ -16,7 +16,14 @@ export const SHARPSHOOTER_BASE_MAX_STACKS = 10;
  *   ricochet: string,
  *   sharpshooterStacks: string,
  *   sharpshooterCapacity: string,
- *   hotStreak: string
+ *   hotStreak: string,
+ *   deadeyeStacks: string,
+ *   deadeyeCapacity: string,
+ *   perfectChain: string,
+ *   criticalPity: string,
+ *   elementalBurst: string,
+ *   ultimateCriterium: string,
+ *   ultimateVagrus: string
  * }}
  */
 export const ARCHER_NODES = {
@@ -24,7 +31,14 @@ export const ARCHER_NODES = {
     ricochet: 'UL1',
     sharpshooterStacks: 'L1',
     sharpshooterCapacity: 'L1a',
-    hotStreak: 'L1b'
+    hotStreak: 'L1b',
+    deadeyeStacks: 'L2',
+    deadeyeCapacity: 'L2a',
+    perfectChain: 'L2b',
+    criticalPity: 'UL2',
+    elementalBurst: 'UR',
+    ultimateCriterium: 'UR1',
+    ultimateVagrus: 'UR2'
 };
 
 /**
@@ -53,6 +67,16 @@ export function getArcherNodeValue(context, nodeId) {
     const level = context.build?.treeLevels?.archer?.get(nodeId) ?? 0;
 
     return getNodeValue(node, level);
+}
+
+/**
+ * Legge il livello investito in un nodo arciere.
+ * @param {DamageContext} context
+ * @param {string} nodeId
+ * @returns {number}
+ */
+export function getArcherNodeLevel(context, nodeId) {
+    return context.build?.treeLevels?.archer?.get(nodeId) ?? 0;
 }
 
 /**

@@ -9,6 +9,7 @@ export {
     getElementalChannelingPercent,
     getElementalKnowledge,
     getNaturalDistillationEffects,
+    NATURAL_DISTILLATION_EP_MULTIPLIER,
     getElementalSynergyEffects
 } from './elemental.js';
 
@@ -23,6 +24,7 @@ export {
 
 export {
     getPotentialChargeEffects,
+    getBurstCycleEffects,
     getBurstHitsPerSecond
 } from './burst.js';
 

@@ -56,7 +56,11 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
 
     const critRate = Math.min(100, Math.max(0, critChancePercent)) / 100;
     const baseHitsPerSecond = (1 / attackInterval) + getBurstHitsPerSecond(context);
-    const combatHits = getCombatHitModel(context, baseHitsPerSecond);
+    const combatHits = getCombatHitModel(
+        context,
+        baseHitsPerSecond,
+        critChancePercent
+    );
     const critsPerSecond = combatHits.totalHitsPerSecond * critRate;
     const shardsPerSecond = critsPerSecond * (insights.chancePercent / 100);
     const averageActiveShards = shardsPerSecond * CRYSTAL_INSIGHTS_DURATION;
@@ -72,26 +76,37 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
  * funzione (o `getTotalHitsPerSecond`) invece di ricalcolare gli hit.
  *
  * @param {DamageContext} context
+ * @param {number|null} [critChancePercentOverride]
  * @returns {ReturnType<typeof getCombatHitModel> & {hitStats: ReturnType<typeof getHitStats>}}
  */
-export function getCombatHits(context) {
-    const hitStats = getHitStats(context, getBurstHitsPerSecond(context));
-    const model = getCombatHitModel(context, hitStats.totalHitsPerSecond);
+export function getCombatHits(context, critChancePercentOverride = null) {
+    const hitStats = getHitStats(
+        context,
+        getBurstHitsPerSecond(context),
+        critChancePercentOverride
+    );
+    const model = getCombatHitModel(
+        context,
+        hitStats.totalHitsPerSecond,
+        critChancePercentOverride
+    );
     return { ...model, hitStats };
 }
 
 /**
  * Scorciatoia per i consumer che hanno bisogno solo del totale hit/s.
  * @param {DamageContext} context
+ * @param {number|null} [critChancePercentOverride]
  * @returns {number}
  */
-export function getTotalHitsPerSecond(context) {
-    return getCombatHits(context).totalHitsPerSecond;
+export function getTotalHitsPerSecond(context, critChancePercentOverride = null) {
+    return getCombatHits(context, critChancePercentOverride).totalHitsPerSecond;
 }
 
 /**
  * Crystal Combustion: drop rate dei cristalli e percentuale di danno.
  * @param {DamageContext} context
+ * @param {number|null} [critChancePercentOverride]
  * @returns {{
  *   recoverChancePercent: number,
  *   powerChancePercent: number,
@@ -107,8 +122,8 @@ export function getTotalHitsPerSecond(context) {
  *   crystalsPerSecond: number
  * }}
  */
-export function getCrystalCombustionEffects(context) {
-    const model = getCombatHits(context);
+export function getCrystalCombustionEffects(context, critChancePercentOverride = null) {
+    const model = getCombatHits(context, critChancePercentOverride);
 
     return {
         recoverChancePercent: model.crystalConfig.recoverChancePercent,
@@ -167,6 +182,7 @@ function getSupportOrbConfig(context) {
 /**
  * Support Orbs: hit/s RED e moltiplicatore BLUE.
  * @param {DamageContext} context
+ * @param {number|null} [critChancePercentOverride]
  * @returns {{
  *   spawnChancePercent: number,
  *   durationSeconds: number,
@@ -186,9 +202,9 @@ function getSupportOrbConfig(context) {
  *   extraCapacity: number
  * }}
  */
-export function getSupportOrbEffects(context) {
+export function getSupportOrbEffects(context, critChancePercentOverride = null) {
     const config = getSupportOrbConfig(context);
-    const model = getCombatHits(context);
+    const model = getCombatHits(context, critChancePercentOverride);
 
     const activeBlueOrbs = model.totalActiveOrbs * SUPPORT_ORB_COLOR_CHANCE;
     const blueUptime = Math.min(1, activeBlueOrbs);
@@ -272,6 +288,7 @@ function getCrystalDropRates(context, hitsPerSecond) {
  *
  * @param {DamageContext} context
  * @param {number} baseHitsPerSecond
+ * @param {number|null} [critChancePercentOverride]
  * @returns {{
  *   baseHitsPerSecond: number,
  *   totalHitsPerSecond: number,
@@ -291,7 +308,7 @@ function getCrystalDropRates(context, hitsPerSecond) {
  *   orbConfig: ReturnType<typeof getSupportOrbConfig>
  * }}
  */
-function getCombatHitModel(context, baseHitsPerSecond) {
+function getCombatHitModel(context, baseHitsPerSecond, critChancePercentOverride = null) {
     const crystalConfig = getCrystalDropConfig(context);
     const orbConfig = getSupportOrbConfig(context);
     const manager = context.specialAbilityManager;
@@ -311,15 +328,18 @@ function getCombatHitModel(context, baseHitsPerSecond) {
         Math.max(0, context.settings?.crystalExplosionsPerSecond ?? 0)
     );
 
+    const critChancePercent = Number.isFinite(critChancePercentOverride)
+        ? Math.min(100, Math.max(0, /** @type {number} */ (critChancePercentOverride)))
+        : Math.min(100, Math.max(0, findPercent(context.statsValues ?? {}, 'Crit Chance')));
+    const critRate = critChancePercent / 100;
     const cache = context.cache ?? (context.cache = {});
-    const cacheKey = `${baseHitsPerSecond.toFixed(10)}|${specialAttackHits.toFixed(10)}|${ricochetHits.toFixed(10)}|${override ? 1 : 0}|${fixedExplosions}`;
+    const cacheKey = `${baseHitsPerSecond.toFixed(10)}|${specialAttackHits.toFixed(10)}|${ricochetHits.toFixed(10)}|${critChancePercent.toFixed(10)}|${override ? 1 : 0}|${fixedExplosions}`;
     const cached = cache.combatHitModels?.[cacheKey];
     if (cached) return cached;
 
     let explosions = override ? fixedExplosions : 0;
     let redOrbHits = 0;
     let passiveHits = 0;
-    const critRate = Math.min(100, Math.max(0, findPercent(context.statsValues ?? {}, 'Crit Chance'))) / 100;
 
     for (let i = 0; i < 200; i++) {
         const nonPassiveHits = baseHitsPerSecond
@@ -395,6 +415,7 @@ function getCombatHitModel(context, baseHitsPerSecond) {
  * Include attacchi base, burst, esplosioni, orb e passive.
  *
  * @param {DamageContext} context
+ * @param {number|null} [critChancePercentOverride]
  * @returns {{
  *   hitsPerSecond: number,
  *   nonPassiveHitsPerSecond: number,
@@ -402,8 +423,8 @@ function getCombatHitModel(context, baseHitsPerSecond) {
  *   breakdown: Array<{name: string, everyHits: number, hitsPerSecond: number}>
  * }}
  */
-export function getPassiveHitStats(context) {
-    const model = getCombatHits(context);
+export function getPassiveHitStats(context, critChancePercentOverride = null) {
+    const model = getCombatHits(context, critChancePercentOverride);
 
     return {
         hitsPerSecond: model.passiveHitsPerSecond,

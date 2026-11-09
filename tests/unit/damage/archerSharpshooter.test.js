@@ -63,6 +63,31 @@ describe('Sharpshooter', () => {
         expect(steps.criticalDamage.critDamagePercent).toBeCloseTo(70, 10);
     });
 
+    it('scales stacks with Sharpshooter resets per second', () => {
+        const noResets = run({ treeLevels: { L1: 5, L1a: 5, L1b: 5 } }).steps;
+        const halfUptime = run({
+            treeLevels: { L1: 5, L1a: 5, L1b: 5 },
+            settings: { sharpshooterResetsPerSecond: 1 }
+        }).steps;
+        const alwaysReset = run({
+            treeLevels: { L1: 5, L1a: 5, L1b: 5 },
+            settings: { sharpshooterResetsPerSecond: 2 }
+        }).steps;
+
+        expect(noResets.sharpshooter.stacks).toBe(25);
+        expect(noResets.sharpshooter.damagePercent).toBeCloseTo(37.5, 10);
+
+        expect(halfUptime.sharpshooter.stackUptime).toBe(0.5);
+        expect(halfUptime.sharpshooter.stacks).toBe(12.5);
+        expect(halfUptime.sharpshooter.damagePercent).toBeCloseTo(18.75, 10);
+        expect(halfUptime.sharpshooter.hotStreakActive).toBe(true);
+
+        expect(alwaysReset.sharpshooter.stackUptime).toBe(0);
+        expect(alwaysReset.sharpshooter.stacks).toBe(0);
+        expect(alwaysReset.sharpshooter.damagePercent).toBe(0);
+        expect(alwaysReset.sharpshooter.hotStreakActive).toBe(false);
+    });
+
     it('does not gain stacks when hits are slower than the node window', () => {
         const { steps } = run({ treeLevels: { L1: 1 } });
 
@@ -83,6 +108,33 @@ describe('Sharpshooter', () => {
         expect(steps.sharpshooter.stacks).toBe(10);
         expect(steps.sharpshooter.damagePercent).toBeCloseTo(6, 10);
         expect(steps.sharpshooter.damage).toBeCloseTo(106, 10);
+    });
+
+    it('includes the ramp phase against a finite-health target', () => {
+        const shortFight = run({
+            treeLevels: { L1: 5, L1a: 5, L1b: 5 },
+            settings: { targetHealth: 500, targetDefense: 0 }
+        }).steps;
+        const longFight = run({
+            treeLevels: { L1: 5, L1a: 5, L1b: 5 },
+            settings: { targetHealth: 1_000_000_000, targetDefense: 0 }
+        }).steps;
+        const noTarget = run({
+            treeLevels: { L1: 5, L1a: 5, L1b: 5 }
+        }).steps;
+
+        expect(Number.isFinite(shortFight.sharpshooter.fightDurationSeconds)).toBe(true);
+        expect(shortFight.sharpshooter.rampFactor).toBeLessThan(1);
+        expect(shortFight.sharpshooter.stacks)
+            .toBeLessThan(longFight.sharpshooter.stacks);
+        expect(shortFight.sharpshooter.damagePercent)
+            .toBeLessThan(longFight.sharpshooter.damagePercent);
+        expect(shortFight.sharpshooter.hotStreakUptime)
+            .toBeLessThan(longFight.sharpshooter.hotStreakUptime);
+
+        expect(noTarget.sharpshooter.fightDurationSeconds).toBe(Infinity);
+        expect(noTarget.sharpshooter.rampFactor).toBe(1);
+        expect(noTarget.sharpshooter.stacks).toBe(25);
     });
 
     it('includes Ricochet hits in the stack estimate', () => {

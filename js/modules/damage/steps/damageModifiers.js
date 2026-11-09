@@ -1,5 +1,6 @@
-import { BASE_CRIT_DAMAGE, BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
+import { BASE_ELEMENTAL_POWER } from '../../../data/constants.js';
 import {
+    NATURAL_DISTILLATION_EP_MULTIPLIER,
     getCrystalInsightsElementalPowerPercent,
     getElementalChannelingPercent,
     getElementalSynergyEffects,
@@ -8,6 +9,7 @@ import {
 } from '../../classes/mage.js';
 import { getAttackInterval } from '../attackTiming.js';
 import { getEnergyRegen } from '../energy.js';
+import { getCritChancePercent, getDistillableCritDamagePercent } from '../critStats.js';
 import { findFlat, findPercent } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -137,7 +139,7 @@ export const damageModifiersStep = {
 
         // Elemental Power totale: (base + flat) * (1 + percent/100).
         // Crystal Insights e le abilità equipaggiate aggiungono EP%.
-        const critChancePercent = findPercent(context.statsValues, 'Crit Chance');
+        const critChancePercent = getCritChancePercent(context);
         const attackInterval = getAttackInterval(context);
         const crystalInsightsPercent = getCrystalInsightsElementalPowerPercent(
             context,
@@ -148,8 +150,13 @@ export const damageModifiersStep = {
             ?.getAbilityElementalPowerPercent(context) ?? 0;
 
         const elementalPowerFlat = findFlat(context.statsValues, 'Elemental Power');
-        const critDamagePercent = BASE_CRIT_DAMAGE + findPercent(context.statsValues, 'Crit Damage');
-        const naturalDistillation = getNaturalDistillationEffects(context, critDamagePercent);
+        // Base distillabile centralizzata in critStats: include base, statistica
+        // ed Elemental Burst, ma non i buff temporanei.
+        const distillableCritDamagePercent = getDistillableCritDamagePercent(context);
+        const naturalDistillation = getNaturalDistillationEffects(
+            context,
+            distillableCritDamagePercent
+        );
         const naturalDistillationPercent = naturalDistillation.distillationPercent;
         const distilledCritDamagePercent = naturalDistillation.convertedCritDamagePercent;
         const distilledElementalPowerFlat = naturalDistillation.elementalPowerFlat;
@@ -179,7 +186,7 @@ export const damageModifiersStep = {
         // Le BLUE orb aumentano il danno subito dal nemico.
         // Sul first hit non possono essere attive: richiedono hit precedenti.
         const firstHit = context.settings?.firstHit === true;
-        const supportOrbs = getSupportOrbEffects(context);
+        const supportOrbs = getSupportOrbEffects(context, critChancePercent);
         const blueDamageMultiplier = firstHit ? 1 : supportOrbs.blueDamageMultiplier;
 
         const damage = Math.max(0,
@@ -234,12 +241,16 @@ export const damageModifiersStep = {
         }
 
         const hasElementalDamage = result.elementalDamagePercent !== 0;
+        if (result.distilledElementalPowerFlat > 0) {
+            rows.push({
+                label: 'Natural Distillation EP',
+                value: result.distilledElementalPowerFlat,
+                help: `Crit Damage convertito ×${NATURAL_DISTILLATION_EP_MULTIPLIER} Elemental Power.`
+            });
+        }
         if (hasElementalDamage) {
             if (result.crystalInsightsPercent > 0) {
                 rows.push({ label: 'Crystal Insights EP', value: result.crystalInsightsPercent, unit: '%' });
-            }
-            if (result.distilledElementalPowerFlat > 0) {
-                rows.push({ label: 'Natural Distillation EP', value: result.distilledElementalPowerFlat });
             }
             if (result.elementalSynergyFlat > 0) {
                 rows.push({ label: 'Elemental Synergy EP', value: result.elementalSynergyFlat });

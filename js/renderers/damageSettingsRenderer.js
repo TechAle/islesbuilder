@@ -15,8 +15,12 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLElement|null} lastSorrowUptimeValue
  * @property {HTMLInputElement|null} focusStacks
  * @property {HTMLElement|null} focusStacksValue
+ * @property {HTMLInputElement|null} sharpshooterResets
+ * @property {HTMLElement|null} sharpshooterResetsValue
  * @property {HTMLInputElement|null} potentialChargeKills
  * @property {HTMLElement|null} potentialChargeKillsValue
+ * @property {HTMLInputElement|null} ultimateKills
+ * @property {HTMLElement|null} ultimateKillsValue
  * @property {HTMLInputElement|null} crystalExplosionOverride
  * @property {HTMLInputElement|null} crystalExplosions
  * @property {HTMLElement|null} crystalExplosionsValue
@@ -67,7 +71,9 @@ export class DamageSettingsRenderer {
         this.griefControl = /** @type {HTMLElement|null} */ (options.griefUptime?.closest('.damage-uptime') ?? null);
         this.lastSorrowControl = /** @type {HTMLElement|null} */ (options.lastSorrowUptime?.closest('.damage-uptime') ?? null);
         this.focusControl = /** @type {HTMLElement|null} */ (options.focusStacks?.closest('.damage-uptime') ?? null);
+        this.sharpshooterResetsControl = /** @type {HTMLElement|null} */ (options.sharpshooterResets?.closest('.damage-uptime') ?? null);
         this.potentialChargeControl = /** @type {HTMLElement|null} */ (options.potentialChargeKills?.closest('.damage-uptime') ?? null);
+        this.ultimateKillsControl = /** @type {HTMLElement|null} */ (options.ultimateKills?.closest('.damage-uptime') ?? null);
         this.crystalExplosionsControl = /** @type {HTMLElement|null} */ (options.crystalExplosions?.closest('.damage-uptime') ?? null);
         this.executionHpControl = /** @type {HTMLElement|null} */ (options.executionHp?.closest('.damage-uptime') ?? null);
         this.prosecutionHpControl = /** @type {HTMLElement|null} */ (options.prosecutionHp?.closest('.damage-uptime') ?? null);
@@ -97,10 +103,22 @@ export class DamageSettingsRenderer {
             valueEl: options.focusStacksValue,
             onChange: emit
         });
+        this.sharpshooterResetsSlider = new SliderControl({
+            input: options.sharpshooterResets,
+            valueEl: options.sharpshooterResetsValue,
+            onChange: emit,
+            format: value => `${value} /s`
+        });
         this.potentialChargeSlider = new SliderControl({
             input: options.potentialChargeKills,
             valueEl: options.potentialChargeKillsValue,
             onChange: emit
+        });
+        this.ultimateKillsSlider = new SliderControl({
+            input: options.ultimateKills,
+            valueEl: options.ultimateKillsValue,
+            onChange: emit,
+            format: value => `${value} /s`
         });
         this.crystalExplosionSlider = new SliderControl({
             input: options.crystalExplosions,
@@ -147,7 +165,9 @@ export class DamageSettingsRenderer {
             this.griefSlider,
             this.lastSorrowSlider,
             this.focusSlider,
+            this.sharpshooterResetsSlider,
             this.potentialChargeSlider,
+            this.ultimateKillsSlider,
             this.crystalExplosionSlider,
             this.executionHpSlider,
             this.prosecutionHpSlider,
@@ -248,6 +268,7 @@ export class DamageSettingsRenderer {
      * @param {{grief: boolean, lastSorrow: boolean, focus: boolean}} visible
      */
     placeUptimeControls(container, visible) {
+        // placeControl usa prepend: l'ultimo chiamato finisce in cima.
         this.placeControl(this.focusControl, container, visible.focus);
         this.placeControl(this.lastSorrowControl, container, visible.lastSorrow);
         this.placeControl(this.griefControl, container, visible.grief);
@@ -259,6 +280,14 @@ export class DamageSettingsRenderer {
      */
     placePotentialChargeControl(container, visible) {
         this.placeControl(this.potentialChargeControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeUltimateKillsControl(container, visible) {
+        this.placeControl(this.ultimateKillsControl, container, visible);
     }
 
     /**
@@ -296,6 +325,14 @@ export class DamageSettingsRenderer {
      */
     placeCalculatedStrikeControl(container, visible) {
         this.placeControl(this.calculatedStrikeKillsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeSharpshooterResetsControl(container, visible) {
+        this.placeControl(this.sharpshooterResetsControl, container, visible);
     }
 
     /**
@@ -511,7 +548,9 @@ export class DamageSettingsRenderer {
             griefUptime: this.griefSlider.value,
             lastSorrowUptime: this.lastSorrowSlider.value,
             focusStacks: this.focusSlider.value,
+            sharpshooterResetsPerSecond: this.sharpshooterResetsSlider.value,
             potentialChargeKills: this.potentialChargeSlider.value,
+            ultimateKillsPerSecond: this.ultimateKillsSlider.value,
             crystalExplosionOverride: this.crystalExplosionOverride?.checked ?? false,
             crystalExplosionsPerSecond: this.crystalExplosionSlider.value,
             disabledSpecialAttacks: [...this.disabledSpecialAttacks],
