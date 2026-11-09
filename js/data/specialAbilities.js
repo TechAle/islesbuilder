@@ -66,6 +66,25 @@ export const SPECIAL_ABILITY_OVERRIDES = {
         maxDamage: 300
     },
 
+    // Awoken Fissure: il Void Rift aumenta il danno del 20%. Il bonus è
+    // trattato come damageTakenIncreasePercent perché entra nello stesso
+    // moltiplicatore finale del danno. Cooldown verificato: 3.8s.
+    'Awoken Fissure-Riftripper': {
+        damage: 250,
+        cooldown: 3.8,
+        damageTakenIncreasePercent: 20,
+        requiresPriorHit: true
+    },
+
+    // Chain Stinger: un solo colpo al 200%, con cooldown 0.9s.
+    // L'override esplicito evita che futuri cambi al testo cambino il parsing.
+    'Chain Stinger-Royal Blowpipe': {
+        damage: 200,
+        times: 1,
+        hitsPerUse: 1,
+        cooldown: 0.9
+    },
+
     // Runic Knuckles: 1 hit extra per swing, durata/cooldown 4s.
     'Runic Knuckles-Runic Putrifists': {
         damage: 0,

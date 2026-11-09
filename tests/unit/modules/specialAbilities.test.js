@@ -12,6 +12,7 @@ import {
     makeWorld,
     makeDamageBuild
 } from '../../helpers/legacyRuntime.js';
+import { ITEMS_API_FIXTURE } from '../../fixtures/items.js';
 
 test('special abilities: parsing nome, danno, key e times', () => {
     specialAbilityManager.reset();
@@ -73,6 +74,61 @@ test('special abilities: cooldown override', () => {
     assert.equal(ability.cooldown, 2.5);
 
     delete SPECIAL_ABILITY_OVERRIDES['Test Strike-Test Weapon'];
+    specialAbilityManager.reset();
+});
+
+test('special abilities: Royal Blowpipe fa un solo colpo al 200% con cooldown 0.9s', () => {
+    specialAbilityManager.reset();
+
+    const blowpipe = ITEMS_API_FIXTURE.weapons.find(item => item.name === 'Royal Blowpipe');
+    assert.ok(blowpipe);
+    specialAbilityManager.registerAbilities(blowpipe.name, blowpipe.gear.abilities);
+
+    const chainStinger = onClick.find(entry => entry.name === 'Chain Stinger-Royal Blowpipe');
+    assert.ok(chainStinger);
+    assert.equal(chainStinger.damage, 200);
+    assert.equal(chainStinger.times, 1);
+    assert.equal(chainStinger.hitsPerUse, 1);
+    assert.equal(chainStinger.cooldown, 0.9);
+
+    specialAbilityManager.reset();
+});
+
+test('special abilities: Riftripper dà +20% danno con cooldown 3.8s', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Riftripper', [{
+        kind: 'ability',
+        name: 'Awoken Fissure',
+        energy: 16,
+        text: 'Shoot an arrow that will spawn a Void Rift on hit, increasing damage by 20%. Hitting a Rift will deal 250% damage to nearby enemies.',
+        key: 'Right click'
+    }]);
+
+    const fissure = onClick.find(entry => entry.name === 'Awoken Fissure-Riftripper');
+    assert.ok(fissure);
+    assert.equal(fissure.damage, 250);
+    assert.equal(fissure.cooldown, 3.8);
+    assert.equal(fissure.damageTakenIncreasePercent, 20);
+    assert.equal(fissure.requiresPriorHit, true);
+
+    const build = makeDamageBuild({
+        'Damage Type': 'Arcane',
+        'Default Attack': 100,
+        'Weapon Type': 'ranged',
+        'Arcane Damage': 20
+    });
+    build.activeEquip.weapon.name = 'Riftripper';
+
+    const steps = new DpsManager({ specialAbilityManager }).recalculate({
+        statsValues: { 'Arcane Damage': { flat: 20, percent: 0 } },
+        skillValues: {},
+        build,
+        skillTrees: CLASS_SKILL_TREES
+    });
+
+    assert.equal(steps.damageMultiplier.damageTakenIncreasePercent, 20);
+
     specialAbilityManager.reset();
 });
 
