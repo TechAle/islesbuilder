@@ -1,4 +1,5 @@
 import { getAugmentEffects, getAugmentStatBonuses } from '../../augmentManager.js';
+import { getItemSetEffects } from '../../itemSets.js';
 import { getCritTotalHitsPerSecond } from '../critStats.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -26,6 +27,8 @@ export const augmentFinalStep = {
         const baseDamageBefore = previous?.baseDamage ?? 0;
         const damageBefore = previous?.damage ?? 0;
         const effects = getAugmentEffects(context);
+        const itemSets = getItemSetEffects(context);
+        const setExecutionPercent = itemSets.executionPercent;
 
         const totalHitsPerSecond = getCritTotalHitsPerSecond(context);
         const infectedHitOverride = Number(context.settings?.infectedHitsOverride) || 0;
@@ -73,6 +76,7 @@ export const augmentFinalStep = {
 
         const augmentPercent = effects.enragedPercent
             + effects.executionPercent
+            + setExecutionPercent
             + effects.hunterPercent
             + effects.prosecutionPercent
             + infectedPercent
@@ -80,11 +84,14 @@ export const augmentFinalStep = {
             + damageStatPercent;
 
         const multiplier = (1 + augmentPercent / 100) * natureBlessMultiplier;
-        const enabled = effects.hasEffects || damageStatPercent !== 0;
+        const enabled = effects.hasEffects
+            || damageStatPercent !== 0
+            || itemSets.hasExecution;
 
         return {
             enabled,
             hasExecution: effects.hasExecution,
+            hasSetExecution: itemSets.hasExecution,
             hasProsecution: effects.hasProsecution,
             hasHunter: effects.hasHunter,
             hasEnraged: effects.hasEnraged,
@@ -100,6 +107,7 @@ export const augmentFinalStep = {
             infectedPercent,
             enragedPercent: effects.enragedPercent,
             executionPercent: effects.executionPercent,
+            setExecutionPercent,
             hunterPercent: effects.hunterPercent,
             prosecutionPercent: effects.prosecutionPercent,
             firstStrikePercent,
@@ -129,6 +137,9 @@ export const augmentFinalStep = {
 
         if (result.hasExecution) {
             rows.push({ label: 'Execution Damage%', value: result.executionPercent, unit: '%' });
+        }
+        if (result.setExecutionPercent > 0) {
+            rows.push({ label: 'Aetherbloom Execution', value: result.setExecutionPercent, unit: '%' });
         }
         if (result.hasProsecution) {
             rows.push({ label: 'Prosecution Damage%', value: result.prosecutionPercent, unit: '%' });

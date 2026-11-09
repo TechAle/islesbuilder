@@ -7,6 +7,7 @@ import {
     getUltimateEffects
 } from '../classes/archer.js';
 import { getTotalHitsPerSecond } from '../classes/mage.js';
+import { getItemSetEffects } from '../itemSets.js';
 import { findPercent } from './statLookup.js';
 
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
@@ -59,17 +60,23 @@ const CRIT_STATS_HIT_TOLERANCE = 1e-9;
  *   deadeye: ReturnType<typeof getDeadeyeEffects>,
  *   criticalPity: ReturnType<typeof getCriticalPityEffects>,
  *   elementalBurst: ReturnType<typeof getElementalBurstEffects>,
- *   ultimate: ReturnType<typeof getUltimateEffects>
+ *   ultimate: ReturnType<typeof getUltimateEffects>,
+ *   itemSets: ReturnType<typeof getItemSetEffects>
  * }}
  */
 function computeCritStats(context) {
     const cache = context.cache ?? (context.cache = {});
     if (cache.critStats) return cache.critStats;
 
-    const baseCritChancePercent = findPercent(
+    const baseCritChanceStatPercent = findPercent(
         context.statsValues ?? {},
         'Crit Chance'
     );
+    // Alliance è una Crit Chance statica: entra nella base usata anche da
+    // Deadeye/Pity, non solo nel totale finale.
+    const itemSets = getItemSetEffects(context);
+    const baseCritChancePercent = baseCritChanceStatPercent
+        + itemSets.allianceCritChancePercent;
     // L'uptime della burst non dipende dalla Crit Chance: calcoliamolo una
     // volta sola e usiamolo per entrambe le statistiche critiche.
     const ultimate = getUltimateEffects(context);
@@ -161,7 +168,8 @@ function computeCritStats(context) {
         deadeye,
         criticalPity,
         elementalBurst,
-        ultimate
+        ultimate,
+        itemSets
     };
 
     cache.critStats = stats;
@@ -198,6 +206,14 @@ export function getCriticalPityCritStats(context) {
  */
 export function getElementalBurstCritStats(context) {
     return computeCritStats(context).elementalBurst;
+}
+
+/**
+ * @param {DamageContext} context
+ * @returns {ReturnType<typeof getItemSetEffects>}
+ */
+export function getItemSetCritStats(context) {
+    return computeCritStats(context).itemSets;
 }
 
 /**

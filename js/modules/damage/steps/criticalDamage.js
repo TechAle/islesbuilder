@@ -5,6 +5,7 @@ import {
     getCriticalPityCritStats,
     getDeadeyeCritStats,
     getElementalBurstCritStats,
+    getItemSetCritStats,
     getSharpshooterCritStats,
     getUltimateCritStats
 } from '../critStats.js';
@@ -48,6 +49,7 @@ export const criticalDamageStep = {
         const criticalPity = getCriticalPityCritStats(context);
         const elementalBurst = getElementalBurstCritStats(context);
         const ultimate = getUltimateCritStats(context);
+        const itemSets = getItemSetCritStats(context);
         const sharpshooterCritChance = sharpshooter.hotStreakCritChancePercent;
         const sharpshooterCritDamage = sharpshooter.hotStreakCritDamagePercent;
         const deadeyeCritChance = deadeye.critChanceBonusPercent;
@@ -75,6 +77,7 @@ export const criticalDamageStep = {
                 ultimate,
                 ultimateCritChancePercent: 0,
                 ultimateCritDamagePercent: 0,
+                itemSets,
                 distillationPercent: 0,
                 convertedCritDamagePercent: 0,
                 criticalHit: 0,
@@ -124,6 +127,7 @@ export const criticalDamageStep = {
             ultimate,
             ultimateCritChancePercent: ultimate.critChancePercent,
             ultimateCritDamagePercent: ultimate.critDamagePercent,
+            itemSets,
             distillationPercent,
             convertedCritDamagePercent,
             criticalHit,
@@ -218,6 +222,17 @@ export const criticalDamageStep = {
                     unit: '%'
                 });
             }
+        }
+
+        if (result.itemSets?.hasAlliance) {
+            rows.push(
+                { label: 'Alliance Players', value: result.itemSets.nearbyPlayers },
+                {
+                    label: 'Alliance Crit Chance',
+                    value: result.itemSets.allianceCritChancePercent,
+                    unit: '%'
+                }
+            );
         }
 
         if (result.ultimate?.visible) {

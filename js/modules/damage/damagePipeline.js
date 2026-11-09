@@ -73,6 +73,7 @@ export function createDamageContext({
             griefUptime: 100,
             lastSorrowUptime: 100,
             focusStacks: 0,
+            nearbyPlayers: 0,
             potentialChargeKills: 0,
             ultimateKillsPerSecond: 0.2,
             crystalExplosionOverride: false,

@@ -15,6 +15,8 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLElement|null} lastSorrowUptimeValue
  * @property {HTMLInputElement|null} focusStacks
  * @property {HTMLElement|null} focusStacksValue
+ * @property {HTMLInputElement|null} nearbyPlayers
+ * @property {HTMLElement|null} nearbyPlayersValue
  * @property {HTMLInputElement|null} sharpshooterResets
  * @property {HTMLElement|null} sharpshooterResetsValue
  * @property {HTMLInputElement|null} potentialChargeKills
@@ -71,6 +73,7 @@ export class DamageSettingsRenderer {
         this.griefControl = /** @type {HTMLElement|null} */ (options.griefUptime?.closest('.damage-uptime') ?? null);
         this.lastSorrowControl = /** @type {HTMLElement|null} */ (options.lastSorrowUptime?.closest('.damage-uptime') ?? null);
         this.focusControl = /** @type {HTMLElement|null} */ (options.focusStacks?.closest('.damage-uptime') ?? null);
+        this.nearbyPlayersControl = /** @type {HTMLElement|null} */ (options.nearbyPlayers?.closest('.damage-uptime') ?? null);
         this.sharpshooterResetsControl = /** @type {HTMLElement|null} */ (options.sharpshooterResets?.closest('.damage-uptime') ?? null);
         this.potentialChargeControl = /** @type {HTMLElement|null} */ (options.potentialChargeKills?.closest('.damage-uptime') ?? null);
         this.ultimateKillsControl = /** @type {HTMLElement|null} */ (options.ultimateKills?.closest('.damage-uptime') ?? null);
@@ -102,6 +105,12 @@ export class DamageSettingsRenderer {
             input: options.focusStacks,
             valueEl: options.focusStacksValue,
             onChange: emit
+        });
+        this.nearbyPlayersSlider = new SliderControl({
+            input: options.nearbyPlayers,
+            valueEl: options.nearbyPlayersValue,
+            onChange: emit,
+            format: value => `${value} / 6`
         });
         this.sharpshooterResetsSlider = new SliderControl({
             input: options.sharpshooterResets,
@@ -165,6 +174,7 @@ export class DamageSettingsRenderer {
             this.griefSlider,
             this.lastSorrowSlider,
             this.focusSlider,
+            this.nearbyPlayersSlider,
             this.sharpshooterResetsSlider,
             this.potentialChargeSlider,
             this.ultimateKillsSlider,
@@ -280,6 +290,14 @@ export class DamageSettingsRenderer {
      */
     placePotentialChargeControl(container, visible) {
         this.placeControl(this.potentialChargeControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeNearbyPlayersControl(container, visible) {
+        this.placeControl(this.nearbyPlayersControl, container, visible);
     }
 
     /**
@@ -548,6 +566,7 @@ export class DamageSettingsRenderer {
             griefUptime: this.griefSlider.value,
             lastSorrowUptime: this.lastSorrowSlider.value,
             focusStacks: this.focusSlider.value,
+            nearbyPlayers: this.nearbyPlayersSlider.value,
             sharpshooterResetsPerSecond: this.sharpshooterResetsSlider.value,
             potentialChargeKills: this.potentialChargeSlider.value,
             ultimateKillsPerSecond: this.ultimateKillsSlider.value,

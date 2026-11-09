@@ -31,6 +31,13 @@ describe('damage settings sliders', () => {
         expect(slider('focus-stacks').step).toBe('0.1');
     });
 
+    it('has the correct nearby players range', () => {
+        expect(slider('nearby-players').min).toBe('0');
+        expect(slider('nearby-players').max).toBe('6');
+        expect(slider('nearby-players').step).toBe('1');
+        expect(slider('nearby-players').value).toBe('0');
+    });
+
     it('has the correct Sharpshooter resets range', () => {
         expect(slider('sharpshooter-resets').min).toBe('0');
         expect(slider('sharpshooter-resets').max).toBe('2');

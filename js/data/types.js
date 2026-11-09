@@ -301,6 +301,7 @@
  * @typedef {Object} AugmentFinalStepResult
  * @property {boolean} enabled
  * @property {boolean} hasExecution
+ * @property {boolean} hasSetExecution
  * @property {boolean} hasProsecution
  * @property {boolean} hasHunter
  * @property {boolean} hasEnraged
@@ -316,6 +317,7 @@
  * @property {number} infectedPercent
  * @property {number} enragedPercent
  * @property {number} executionPercent
+ * @property {number} setExecutionPercent
  * @property {number} hunterPercent
  * @property {number} prosecutionPercent
  * @property {number} firstStrikePercent
@@ -396,6 +398,22 @@
  */
 
 /**
+ * Effetti dei set equipaggiati.
+ * @typedef {Object} ItemSetEffectsResult
+ * @property {number} aetherbloomPieces
+ * @property {string[]} aetherbloomSlots
+ * @property {boolean} hasAetherbloom
+ * @property {boolean} hasExecution
+ * @property {number} executionPercent
+ * @property {boolean} hasAlliance
+ * @property {number} nearbyPlayers
+ * @property {number} allianceCritChancePercent
+ * @property {number} executionMaxPercent
+ * @property {number} allianceCritChancePerPlayer
+ * @property {number} allianceMaxPlayers
+ */
+
+/**
  * Risultato dello step "Critical Damage".
  * @typedef {Object} CriticalDamageStepResult
  * @property {number} baseDamage - Danno non critico di partenza
@@ -416,6 +434,7 @@
  * @property {UltimateEffectsResult} ultimate - Effetti medi di Ultimatum Criterium/Vagrus
  * @property {number} ultimateCritChancePercent - Crit Chance media da Ultimatum Criterium
  * @property {number} ultimateCritDamagePercent - Crit Damage medio da Ultimatum Vagrus
+ * @property {ItemSetEffectsResult} itemSets - Effetti dei set equipaggiati
  * @property {number} distillationPercent - Percentuale convertita da Natural Distillation
  * @property {number} convertedCritDamagePercent - Crit Damage convertito in Elemental Power
  * @property {number} criticalHit - Danno del colpo critico
@@ -567,6 +586,7 @@
  * @property {Record<string, number>} [abilityHitCountOverrides] - Numero hit per abilità
  * @property {Record<string, number>} [abilityDamageOverrides] - Danno % per abilità
  * @property {number} [executionHpPercent] - HP attuali del nemico per Execution (0-100)
+ * @property {number} [nearbyPlayers] - Giocatori vicini per Alliance (0-6)
  * @property {number} [prosecutionHpPercent] - HP attuali del nemico per Prosecution (0-100)
  * @property {number} [enragedHpPercent] - HP attuali del player per Enraged (0-100)
  * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)

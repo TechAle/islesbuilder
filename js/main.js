@@ -132,6 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         griefUptime: 100,
         lastSorrowUptime: 100,
         focusStacks: 0,
+        nearbyPlayers: 0,
         sharpshooterResetsPerSecond: 0,
         potentialChargeKills: 0,
         ultimateKillsPerSecond: 0.2,
@@ -161,6 +162,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         lastSorrowUptimeValue: document.getElementById('last-sorrow-uptime-value'),
         focusStacks: /** @type {HTMLInputElement|null} */ (document.getElementById('focus-stacks')),
         focusStacksValue: document.getElementById('focus-stacks-value'),
+        nearbyPlayers: /** @type {HTMLInputElement|null} */ (document.getElementById('nearby-players')),
+        nearbyPlayersValue: document.getElementById('nearby-players-value'),
         sharpshooterResets: /** @type {HTMLInputElement|null} */ (document.getElementById('sharpshooter-resets')),
         sharpshooterResetsValue: document.getElementById('sharpshooter-resets-value'),
         potentialChargeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('potential-charge-kills')),
@@ -303,6 +306,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageSettingsRenderer.placePotentialChargeControl(
             damageRenderer.getStepContent('burst'),
             potentialCharge > 0
+        );
+        damageSettingsRenderer.placeNearbyPlayersControl(
+            damageRenderer.getStepContent('criticalDamage'),
+            dpsManager.getSteps().criticalDamage?.itemSets?.hasAlliance === true
         );
         damageSettingsRenderer.placeUltimateKillsControl(
             damageRenderer.getStepContent('burst'),
