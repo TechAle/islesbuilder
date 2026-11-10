@@ -7,7 +7,8 @@ import { DpsManager } from '../../../js/modules/dpsManager.js';
 import { SpecialAbilityManager } from '../../../js/modules/specialAbilityManager.js';
 import { makeBuild, makeSettings } from '../../helpers/build.js';
 
-const BURST_HITS_PER_SECOND = (10 / 0.75) / 30;
+// Il Barrage dell'Archer Core spara 30 frecce in un ciclo di 30s.
+const BURST_HITS_PER_SECOND = 30 / 30;
 
 function makePierceWeapon() {
     return {
@@ -109,6 +110,7 @@ describe('Archer Core', () => {
         expect(steps.burst.coreName).toBe('Archer Core');
         expect(steps.burst.burstDamagePerHit).toBeCloseTo(expectedArrow, 10);
         expect(steps.burst.burstCycle).toBe(30);
+        expect(steps.burst.burstHitsPerSecond).toBeCloseTo(1, 10);
         expect(steps.burst.burstCastsPerSecond).toBeCloseTo(1 / 30, 10);
         expect(steps.burst.burstEnergyPerSecond).toBeCloseTo(50 / 30, 10);
         expect(steps.burst.energyPerSecondBurstOnly).toBeCloseTo(-50 / 30, 10);

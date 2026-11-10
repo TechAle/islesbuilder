@@ -98,6 +98,9 @@ export const BURST_ENERGY_COST = 50;
 /** Archer Core burst: percentuale del danno inflitta da ogni freccia. */
 export const ARCHER_BURST_DAMAGE_PERCENT = 66;
 
+/** Archer Core burst: frecce sparate in un singolo Barrage. */
+export const ARCHER_BURST_HITS = 30;
+
 /** Assassin Core: durata del buff di danno, in secondi. */
 export const ASSASSIN_BURST_ACTIVE_SECONDS = 6;
 

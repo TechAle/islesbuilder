@@ -1,5 +1,6 @@
 import {
     ARCHER_BURST_DAMAGE_PERCENT,
+    ARCHER_BURST_HITS,
     ASSASSIN_BURST_ACTIVE_SECONDS,
     ASSASSIN_BURST_DAMAGE_PERCENT,
     BOMBARDIER_BURST_DAMAGE_PERCENT,
@@ -94,7 +95,7 @@ export function hasBurstCore(context) {
  * intervallo, danno e tipo di effetto:
  *
  * - Mage Core: burst a colpi ogni 0.75s.
- * - Archer Core: burst a frecce ogni 0.75s.
+ * - Archer Core: Barrage da 30 frecce, 66% ciascuna.
  * - Assassin Core: buff di danno per 6s.
  * - Swordsman Core: proc melee ogni 0.5s, solo con armi melee.
  * - Bombardier Core: un singolo hit da 950% (200% + 3×100% + 9×50%).
@@ -138,6 +139,7 @@ export function getBurstCore(context) {
             energyCost: BURST_ENERGY_COST,
             activeSeconds: BURST_ACTIVE_SECONDS,
             hitInterval: BURST_HIT_INTERVAL,
+            hitsPerBurst: ARCHER_BURST_HITS,
             cycleSeconds: BURST_INTERVAL,
             buffDamagePercent: 0,
             requiresMelee: false

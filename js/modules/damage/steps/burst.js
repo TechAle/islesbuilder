@@ -32,7 +32,7 @@ function getBurstBaseDamage(context) {
  * Ogni core ha la propria burst:
  *
  * - Mage Core: 75% per colpo ogni 0.75s, 10s attivi.
- * - Archer Core: 66% per freccia ogni 0.75s, 10s attivi.
+ * - Archer Core: Barrage da 30 frecce al 66%, 10s attivi.
  * - Assassin Core: +25% danno per 6s, senza colpi diretti.
  * - Swordsman Core: 200% per proc melee ogni 0.5s, 10s attivi.
  *
