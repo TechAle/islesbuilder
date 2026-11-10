@@ -3,7 +3,7 @@ import {
     passives,
     SPECIAL_ABILITY_OVERRIDES
 } from '../data/specialAbilities.js';
-import { DEFAULT_ABILITY_COOLDOWN } from '../data/constants.js';
+import { DEFAULT_ABILITY_COOLDOWN, HEAVY_ABILITY_COOLDOWN } from '../data/constants.js';
 import { getAttackInterval } from './damage/attackTiming.js';
 import { getEnergyRegen } from './damage/energy.js';
 import { getEnergyCostMultiplier } from './damage/energyCost.js';
@@ -12,6 +12,19 @@ import { findPercent } from './damage/statLookup.js';
 
 /** @typedef {import('../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../data/types.js').SpecialAbility} SpecialAbility */
+
+/**
+ * Cooldown base di un'abilità in base al tipo di danno dell'arma.
+ * Le armi Heavy usano 3s, le altre il default.
+ * @param {{damageType?: string|null}|undefined} options
+ * @returns {number}
+ */
+function getDefaultAbilityCooldown(options) {
+    const damageType = String(options?.damageType ?? '').trim().toLowerCase();
+    return damageType === 'heavy'
+        ? HEAVY_ABILITY_COOLDOWN
+        : DEFAULT_ABILITY_COOLDOWN;
+}
 
 /**
  * Gestisce parsing, override e calcolo delle abilità speciali.
@@ -68,9 +81,10 @@ export class SpecialAbilityManager {
      * Converte una voce `abilities` dell'API in una voce interna.
      * @param {string} weaponName
      * @param {any} ability
+     * @param {{damageType?: string|null}} [options]
      * @returns {SpecialAbility|null}
      */
-    parseAbility(weaponName, ability) {
+    parseAbility(weaponName, ability, options = {}) {
         const abilityName = typeof ability === 'string'
             ? ability
             : (ability?.name || ability?.title || '');
@@ -95,7 +109,7 @@ export class SpecialAbilityManager {
             damage: this.extractDamage(ability?.text),
             times: 1,
             hitsPerUse: 1,
-            cooldown: isPassive ? 0 : DEFAULT_ABILITY_COOLDOWN,
+            cooldown: isPassive ? 0 : getDefaultAbilityCooldown(options),
             everyHits: null,
             text: typeof ability?.text === 'string' ? ability.text : ''
         };
@@ -108,12 +122,13 @@ export class SpecialAbilityManager {
      * Registra le abilità di un'arma nelle liste globali.
      * @param {string} weaponName
      * @param {any[]|null|undefined} abilities
+     * @param {{damageType?: string|null}} [options]
      */
-    registerAbilities(weaponName, abilities) {
+    registerAbilities(weaponName, abilities, options = {}) {
         if (!weaponName || !Array.isArray(abilities)) return;
 
         abilities.forEach(ability => {
-            const entry = this.parseAbility(weaponName, ability);
+            const entry = this.parseAbility(weaponName, ability, options);
             if (!entry) return;
 
             const list = entry.kind === 'passive' ? passives : onClick;
@@ -154,7 +169,7 @@ export class SpecialAbilityManager {
                 this.registerAbilities(itemName, [{
                     name: abilityName,
                     kind: override.kind === 'passive' ? 'passive' : 'ability'
-                }]);
+                }], { damageType: stats['Damage Type'] });
             });
     }
 
@@ -169,7 +184,11 @@ export class SpecialAbilityManager {
 
             list.forEach(item => {
                 const abilities = item?.abilities ?? item?.gear?.abilities;
-                this.registerAbilities(item?.name ?? item?.gear?.name, abilities);
+                this.registerAbilities(
+                    item?.name ?? item?.gear?.name,
+                    abilities,
+                    { damageType: item?.gear?.damageType ?? item?.stats?.['Damage Type'] }
+                );
                 this.registerAbilitiesFromStats(
                     item?.name ?? item?.gear?.name,
                     item?.stats
@@ -208,9 +227,10 @@ export class SpecialAbilityManager {
      * @param {string} itemName
      * @param {string} abilityName
      * @param {'ability'|'passive'} kind
+     * @param {string|null} [damageType]
      * @returns {SpecialAbility|null}
      */
-    resolveAbility(list, itemName, abilityName, kind) {
+    resolveAbility(list, itemName, abilityName, kind, damageType = null) {
         const fullName = `${abilityName}-${itemName}`.toLowerCase();
         const existing = list.find(entry => entry.name.toLowerCase() === fullName);
         if (existing) return existing;
@@ -229,7 +249,7 @@ export class SpecialAbilityManager {
         this.registerAbilities(itemName, [{
             name: abilityName,
             kind: overrideKind
-        }]);
+        }], { damageType });
 
         return list.find(entry => entry.name.toLowerCase() === fullName) ?? null;
     }
@@ -271,7 +291,13 @@ export class SpecialAbilityManager {
             }
 
             abilityNames.forEach(abilityName => {
-                add(this.resolveAbility(list, item.name, abilityName, kind));
+                add(this.resolveAbility(
+                    list,
+                    item.name,
+                    abilityName,
+                    kind,
+                    item.stats?.['Damage Type'] ?? null
+                ));
             });
         });
 

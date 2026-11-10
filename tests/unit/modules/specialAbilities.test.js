@@ -94,6 +94,43 @@ test('special abilities: Royal Blowpipe fa un solo colpo al 200% con cooldown 0.
     specialAbilityManager.reset();
 });
 
+test('special abilities: Toxin Hit di Recluse Stinger ha cooldown 5s', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Recluse Stinger', [{
+        kind: 'ability',
+        name: 'Toxin Hit',
+        energy: 12,
+        text: 'Deal 300% damage to the target split over 5 seconds.',
+        key: 'Right click'
+    }]);
+
+    const toxin = onClick.find(entry => entry.name === 'Toxin Hit-Recluse Stinger');
+    assert.ok(toxin);
+    assert.equal(toxin.damage, 300);
+    assert.equal(toxin.cooldown, 5);
+
+    specialAbilityManager.reset();
+});
+
+test('special abilities: le armi Heavy usano 3s di cooldown di default', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Heavy Test Weapon', [{
+        kind: 'ability',
+        name: 'Heavy Strike',
+        energy: 10,
+        text: 'Deal 100% damage.',
+        key: 'Right click'
+    }], { damageType: 'Heavy' });
+
+    const ability = onClick.find(entry => entry.name === 'Heavy Strike-Heavy Test Weapon');
+    assert.ok(ability);
+    assert.equal(ability.cooldown, 3);
+
+    specialAbilityManager.reset();
+});
+
 test('special abilities: Riftripper dà +20% danno con cooldown 3.8s', () => {
     specialAbilityManager.reset();
 
@@ -616,7 +653,7 @@ test('ability speciali: Bug Vitality usa il numero di hit scelto', () => {
     specialAbilityManager.reset();
 });
 
-test('ability speciali: Death Ledger fa 28 hit ogni 14s', () => {
+test('ability speciali: Death Ledger fa 28 hit con cooldown 10s', () => {
     specialAbilityManager.reset();
     specialAbilityManager.registerAbilities('Voras Deathnote', [
         {
@@ -642,10 +679,10 @@ test('ability speciali: Death Ledger fa 28 hit ogni 14s', () => {
     });
 
     const deathLedger = steps.specialAttacks.abilities[0];
-    assert.equal(deathLedger.cooldown, 14);
+    assert.equal(deathLedger.cooldown, 10);
     assert.equal(deathLedger.times, 28);
     assert.equal(deathLedger.hitsPerUse, 28);
-    assert.ok(Math.abs(deathLedger.hitsPerSecond - 2) < 1e-9);
+    assert.ok(Math.abs(deathLedger.hitsPerSecond - 2.8) < 1e-9);
 
     specialAbilityManager.reset();
 });

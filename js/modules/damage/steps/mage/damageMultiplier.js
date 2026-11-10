@@ -4,6 +4,7 @@ import {
     getLastSorrowEffects,
     getFocusStacksEffects
 } from '../../../classes/mage.js';
+import { getCoreBuffEffects } from '../../../classes/coreBuff.js';
 import { applyAdditiveMultipliers } from '../../applyMultipliers.js';
 
 /** @typedef {import('../../../../data/types.js').DamageContext} DamageContext */
@@ -45,12 +46,14 @@ export const damageMultiplierStep = {
             context.settings?.firstHit ? 0 : (context.settings?.lastSorrowUptime ?? 100)
         );
         const focus = getFocusStacksEffects(context, context.settings?.focusStacks ?? 0);
+        const coreBuff = getCoreBuffEffects(context);
 
         const applied = applyAdditiveMultipliers(previous, [
             knowledge.damageMultiplierPercent,
             grief.griefDamagePercent,
             lastSorrow.lastSorrowDamagePercent,
-            focus.focusDamagePercent
+            focus.focusDamagePercent,
+            coreBuff.damagePercent
         ]);
         const damageTakenIncreasePercent = context.specialAbilityManager
             ?.getDamageTakenIncreasePercent(context) ?? 0;
@@ -71,6 +74,8 @@ export const damageMultiplierStep = {
             focusMaxStacks: focus.maxStacks,
             focusStacks: focus.focusStacks,
             focusDamagePercent: focus.focusDamagePercent,
+            coreBuff,
+            coreBuffDamagePercent: coreBuff.damagePercent,
             damageTakenIncreasePercent,
             multiplierPercent: applied.totalPercent + damageTakenIncreasePercent,
             multiplier: applied.multiplier * (1 + damageTakenIncreasePercent / 100),
@@ -87,7 +92,8 @@ export const damageMultiplierStep = {
             || (result?.griefInflictionPercent ?? 0) > 0
             || (result?.lastSorrowPercent ?? 0) > 0
             || (result?.focusStacksPercent ?? 0) > 0
-            || (result?.damageTakenIncreasePercent ?? 0) > 0;
+            || (result?.damageTakenIncreasePercent ?? 0) > 0
+            || result?.coreBuff?.visible === true;
     },
 
     /**
@@ -121,6 +127,33 @@ export const damageMultiplierStep = {
 
         if (result.damageTakenIncreasePercent > 0) {
             rows.push({ label: 'Damage%', value: result.damageTakenIncreasePercent, unit: '%' });
+        }
+
+        if (result.coreBuff?.visible) {
+            if (!result.coreBuff.enabled) {
+                rows.push({
+                    label: 'Core Buff',
+                    value: result.coreBuff.reason ?? 'Off'
+                });
+            } else {
+                rows.push(
+                    {
+                        label: 'Core Buff',
+                        value: result.coreBuff.buffDamagePercent,
+                        unit: '%'
+                    },
+                    {
+                        label: 'Core Buff Uptime',
+                        value: result.coreBuff.uptime * 100,
+                        unit: '%'
+                    },
+                    {
+                        label: 'Core Buff Damage',
+                        value: result.coreBuffDamagePercent,
+                        unit: '%'
+                    }
+                );
+            }
         }
 
         rows.push({ label: 'Damage Multiplier', value: result.multiplierPercent, unit: '%' });

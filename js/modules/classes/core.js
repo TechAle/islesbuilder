@@ -1,7 +1,14 @@
 import {
     ARCHER_BURST_DAMAGE_PERCENT,
+    ASSASSIN_BURST_ACTIVE_SECONDS,
+    ASSASSIN_BURST_DAMAGE_PERCENT,
+    BURST_ACTIVE_SECONDS,
     BURST_DAMAGE_PERCENT,
-    BURST_ENERGY_COST
+    BURST_ENERGY_COST,
+    BURST_HIT_INTERVAL,
+    BURST_INTERVAL,
+    SWORDSMAN_BURST_DAMAGE_PERCENT,
+    SWORDSMAN_BURST_HIT_INTERVAL
 } from '../../data/constants.js';
 
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
@@ -9,7 +16,7 @@ import {
 /**
  * Chiave del core equipaggiato, ricavata dal nome dell'oggetto.
  * @param {DamageContext} context
- * @returns {'mage'|'archer'|null}
+ * @returns {'mage'|'archer'|'assassin'|'swordsman'|null}
  */
 export function getCoreKey(context) {
     const core = context.build?.activeEquip?.core;
@@ -18,6 +25,8 @@ export function getCoreKey(context) {
     const name = core.name.toLowerCase();
     if (name.includes('mage')) return 'mage';
     if (name.includes('archer')) return 'archer';
+    if (name.includes('assassin')) return 'assassin';
+    if (name.includes('swordsman')) return 'swordsman';
     return null;
 }
 
@@ -40,6 +49,24 @@ export function hasArcherCore(context) {
 }
 
 /**
+ * Verifica se il core equipaggiato è un Assassin Core.
+ * @param {DamageContext} context
+ * @returns {boolean}
+ */
+export function hasAssassinCore(context) {
+    return getCoreKey(context) === 'assassin';
+}
+
+/**
+ * Verifica se il core equipaggiato è un Swordsman Core.
+ * @param {DamageContext} context
+ * @returns {boolean}
+ */
+export function hasSwordsmanCore(context) {
+    return getCoreKey(context) === 'swordsman';
+}
+
+/**
  * Verifica se il core equipaggiato abilita una burst.
  * @param {DamageContext} context
  * @returns {boolean}
@@ -51,25 +78,41 @@ export function hasBurstCore(context) {
 /**
  * Configurazione della burst del core equipaggiato.
  *
- * Mage Core e Archer Core condividono durata, cooldown e costo energetico;
- * cambia solo la percentuale di danno del singolo colpo.
+ * I core condividono costo energetico e ciclo base di 30s. Cambiano durata,
+ * intervallo, danno e tipo di effetto:
+ *
+ * - Mage Core: burst a colpi ogni 0.75s.
+ * - Archer Core: burst a frecce ogni 0.75s.
+ * - Assassin Core: buff di danno per 6s.
+ * - Swordsman Core: proc melee ogni 0.5s, solo con armi melee.
  *
  * @param {DamageContext} context
  * @returns {{
- *   key: 'mage'|'archer',
+ *   key: 'mage'|'archer'|'assassin'|'swordsman',
  *   name: string,
  *   damagePercent: number,
- *   energyCost: number
+ *   energyCost: number,
+ *   activeSeconds: number,
+ *   hitInterval: number,
+ *   cycleSeconds: number,
+ *   buffDamagePercent: number,
+ *   requiresMelee: boolean
  * }|null}
  */
 export function getBurstCore(context) {
     const key = getCoreKey(context);
+
     if (key === 'mage') {
         return {
             key,
             name: 'Mage Core',
             damagePercent: BURST_DAMAGE_PERCENT,
-            energyCost: BURST_ENERGY_COST
+            energyCost: BURST_ENERGY_COST,
+            activeSeconds: BURST_ACTIVE_SECONDS,
+            hitInterval: BURST_HIT_INTERVAL,
+            cycleSeconds: BURST_INTERVAL,
+            buffDamagePercent: 0,
+            requiresMelee: false
         };
     }
 
@@ -78,7 +121,40 @@ export function getBurstCore(context) {
             key,
             name: 'Archer Core',
             damagePercent: ARCHER_BURST_DAMAGE_PERCENT,
-            energyCost: BURST_ENERGY_COST
+            energyCost: BURST_ENERGY_COST,
+            activeSeconds: BURST_ACTIVE_SECONDS,
+            hitInterval: BURST_HIT_INTERVAL,
+            cycleSeconds: BURST_INTERVAL,
+            buffDamagePercent: 0,
+            requiresMelee: false
+        };
+    }
+
+    if (key === 'assassin') {
+        return {
+            key,
+            name: 'Assassin Core',
+            damagePercent: 0,
+            energyCost: BURST_ENERGY_COST,
+            activeSeconds: ASSASSIN_BURST_ACTIVE_SECONDS,
+            hitInterval: 0,
+            cycleSeconds: BURST_INTERVAL,
+            buffDamagePercent: ASSASSIN_BURST_DAMAGE_PERCENT,
+            requiresMelee: false
+        };
+    }
+
+    if (key === 'swordsman') {
+        return {
+            key,
+            name: 'Swordsman Core',
+            damagePercent: SWORDSMAN_BURST_DAMAGE_PERCENT,
+            energyCost: BURST_ENERGY_COST,
+            activeSeconds: BURST_ACTIVE_SECONDS,
+            hitInterval: SWORDSMAN_BURST_HIT_INTERVAL,
+            cycleSeconds: BURST_INTERVAL,
+            buffDamagePercent: 0,
+            requiresMelee: true
         };
     }
 

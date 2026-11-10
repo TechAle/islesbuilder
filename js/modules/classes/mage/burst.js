@@ -1,6 +1,7 @@
-import { BURST_ACTIVE_SECONDS, BURST_HIT_INTERVAL, BURST_INTERVAL } from '../../../data/constants.js';
+import { BURST_ACTIVE_SECONDS, BURST_INTERVAL } from '../../../data/constants.js';
 import { getAugmentEffects } from '../../augmentManager.js';
-import { getBurstCore, hasBurstCore } from '../core.js';
+import { getWeaponClass } from '../../damage/weaponProps.js';
+import { getBurstCore } from '../core.js';
 import { getMageNodeValue, MAGE_NODES } from './shared.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -49,6 +50,8 @@ export function getPotentialChargeEffects(context, kills) {
  *   potentialChargeKills: number,
  *   cooldownReduction: number,
  *   burstCooldown: number,
+ *   activeSeconds: number,
+ *   cycleSeconds: number,
  *   effectiveBurstCooldown: number,
  *   burstCycle: number,
  *   burstCastsPerSecond: number,
@@ -61,6 +64,8 @@ export function getPotentialChargeEffects(context, kills) {
 export function getBurstCycleEffects(context) {
     const burstCore = getBurstCore(context);
     const isMageCore = burstCore?.key === 'mage';
+    const activeSeconds = burstCore?.activeSeconds ?? BURST_ACTIVE_SECONDS;
+    const cycleSeconds = burstCore?.cycleSeconds ?? BURST_INTERVAL;
 
     // Potential Charge è un nodo del tree mago: vale solo con il Mage Core.
     const potentialCharge = isMageCore
@@ -72,8 +77,8 @@ export function getBurstCycleEffects(context) {
             potentialChargeSeconds: 0,
             potentialChargeKills: 0,
             cooldownReduction: 0,
-            burstCooldown: Math.max(0, BURST_INTERVAL - BURST_ACTIVE_SECONDS),
-            burstCycle: BURST_INTERVAL
+            burstCooldown: Math.max(0, cycleSeconds - activeSeconds),
+            burstCycle: cycleSeconds
         };
 
     // Second Wind resetta l'Ultimate del mago. L'Archer Core mantiene sempre
@@ -110,10 +115,12 @@ export function getBurstCycleEffects(context) {
     const effectiveBurstCooldown = resetRate > 0
         ? (1 - Math.exp(-resetRate * potentialCharge.burstCooldown)) / resetRate
         : potentialCharge.burstCooldown;
-    const burstCycle = BURST_ACTIVE_SECONDS + effectiveBurstCooldown;
+    const burstCycle = activeSeconds + effectiveBurstCooldown;
 
     return {
         ...potentialCharge,
+        activeSeconds,
+        cycleSeconds,
         effectiveBurstCooldown,
         burstCycle,
         burstCastsPerSecond: burstCycle > 0 ? 1 / burstCycle : 0,
@@ -130,9 +137,17 @@ export function getBurstCycleEffects(context) {
  * @returns {number}
  */
 export function getBurstHitsPerSecond(context) {
-    if (!context.settings?.useBurst || !hasBurstCore(context)) return 0;
+    if (!context.settings?.useBurst) return 0;
+
+    const burstCore = getBurstCore(context);
+    if (!burstCore || burstCore.damagePercent <= 0 || burstCore.hitInterval <= 0) {
+        return 0;
+    }
+    if (burstCore.requiresMelee && getWeaponClass(context.weapon) !== 'melee') {
+        return 0;
+    }
 
     const burstCycle = getBurstCycleEffects(context).burstCycle;
 
-    return (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL) / burstCycle;
+    return (burstCore.activeSeconds / burstCore.hitInterval) / burstCycle;
 }

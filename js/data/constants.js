@@ -98,11 +98,26 @@ export const BURST_ENERGY_COST = 50;
 /** Archer Core burst: percentuale del danno inflitta da ogni freccia. */
 export const ARCHER_BURST_DAMAGE_PERCENT = 66;
 
+/** Assassin Core: durata del buff di danno, in secondi. */
+export const ASSASSIN_BURST_ACTIVE_SECONDS = 6;
+
+/** Assassin Core: aumento del danno durante il buff. */
+export const ASSASSIN_BURST_DAMAGE_PERCENT = 25;
+
+/** Swordsman Core burst: percentuale del danno di ogni proc melee. */
+export const SWORDSMAN_BURST_DAMAGE_PERCENT = 200;
+
+/** Swordsman Core burst: intervallo tra i proc melee, in secondi. */
+export const SWORDSMAN_BURST_HIT_INTERVAL = 0.5;
+
 /** Durata del buff Crit Chance/Crit Damage di Ultimatum Criterium/Vagrus. */
 export const ULTIMATE_BUFF_SECONDS = 5;
 
 /** Cooldown base di un'abilità onClick, in secondi. */
 export const DEFAULT_ABILITY_COOLDOWN = 1.6;
+
+/** Cooldown base delle special ability delle armi Heavy, in secondi. */
+export const HEAVY_ABILITY_COOLDOWN = 3;
 
 /**
  * Mappa lo slot grezzo restituito dall'API alla categoria usata da ITEM_DATABASE.

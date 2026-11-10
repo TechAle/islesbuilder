@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Item Search</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/items.css">
+</head>
+<body class="items-page">
+
+<header class="items-header">
+    <div>
+        <h1>Item Search</h1>
+        <p class="items-subtitle">
+            Search, filter and sort weapons, armor, accessories, cores and augments.
+        </p>
+    </div>
+    <a class="items-back" href="index.html">← Back to builder</a>
+</header>
+
+<main class="items-main">
+
+    <section class="items-toolbar">
+        <div class="items-level">
+            <label for="item-level">Level</label>
+            <input id="item-level" type="number" min="1" max="35" step="1" value="35">
+            <button id="set-level" class="items-button" type="button">Set level</button>
+            <span id="level-status" class="items-muted">Level 35</span>
+        </div>
+        <button id="reset-filters" class="items-button items-button--ghost" type="button">Reset</button>
+    </section>
+
+    <section class="items-filters">
+        <div class="items-filter">
+            <label for="search-name">Name</label>
+            <input id="search-name" type="search" placeholder="Search by name...">
+        </div>
+        <div class="items-filter">
+            <label for="filter-category">Category</label>
+            <select id="filter-category"></select>
+        </div>
+        <div class="items-filter">
+            <label for="filter-type">Type</label>
+            <select id="filter-type"></select>
+        </div>
+        <div class="items-filter">
+            <label for="filter-ability">Ability</label>
+            <select id="filter-ability"></select>
+        </div>
+        <div class="items-filter">
+            <label for="sort-field">Sort by</label>
+            <select id="sort-field"></select>
+        </div>
+        <div class="items-filter">
+            <label for="sort-direction">Direction</label>
+            <select id="sort-direction">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
+    </section>
+
+    <section class="items-stat-filter">
+        <div class="items-filter">
+            <label for="stat-field">Stat</label>
+            <select id="stat-field"></select>
+        </div>
+        <div class="items-filter">
+            <label for="stat-operator">Operator</label>
+            <select id="stat-operator">
+                <option value="eq">=</option>
+                <option value="gt">&gt;</option>
+                <option value="gte">&ge;</option>
+                <option value="lt">&lt;</option>
+                <option value="lte">&le;</option>
+            </select>
+        </div>
+        <div class="items-filter">
+            <label for="stat-value">Value</label>
+            <input id="stat-value" type="number" step="any" placeholder="e.g. 20">
+        </div>
+        <button id="add-stat-filter" class="items-button" type="button">Add filter</button>
+    </section>
+
+    <div id="active-filters" class="items-active-filters"></div>
+    <div id="items-status" class="items-status" role="status">Loading items...</div>
+
+    <div class="items-table-wrap">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th data-sort="@name">Name</th>
+                    <th>Type</th>
+                    <th data-sort="@level">Base Lvl</th>
+                    <th data-sort="@baseDamage" class="items-num">Base Dmg</th>
+                    <th data-sort="@scaledBaseDamage" class="items-num">Scaled Dmg</th>
+                    <th data-sort="@scaledWithSpecial" class="items-num">+Special</th>
+                    <th>Ability</th>
+                    <th>Stats</th>
+                </tr>
+            </thead>
+            <tbody id="items-tbody"></tbody>
+        </table>
+    </div>
+
+    <p class="items-help">
+        Base Dmg = flat damage stat. Scaled Dmg = Base × Default Attack.
+        +Special = Base × (Default Attack + best damaging ability).
+        Items whose base level is above the selected level are hidden.
+        Augments and cores are not affected by item level.
+    </p>
+
+</main>
+
+<script type="module" src="js/itemsPage.js"></script>
+</body>
+</html>

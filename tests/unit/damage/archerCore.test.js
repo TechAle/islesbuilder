@@ -57,7 +57,7 @@ describe('Archer Core', () => {
         expect(core.stats['Pierce Damage']).toBe('20%');
     });
 
-    it('riconosce Archer Core e Mage Core come core con burst', () => {
+    it('riconosce Archer Core, Mage Core e Assassin Core come core con burst', () => {
         const archer = { build: { activeEquip: { core: { name: 'Archer Core' } } } };
         const mage = { build: { activeEquip: { core: { name: 'Mage Core' } } } };
         const assassin = { build: { activeEquip: { core: { name: 'Assassin Core' } } } };
@@ -81,8 +81,15 @@ describe('Archer Core', () => {
         });
 
         expect(hasArcherCore(assassin)).toBe(false);
-        expect(hasBurstCore(assassin)).toBe(false);
-        expect(getBurstCore(assassin)).toBe(null);
+        expect(hasBurstCore(assassin)).toBe(true);
+        expect(getBurstCore(assassin)).toMatchObject({
+            key: 'assassin',
+            name: 'Assassin Core',
+            damagePercent: 0,
+            energyCost: 50,
+            activeSeconds: 6,
+            buffDamagePercent: 25
+        });
     });
 
     it('infligge il 66% del danno per freccia con un ciclo fisso di 30s', () => {

@@ -1,11 +1,11 @@
-import {
-    BURST_ACTIVE_SECONDS,
-    BURST_HIT_INTERVAL,
-    BURST_INTERVAL
-} from '../../../data/constants.js';
+import { BURST_INTERVAL } from '../../../data/constants.js';
 import { computeEnergyState } from '../energy.js';
-import { getDefaultAttackReverseMultiplier } from '../weaponProps.js';
+import {
+    getDefaultAttackReverseMultiplier,
+    getWeaponClass
+} from '../weaponProps.js';
 import { getBurstCore } from '../../classes/core.js';
+import { getCoreBuffEffects } from '../../classes/coreBuff.js';
 import { getBurstCycleEffects } from '../../classes/mage.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -27,18 +27,17 @@ function getBurstBaseDamage(context) {
 /**
  * Step 6 — Burst DPS.
  *
- * Con Mage Core o Archer Core equipaggiato, durante i 10 secondi attivi ogni
- * colpo infligge una percentuale del danno dopo il critico, riportato al danno
- * base dell'arma (reverse del Default Attack):
+ * Ogni core ha la propria burst:
  *
- * - Mage Core: 75% per colpo.
- * - Archer Core: 66% per freccia.
+ * - Mage Core: 75% per colpo ogni 0.75s, 10s attivi.
+ * - Archer Core: 66% per freccia ogni 0.75s, 10s attivi.
+ * - Assassin Core: +25% danno per 6s, senza colpi diretti.
+ * - Swordsman Core: 200% per proc melee ogni 0.5s, 10s attivi.
  *
- * Poi ci sono 20 secondi di cooldown, quindi su 30 secondi l'effetto è attivo
- * solo per 10.
+ * Il danno dei proc usa lo stesso percorso di Mage/Archer:
  *
- * - Burst DPS = postCritDamage × reverseDefaultAttack × core% × 10 / 30
- * - Costo energetico = 50 / 30 al secondo
+ * - Burst DPS = postCritDamage × reverseDefaultAttack × core% × hit/s medi
+ * - Costo energetico = 50 / ciclo della burst
  *
  * @type {import('../../../data/types.js').DamageStep}
  */
@@ -80,6 +79,10 @@ export const burstStep = {
             secondWindCooldownSeconds: 0,
             secondWindResetsPerSecond: 0,
             hasSecondWind: false,
+            buffDamagePercent: 0,
+            buffUptime: 0,
+            buffDurationSeconds: 0,
+            reason: null,
             attackDps,
             totalDps: attackDps,
             energyPerSecond: attack?.energyPerSecond ?? 0,
@@ -94,18 +97,33 @@ export const burstStep = {
             return inactive;
         }
 
-        const damage = getBurstBaseDamage(context);
         const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
+        if (burstCore.requiresMelee && getWeaponClass(weapon) !== 'melee') {
+            return {
+                ...inactive,
+                reason: 'Requires melee weapon'
+            };
+        }
+
+        const damage = getBurstBaseDamage(context);
         const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
-        const burstDamagePerHit = damage
-            * reverseMultiplier
-            * (burstCore.damagePercent / 100);
-
         const potentialCharge = getBurstCycleEffects(context);
+        const coreBuff = getCoreBuffEffects(context);
 
-        const burstHitsPerSecond = (BURST_ACTIVE_SECONDS / BURST_HIT_INTERVAL)
-            / potentialCharge.burstCycle;
-        const burstDps = burstDamagePerHit * burstHitsPerSecond;
+        let burstDamagePerHit = 0;
+        let burstHitsPerSecond = 0;
+        let burstDps = 0;
+
+        if (burstCore.damagePercent > 0 && burstCore.hitInterval > 0) {
+            burstDamagePerHit = damage
+                * reverseMultiplier
+                * (burstCore.damagePercent / 100);
+            burstHitsPerSecond = (
+                burstCore.activeSeconds / burstCore.hitInterval
+            ) / potentialCharge.burstCycle;
+            burstDps = burstDamagePerHit * burstHitsPerSecond;
+        }
+
         const burstEnergyPerSecond = burstCore.energyCost / potentialCharge.burstCycle;
         const energyPerSecondBurstOnly = -burstEnergyPerSecond;
 
@@ -120,6 +138,7 @@ export const burstStep = {
             enabled: true,
             burstDps,
             burstDamagePerHit,
+            burstHitsPerSecond,
             energyPerSecondBurstOnly,
             reverseMultiplier,
             burstEnergyPerSecond,
@@ -134,6 +153,10 @@ export const burstStep = {
             secondWindCooldownSeconds: potentialCharge.secondWindCooldownSeconds,
             secondWindResetsPerSecond: potentialCharge.secondWindResetsPerSecond,
             hasSecondWind: potentialCharge.hasSecondWind,
+            buffDamagePercent: coreBuff.buffDamagePercent,
+            buffUptime: coreBuff.uptime,
+            buffDurationSeconds: coreBuff.activeSeconds,
+            reason: null,
             attackDps,
             totalDps,
             energyPerSecond,
@@ -168,16 +191,47 @@ export const burstStep = {
         if (!result || !result.visible) return [];
 
         if (!result.available) {
-            return [{ label: 'Burst', value: 'Requires Mage Core or Archer Core' }];
+            return [{ label: 'Burst', value: 'Requires a burst core' }];
+        }
+
+        if (result.reason) {
+            return [{ label: 'Burst', value: result.reason }];
         }
 
         if (!result.enabled) {
             return [{ label: 'Burst', value: 'Off' }];
         }
 
+        if ((result.buffDamagePercent ?? 0) > 0) {
+            const buffPercent = result.buffDamagePercent ?? 0;
+            const buffUptime = result.buffUptime ?? 0;
+            return [
+                { label: 'Burst Buff', value: buffPercent, unit: '%' },
+                { label: 'Buff Duration', value: result.buffDurationSeconds ?? 0, unit: 's' },
+                { label: 'Buff Uptime', value: buffUptime * 100, unit: '%' },
+                {
+                    label: 'Average Buff',
+                    value: buffPercent * buffUptime,
+                    unit: '%'
+                },
+                { label: 'Burst Cycle', value: result.burstCycle, unit: 's' },
+                {
+                    label: 'Energy per Second',
+                    value: result.energyPerSecondBurstOnly,
+                    unit: '/s'
+                }
+            ];
+        }
+
+        const hitLabel = result.coreName === 'Archer Core'
+            ? 'Burst / Arrow'
+            : result.coreName === 'Swordsman Core'
+                ? 'Burst / Proc'
+                : 'Burst / Hit';
+
         return [
             {
-                label: result.coreName === 'Archer Core' ? 'Burst / Arrow' : 'Burst / Hit',
+                label: hitLabel,
                 value: result.burstDamagePerHit
             },
             ...(result.potentialChargeSeconds > 0

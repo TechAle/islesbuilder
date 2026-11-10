@@ -52,11 +52,11 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     },
     'Honey Healing-The Drizzler': { damage: 250 },
 
-    // Death Ledger: 30% ogni 0.5s per 14s, cooldown 14s.
+    // Death Ledger: 30% ogni 0.5s, 28 hit totali, cooldown 10s.
     'Death Ledger-Voras Deathnote': {
         times: 28,
         hitsPerUse: 28,
-        cooldown: 14
+        cooldown: 10
     },
 
     // Astro Break: danno selezionabile tra 150% e 300%.
@@ -83,6 +83,11 @@ export const SPECIAL_ABILITY_OVERRIDES = {
         times: 1,
         hitsPerUse: 1,
         cooldown: 0.9
+    },
+
+    // Toxin Hit (Recluse Stinger): 300% totali nel tempo, cooldown 5s.
+    'Toxin Hit-Recluse Stinger': {
+        cooldown: 5
     },
 
     // Runic Knuckles: 1 hit extra per swing, durata/cooldown 4s.

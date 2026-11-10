@@ -290,6 +290,8 @@
  * @property {number} focusMaxStacks - Stack massimi (3 + Focus Capacity)
  * @property {number} focusStacks - Stack medi usati
  * @property {number} focusDamagePercent - Aumento effettivo di Focus
+ * @property {{visible: boolean, enabled: boolean, coreName: string|null, buffDamagePercent: number, activeSeconds: number, burstCycle: number, uptime: number, damagePercent: number, reason: string|null}} coreBuff - Buff del core
+ * @property {number} coreBuffDamagePercent - Bonus medio del buff del core
  * @property {number} damageTakenIncreasePercent - Aumento danno subito dal nemico
  * @property {number} multiplierPercent - Aumento percentuale totale
  * @property {number} multiplier - Moltiplicatore applicato
@@ -693,6 +695,11 @@
  * @property {boolean} enabled - Se il burst è attivo
  * @property {number} burstDps
  * @property {number} burstDamagePerHit
+ * @property {number} [burstHitsPerSecond] - Hit/s medi della burst
+ * @property {number} [buffDamagePercent] - Buff di danno del core
+ * @property {number} [buffUptime] - Uptime medio del buff
+ * @property {number} [buffDurationSeconds] - Durata del buff
+ * @property {string|null} [reason] - Motivo per cui la burst non è attiva
  * @property {number} energyPerSecondBurstOnly
  * @property {number} reverseMultiplier
  * @property {number} burstEnergyPerSecond

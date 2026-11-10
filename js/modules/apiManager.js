@@ -247,7 +247,11 @@ export class ApiManager {
                 const gear = item.gear || {};
 
                 if (Array.isArray(gear.abilities) && gear.abilities.length > 0) {
-                    this.specialAbilityManager?.registerAbilities(name, gear.abilities);
+                    this.specialAbilityManager?.registerAbilities(
+                        name,
+                        gear.abilities,
+                        { damageType: gear.damageType }
+                    );
                 }
 
                 // Chiamata alla funzione di appoggio per generare tutte le statistiche pulite
