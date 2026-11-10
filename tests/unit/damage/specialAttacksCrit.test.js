@@ -57,28 +57,28 @@ describe('special attacks and critical damage', () => {
         const noCritWhirlwind = noCrit.specialAttacks.abilities[0];
         const fullCritWhirlwind = fullCrit.specialAttacks.abilities[0];
 
-        expect(noCritWhirlwind.damagePerHit).toBeCloseTo(47.6 * 0.45, 10);
-        expect(fullCritWhirlwind.damagePerHit).toBeCloseTo(71.4 * 0.45, 10);
+        expect(noCritWhirlwind.damagePerHit).toBeCloseTo(47.6 * 1.35, 10);
+        expect(fullCritWhirlwind.damagePerHit).toBeCloseTo(71.4 * 1.35, 10);
         expect(fullCritWhirlwind.dps).toBeGreaterThan(noCritWhirlwind.dps);
-        expect(fullCritWhirlwind.dps).toBeCloseTo((71.4 * 0.45 * 3) / 1.6, 10);
+        expect(fullCritWhirlwind.dps).toBeCloseTo((71.4 * 1.35) / 1.6, 10);
     });
 
-    it('counts Whirlwind as one effect hit even if it deals three damage instances', () => {
+    it('counts Whirlwind as a single hit', () => {
         const { steps } = makeTempest(0);
         const whirlwind = steps.specialAttacks.abilities[0];
 
-        expect(whirlwind.times).toBe(3);
+        expect(whirlwind.times).toBe(1);
         expect(whirlwind.hitsPerUse).toBe(1);
-        expect(whirlwind.damagePerUse).toBeCloseTo(whirlwind.damagePerHit * 3, 10);
+        expect(whirlwind.damagePerUse).toBeCloseTo(whirlwind.damagePerHit, 10);
         expect(whirlwind.hitsPerSecond).toBeCloseTo(whirlwind.castsPerSecond, 10);
     });
 
-    it('multi-hit special attacks multiply damage per use by times', () => {
+    it('single-hit special attacks use damage per hit', () => {
         const { steps } = makeTempest(0);
         const whirlwind = steps.specialAttacks.abilities[0];
 
-        expect(whirlwind.times).toBe(3);
-        expect(whirlwind.damagePerUse).toBeCloseTo(whirlwind.damagePerHit * 3, 10);
+        expect(whirlwind.times).toBe(1);
+        expect(whirlwind.damagePerUse).toBeCloseTo(whirlwind.damagePerHit, 10);
     });
 });
 

@@ -45,8 +45,8 @@ test('special abilities: parsing nome, danno, key e times', () => {
     assert.equal(whirlwind.weapon, 'Tempest');
     assert.equal(whirlwind.key, 'rightClick');
     assert.equal(whirlwind.energy, 12);
-    assert.equal(whirlwind.damage, 45);
-    assert.equal(whirlwind.times, 3); // override
+    assert.equal(whirlwind.damage, 135);
+    assert.equal(whirlwind.times, 1); // override: tre trombe = 1 hit
     assert.equal(whirlwind.cooldown, 1.6);
     assert.equal(smite.key, null);
     assert.equal(smite.damage, 150);
@@ -268,7 +268,7 @@ test('special attacks: cooldown override aumenta il cooldown effettivo', () => {
     );
 
     assert.ok(Math.abs(whirlwind.castsPerSecond - (1 / 3.2)) < 1e-9);
-    assert.ok(Math.abs(whirlwind.dps - (47.6 * 0.45 * 3) * (1 / 3.2)) < 1e-9);
+    assert.ok(Math.abs(whirlwind.dps - (47.6 * 1.35) * (1 / 3.2)) < 1e-9);
 
     specialAbilityManager.reset();
 });
@@ -989,9 +989,9 @@ test('cambio oggetto: non corrompe le definizioni delle abilità', () => {
     const whirlwind = onClick.find(entry => entry.name === 'Whirlwind-Tempest');
     const smite = passives.find(entry => entry.name === 'Smite-Tempest');
 
-    assert.equal(whirlwind.damage, 45);
+    assert.equal(whirlwind.damage, 135);
     assert.equal(whirlwind.energy, 12);
-    assert.equal(whirlwind.times, 3);
+    assert.equal(whirlwind.times, 1);
     assert.equal(smite.damage, 150);
     assert.equal(smite.everyHits, 5);
     assert.ok(!onClick.some(entry => entry.name === 'Smite-Tempest'));

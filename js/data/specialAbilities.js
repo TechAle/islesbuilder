@@ -31,7 +31,8 @@ export const SPECIAL_ABILITY_OVERRIDES = {
 
     // Whirlwind evoca tre tornado, ognuno al 45%. Come da convenzione, le
     // istanze multiple moltiplicano il danno ma contano come un hit effettivo.
-    'Whirlwind-Tempest': { times: 3 },
+    // Tempest: le tre trombe sono un solo hit (135% totale), non 3 hit.
+    'Whirlwind-Tempest': { times: 1, damage: 135 },
 
     // Windstorm Greaves: il testo API può riportare "200 damage" senza %;
     // il valore reale è 200%.

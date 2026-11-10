@@ -100,7 +100,7 @@ describe('blue orb damage propagation', () => {
         );
 
         const whirlwind = steps.specialAttacks.abilities.find(ability => ability.ability === 'Whirlwind');
-        expect(whirlwind.damagePerHit).toBeCloseTo(averageDamage * reverse * 0.45, 10);
+        expect(whirlwind.damagePerHit).toBeCloseTo(averageDamage * reverse * 1.35, 10);
         expect(whirlwind.dps).toBeCloseTo(whirlwind.damagePerUse * whirlwind.castsPerSecond, 10);
 
         expect(steps.burst.burstDamagePerHit).toBeCloseTo(averageDamage * reverse * 0.75, 10);

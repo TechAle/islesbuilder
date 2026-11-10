@@ -119,6 +119,14 @@ export const ITEM_OVERRIDES = {
         "Elemental Power": "25.6%",
         "Ability 2": "Royal Praise"
     },
+    // The Drizzler: l'API riporta un'istanza con crit damage errato e non
+    // espone l'elemento (glifo U+EA37 non mappato). Dati confermati in gioco:
+    // +37.5% Crit Damage, elemento Nature, Honey Healing 250%.
+    "The Drizzler": {
+        "Crit Damage": "37.5%",
+        element: 'nature',
+        "Ability 1": "Honey Healing"
+    },
     "Abyssal Blight Chestplate": {
         "Void Damage": "5%",
     },

@@ -130,8 +130,8 @@ describe('special ability parsing', () => {
 
         expect(ability.name).toBe('Whirlwind-Tempest');
         expect(ability.ability).toBe('Whirlwind');
-        expect(ability.times).toBe(3);
-        expect(ability.damage).toBe(45);
+        expect(ability.times).toBe(1);
+        expect(ability.damage).toBe(135);
     });
 
     it('applies the Tempest Smite passive override', () => {
