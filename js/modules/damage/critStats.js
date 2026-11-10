@@ -6,8 +6,9 @@ import {
     getSharpshooterEffects,
     getUltimateEffects
 } from '../classes/archer.js';
-import { getTotalHitsPerSecond } from '../classes/mage.js';
+import { getTotalHitsPerSecond, getBurstCycleEffects } from '../classes/mage.js';
 import { getEnhancedReservationRingEffects } from '../itemProcs.js';
+import { getFuryResonanceEffects } from '../itemPassives.js';
 import { getItemSetEffects, getSoulResonatorEffects } from '../itemSets.js';
 import { findPercent } from './statLookup.js';
 
@@ -64,6 +65,7 @@ const CRIT_STATS_HIT_TOLERANCE = 1e-9;
  *   ultimate: ReturnType<typeof getUltimateEffects>,
  *   itemSets: ReturnType<typeof getItemSetEffects>,
  *   soulResonator: ReturnType<typeof getSoulResonatorEffects>,
+ *   furyResonance: ReturnType<typeof getFuryResonanceEffects>,
  *   enhancedReservationRing: ReturnType<typeof getEnhancedReservationRingEffects>
  * }}
  */
@@ -79,9 +81,16 @@ function computeCritStats(context) {
     // nella base usata anche da Deadeye/Pity, non solo nel totale finale.
     const itemSets = getItemSetEffects(context);
     const soulResonator = getSoulResonatorEffects(context);
+    // Fury's Resonance è un buff medio: +10% Crit Chance per 4s dopo
+    // l'Ultimate. L'uptime dipende dal ciclo della burst.
+    const furyResonance = getFuryResonanceEffects(
+        context,
+        getBurstCycleEffects(context).burstCycle
+    );
     const baseCritChancePercent = baseCritChanceStatPercent
         + itemSets.allianceCritChancePercent
-        + soulResonator.critChancePercent;
+        + soulResonator.critChancePercent
+        + furyResonance.averageCritChancePercent;
     // L'uptime della burst non dipende dalla Crit Chance: calcoliamolo una
     // volta sola e usiamolo per entrambe le statistiche critiche.
     const ultimate = getUltimateEffects(context);
@@ -196,6 +205,7 @@ function computeCritStats(context) {
         ultimate,
         itemSets,
         soulResonator,
+        furyResonance,
         enhancedReservationRing
     };
 
@@ -257,6 +267,14 @@ export function getUltimateCritStats(context) {
  */
 export function getSoulResonatorCritStats(context) {
     return computeCritStats(context).soulResonator;
+}
+
+/**
+ * @param {DamageContext} context
+ * @returns {ReturnType<typeof getFuryResonanceEffects>}
+ */
+export function getFuryResonanceCritStats(context) {
+    return computeCritStats(context).furyResonance;
 }
 
 /**

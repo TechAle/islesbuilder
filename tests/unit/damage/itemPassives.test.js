@@ -6,7 +6,9 @@ import {
     getBackstabEffects,
     getDemeanorExecutionEffects,
     getDeteriorateEffects,
-    getReclamationEffects
+    getFuryResonanceEffects,
+    getReclamationEffects,
+    getStormEchoEffects
 } from '../../../js/modules/itemPassives.js';
 import {
     MAGE_CORE,
@@ -208,5 +210,110 @@ describe('Execution (Demeanor of Dragons)', () => {
         expect(effects.enabled).toBe(true);
         expect(effects.maxPercent).toBe(30);
         expect(effects.executionPercent).toBe(22.5);
+    });
+});
+
+describe("Fury's Resonance (Storm's Fury)", () => {
+    it('adds average Crit Chance based on the burst cycle', () => {
+        const { steps } = run({
+            weaponName: "Storm's Fury",
+            core: MAGE_CORE,
+            settings: { useBurst: true }
+        });
+        const fury = steps.criticalDamage.furyResonance;
+
+        expect(fury.visible).toBe(true);
+        expect(fury.enabled).toBe(true);
+        expect(fury.uptime).toBeCloseTo(4 / 30, 10);
+        expect(fury.averageCritChancePercent).toBeCloseTo(10 * (4 / 30), 10);
+        expect(steps.criticalDamage.critChance).toBeCloseTo(10 * (4 / 30), 10);
+    });
+
+    it('does nothing without the burst enabled', () => {
+        const { steps } = run({ weaponName: "Storm's Fury" });
+        const fury = steps.criticalDamage.furyResonance;
+
+        expect(fury.visible).toBe(true);
+        expect(fury.enabled).toBe(false);
+        expect(fury.averageCritChancePercent).toBe(0);
+        expect(steps.criticalDamage.critChance).toBe(0);
+    });
+
+    it('reports the effect values', () => {
+        const effects = getFuryResonanceEffects({
+            build: { activeEquip: { weapon: { name: "Storm's Fury" } } },
+            settings: makeSettings({ useBurst: true })
+        }, 28);
+
+        expect(effects.enabled).toBe(true);
+        expect(effects.uptime).toBeCloseTo(4 / 28, 10);
+        expect(effects.averageCritChancePercent).toBeCloseTo(10 * (4 / 28), 10);
+    });
+});
+
+describe("Storm's Echo (Storm's Legacy)", () => {
+    it('gives 3 stacks and +45% damage with at least 1 hit/s', () => {
+        const { steps } = run({ armor: STORM_LEGACY_PIECES });
+
+        expect(steps.damageModifiers.stormEchoVisible).toBe(true);
+        expect(steps.damageModifiers.stormEchoStacks).toBe(3);
+        expect(steps.damageModifiers.stormEchoDamagePercent).toBe(45);
+        // Danno base 100 × 1.45.
+        expect(steps.damageModifiers.damage).toBeCloseTo(145, 10);
+    });
+
+    it('requires all four Storm’s Legacy pieces', () => {
+        const noSet = run({ armor: STORM_LEGACY_PIECES.slice(0, 3) });
+        const fullSet = run({ armor: STORM_LEGACY_PIECES });
+
+        expect(noSet.steps.damageModifiers.stormEchoVisible).toBe(false);
+        expect(noSet.steps.damageModifiers.stormEchoDamagePercent).toBe(0);
+        expect(fullSet.steps.damageModifiers.stormEchoVisible).toBe(true);
+    });
+
+    it('has 0 stacks on the first hit', () => {
+        const { steps } = run({
+            armor: STORM_LEGACY_PIECES,
+            settings: { firstHit: true }
+        });
+
+        expect(steps.damageModifiers.stormEchoVisible).toBe(true);
+        expect(steps.damageModifiers.stormEchoStacks).toBe(0);
+        expect(steps.damageModifiers.stormEchoDamagePercent).toBe(0);
+        expect(steps.damageModifiers.damage).toBeCloseTo(100, 10);
+    });
+
+    it('scales stacks below 1 hit/s', () => {
+        const build = makeBuild({
+            currentClass: 'mage',
+            weapon: makeArcaneWeapon(),
+            armor: STORM_LEGACY_PIECES.map(name => ({ name, stats: {} }))
+        });
+        const effects = getStormEchoEffects({
+            build,
+            settings: makeSettings()
+        }, 0.5);
+
+        expect(effects.averageStacks).toBe(1.5);
+        expect(effects.damagePercent).toBe(22.5);
+        expect(effects.ultimateConsumePercent).toBe(75);
+    });
+
+    it('adds the Ultimate consume bonus to Burst DPS', () => {
+        const withoutSet = run({
+            core: MAGE_CORE,
+            settings: { useBurst: true }
+        }).steps.burst;
+        const withSet = run({
+            armor: STORM_LEGACY_PIECES,
+            core: MAGE_CORE,
+            settings: { useBurst: true }
+        }).steps.burst;
+
+        expect(withoutSet.hasStormEcho).toBe(false);
+        expect(withoutSet.stormEchoConsumeDps).toBe(0);
+        expect(withSet.hasStormEcho).toBe(true);
+        expect(withSet.stormEchoUltimatePercent).toBe(150);
+        expect(withSet.stormEchoConsumeDps).toBeGreaterThan(0);
     });
 });

@@ -173,7 +173,10 @@ export class ApiManager {
                 if (Array.isArray(firstRow) && firstRow.length > 1) {
                     const elementalRow = firstRow[0]?.text;
                     if (typeof elementalRow === 'string' && elementalRow.length > 9) {
-                        statsObj["element"] = ELEMENT_CHAR_TO_NAME[elementalRow[10]];
+                        const element = ELEMENT_CHAR_TO_NAME[elementalRow[10]];
+                        if (typeof element === 'string' && element) {
+                            statsObj["element"] = element;
+                        }
                     }
                 }
             }

@@ -23,6 +23,75 @@ export const ITEM_OVERRIDES = {
     "Demeanor of Dragons": {
         "Default Attack": 100
     },
+    "Voras Harbringer": {
+        "Default Attack": 85,
+        "Ability 1": "Aracha Infestation"
+    },
+    "Invar Mace": {
+        "Default Attack": 133
+    },
+    "Oak Bow": {
+        "Default Attack": 100
+    },
+    // L'API restituisce Default Attack null per molte armi di livello basso.
+    // I valori sono dedotti dalle armi dello stesso tipo/slot.
+    "Bronze Focus": {
+        "Default Attack": 60
+    },
+    "Bronze Gauntlet": {
+        "Default Attack": 60
+    },
+    "Bronze Crux": {
+        "Default Attack": 110
+    },
+    "Nightweb Crux": {
+        "Default Attack": 110
+    },
+    "Oak Wand": {
+        "Default Attack": 85
+    },
+    "Invar Axe": {
+        "Default Attack": 75
+    },
+    "Bronze Dagger": {
+        "Default Attack": 65
+    },
+    "Invar Dagger": {
+        "Default Attack": 65
+    },
+    "Invar Hammer": {
+        "Default Attack": 175
+    },
+    "Bronze Spear": {
+        "Default Attack": 120
+    },
+    "Invar Spear": {
+        "Default Attack": 120
+    },
+    "Flameburster": {
+        "Default Attack": 100
+    },
+    "Invar Sword": {
+        "Default Attack": 100
+    },
+    "Royal's Bane": {
+        "Default Attack": 125
+    },
+    "Royal’s Bane": {
+        "Default Attack": 125
+    },
+    "Bronze Handcannon": {
+        "Default Attack": 115
+    },
+    "Bronze Pot": {
+        "Default Attack": 90
+    },
+    "Bronze Kunai": {
+        "Default Attack": 80
+    },
+    "Recluse Kunai": {
+        "Default Attack": 80
+    },
     "Pirate hat": {
         "Blunt Damage": "9.78%",
         "Heavy Damage": "9.83%",

@@ -6,6 +6,7 @@ import {
     getDeadeyeCritStats,
     getElementalBurstCritStats,
     getEnhancedReservationRingCritStats,
+    getFuryResonanceCritStats,
     getItemSetCritStats,
     getSharpshooterCritStats,
     getSoulResonatorCritStats,
@@ -54,6 +55,7 @@ export const criticalDamageStep = {
         const ultimate = getUltimateCritStats(context);
         const itemSets = getItemSetCritStats(context);
         const soulResonator = getSoulResonatorCritStats(context);
+        const furyResonance = getFuryResonanceCritStats(context);
         const enhancedReservationRing = getEnhancedReservationRingCritStats(context);
         const sharpshooterCritChance = sharpshooter.hotStreakCritChancePercent;
         const sharpshooterCritDamage = sharpshooter.hotStreakCritDamagePercent;
@@ -84,6 +86,7 @@ export const criticalDamageStep = {
                 ultimateCritDamagePercent: 0,
                 itemSets,
                 soulResonator,
+                furyResonance,
                 enhancedReservationRing,
                 distillationPercent: 0,
                 convertedCritDamagePercent: 0,
@@ -136,6 +139,7 @@ export const criticalDamageStep = {
             ultimateCritDamagePercent: ultimate.critDamagePercent,
             itemSets,
             soulResonator,
+            furyResonance,
             enhancedReservationRing,
             distillationPercent,
             convertedCritDamagePercent,
@@ -259,6 +263,28 @@ export const criticalDamageStep = {
                     {
                         label: 'Soul Resonator Crit Chance',
                         value: result.soulResonator.critChancePercent,
+                        unit: '%'
+                    }
+                );
+            }
+        }
+
+        if (result.furyResonance?.visible) {
+            if (!result.furyResonance.enabled) {
+                rows.push({
+                    label: "Fury's Resonance",
+                    value: result.furyResonance.reason ?? 'Not active'
+                });
+            } else {
+                rows.push(
+                    {
+                        label: "Fury's Resonance Uptime",
+                        value: result.furyResonance.uptime * 100,
+                        unit: '%'
+                    },
+                    {
+                        label: "Fury's Resonance Crit Chance",
+                        value: result.furyResonance.averageCritChancePercent,
                         unit: '%'
                     }
                 );

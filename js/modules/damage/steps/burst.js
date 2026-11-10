@@ -7,6 +7,8 @@ import {
 import { getBurstCore, getBurstHitsPerBurst } from '../../classes/core.js';
 import { getCoreBuffEffects } from '../../classes/coreBuff.js';
 import { getBurstCycleEffects } from '../../classes/mage.js';
+import { getStormEchoEffects } from '../../itemPassives.js';
+import { getCritTotalHitsPerSecond } from '../critStats.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').BurstStepResult} BurstStepResult */
@@ -82,6 +84,10 @@ export const burstStep = {
             hasReclamation: false,
             reclamationKillsPerSecond: 0,
             reclamationCooldownReduction: 0,
+            hasStormEcho: false,
+            stormEchoStacks: 0,
+            stormEchoUltimatePercent: 0,
+            stormEchoConsumeDps: 0,
             buffDamagePercent: 0,
             buffUptime: 0,
             buffDurationSeconds: 0,
@@ -112,6 +118,10 @@ export const burstStep = {
         const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
         const potentialCharge = getBurstCycleEffects(context);
         const coreBuff = getCoreBuffEffects(context);
+        const stormEcho = getStormEchoEffects(
+            context,
+            getCritTotalHitsPerSecond(context)
+        );
 
         let burstDamagePerHit = 0;
         let burstHitsPerSecond = 0;
@@ -127,10 +137,18 @@ export const burstStep = {
             burstDps = burstDamagePerHit * burstHitsPerSecond;
         }
 
+        const stormEchoConsumeDps = stormEcho.ultimateConsumePercent > 0
+            && potentialCharge.burstCycle > 0
+            ? damage
+                * reverseMultiplier
+                * (stormEcho.ultimateConsumePercent / 100)
+                / potentialCharge.burstCycle
+            : 0;
+
         const burstEnergyPerSecond = burstCore.energyCost / potentialCharge.burstCycle;
         const energyPerSecondBurstOnly = -burstEnergyPerSecond;
 
-        const totalDps = attackDps + burstDps;
+        const totalDps = attackDps + burstDps + stormEchoConsumeDps;
         const energyPerSecond = attack.energyPerSecond - burstEnergyPerSecond;
         const energyState = computeEnergyState(energyPerSecond, attack.maxEnergy);
 
@@ -159,6 +177,10 @@ export const burstStep = {
             hasReclamation: potentialCharge.hasReclamation,
             reclamationKillsPerSecond: potentialCharge.reclamationKillsPerSecond,
             reclamationCooldownReduction: potentialCharge.reclamationCooldownReduction,
+            hasStormEcho: stormEcho.visible,
+            stormEchoStacks: stormEcho.averageStacks,
+            stormEchoUltimatePercent: stormEcho.ultimateConsumePercent,
+            stormEchoConsumeDps,
             buffDamagePercent: coreBuff.buffDamagePercent,
             buffUptime: coreBuff.uptime,
             buffDurationSeconds: coreBuff.activeSeconds,
@@ -235,6 +257,19 @@ export const burstStep = {
                         }
                     ]
                     : []),
+                ...(result.hasStormEcho
+                    ? [
+                        {
+                            label: "Storm's Echo Stacks",
+                            value: result.stormEchoStacks ?? 0
+                        },
+                        {
+                            label: "Storm's Echo Consume",
+                            value: result.stormEchoUltimatePercent ?? 0,
+                            unit: '%'
+                        }
+                    ]
+                    : []),
                 {
                     label: 'Energy per Second',
                     value: result.energyPerSecondBurstOnly,
@@ -273,6 +308,23 @@ export const burstStep = {
                         unit: 's'
                     },
                     { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
+                ]
+                : []),
+            ...(result.hasStormEcho
+                ? [
+                    {
+                        label: "Storm's Echo Stacks",
+                        value: result.stormEchoStacks ?? 0
+                    },
+                    {
+                        label: "Storm's Echo Consume",
+                        value: result.stormEchoUltimatePercent ?? 0,
+                        unit: '%'
+                    },
+                    {
+                        label: "Storm's Echo Consume DPS",
+                        value: result.stormEchoConsumeDps ?? 0
+                    }
                 ]
                 : []),
             ...(result.hasSecondWind

@@ -107,7 +107,9 @@ test('special abilities: Toxin Hit di Recluse Stinger ha cooldown 5s', () => {
 
     const toxin = onClick.find(entry => entry.name === 'Toxin Hit-Recluse Stinger');
     assert.ok(toxin);
-    assert.equal(toxin.damage, 300);
+    assert.equal(toxin.damage, 60);
+    assert.equal(toxin.times, 5);
+    assert.equal(toxin.hitsPerUse, 1);
     assert.equal(toxin.cooldown, 5);
 
     specialAbilityManager.reset();
@@ -1027,6 +1029,288 @@ test('modale oggetto: rimuovere o rinominare Ability aggiorna le abilità attive
         specialAbilityManager.getActivePassives(context()).map(a => a.ability),
         ['Smite']
     );
+
+    specialAbilityManager.reset();
+});
+
+test('parser: double e triple diventano 200% e 300%', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Test Sword', [
+        {
+            kind: 'ability',
+            name: 'Power Slash',
+            energy: 10,
+            text: 'Slash a single target, dealing double damage.',
+            key: 'Right click'
+        }
+    ]);
+    specialAbilityManager.registerAbilities('Test Axe', [
+        {
+            kind: 'ability',
+            name: 'Triple Slash',
+            energy: 10,
+            text: 'Hit the target, dealing triple damage.',
+            key: 'Right click'
+        }
+    ]);
+
+    assert.equal(
+        onClick.find(entry => entry.name === 'Power Slash-Test Sword').damage,
+        200
+    );
+    assert.equal(
+        onClick.find(entry => entry.name === 'Triple Slash-Test Axe').damage,
+        300
+    );
+
+    specialAbilityManager.reset();
+});
+
+test('parser: senza percentuale assume 100%, utility resta 0', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Invar Mace', [
+        {
+            kind: 'ability',
+            name: 'Crusher',
+            energy: 12,
+            text: 'Deal damage to enemies in a wider radius.',
+            key: 'Right click'
+        }
+    ]);
+    specialAbilityManager.registerAbilities('Greaves of Dashes', [
+        {
+            kind: 'ability',
+            name: 'Dash',
+            energy: 20,
+            text: 'Dash a bunch of blocks forwards.',
+            key: 'F'
+        }
+    ]);
+
+    assert.equal(
+        onClick.find(entry => entry.name === 'Crusher-Invar Mace').damage,
+        100
+    );
+    assert.equal(
+        onClick.find(entry => entry.name === 'Dash-Greaves of Dashes').damage,
+        0
+    );
+
+    specialAbilityManager.reset();
+});
+
+test("storm's resonance: aura periodica al 33% ogni 3s", () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities("Storm's Fury", [
+        {
+            kind: 'ability',
+            name: "Storm's Resonance",
+            energy: 24,
+            text: 'Normal attacks will Mark enemies.',
+            key: 'Right click'
+        }
+    ]);
+
+    const aura = passives.find(entry => entry.name === "Storm's Resonance-Storm's Fury");
+    assert.ok(aura);
+    assert.equal(aura.kind, 'passive');
+    assert.equal(aura.damage, 33);
+    assert.equal(aura.cooldown, 3);
+    assert.equal(aura.periodic, true);
+
+    specialAbilityManager.reset();
+});
+
+test('voras harbringer: aracha infestation 5 hit da 100%', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilitiesFromStats('Voras Harbringer', {
+        'Ability 1': 'Aracha Infestation'
+    });
+
+    const spiders = onClick.find(entry => entry.name === 'Aracha Infestation-Voras Harbringer');
+    assert.ok(spiders);
+    assert.equal(spiders.damage, 100);
+    assert.equal(spiders.times, 5);
+    assert.equal(spiders.hitsPerUse, 5);
+    assert.equal(spiders.energy, 24);
+
+    specialAbilityManager.reset();
+});
+
+test("storm's resonance: la passiva periodica genera hit e danno ogni 3s", () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities("Storm's Fury", [
+        {
+            kind: 'ability',
+            name: "Storm's Resonance",
+            energy: 24,
+            text: 'Normal attacks will Mark enemies.',
+            key: 'Right click'
+        }
+    ]);
+
+    const build = makeDamageBuild({
+        'Damage Type': 'Thunder',
+        'Default Attack': 100,
+        'Weapon Type': 'melee'
+    });
+    build.activeEquip.weapon.name = "Storm's Fury";
+
+    const context = { build, statsValues: {}, settings: {} };
+    const hits = specialAbilityManager.getPassiveHitsFromBase(context, 2);
+    const damage = specialAbilityManager.applyDamagePassives(context, 100, 2);
+
+    assert.ok(Math.abs(hits.hitsPerSecond - 1 / 3) < 1e-9);
+    assert.ok(Math.abs(damage.applied[0].hitsPerSecond - 1 / 3) < 1e-9);
+    assert.ok(damage.dps > 0);
+    assert.ok(Math.abs(damage.dps - (100 * (100 / 100) * 0.33 / 3)) < 1e-9);
+
+    specialAbilityManager.reset();
+});
+
+test('voras harbringer: 5 hit da 100% nel danno onClick', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilitiesFromStats('Voras Harbringer', {
+        'Ability 1': 'Aracha Infestation'
+    });
+
+    const build = makeDamageBuild({
+        'Damage Type': 'Arcane',
+        'Default Attack': 100,
+        'Weapon Type': 'magic'
+    });
+    build.activeEquip.weapon.name = 'Voras Harbringer';
+    build.activeEquip.weapon.stats['Ability 1'] = 'Aracha Infestation';
+
+    const context = { build, statsValues: {}, settings: {} };
+    const effects = specialAbilityManager.getOnClickEffects(context, 100, 1);
+    const spiders = effects.abilities.find(a => a.name === 'Aracha Infestation-Voras Harbringer');
+
+    assert.ok(spiders);
+    assert.equal(spiders.times, 5);
+    assert.ok(Math.abs(spiders.damagePerUse - spiders.damagePerHit * 5) < 1e-9);
+
+    specialAbilityManager.reset();
+});
+
+test('abyssal necklace: corrupt aura riduce la difesa del 20%', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Abyssal Necklace', [{
+        kind: 'passive',
+        name: 'Corrupt Aura',
+        energy: null,
+        text: 'While moving, cast an aura every few seconds, dealing 125% damage to nearby enemies. Hit enemies gain 20% less defense for 3 seconds.',
+        key: null
+    }]);
+
+    const build = makeDamageBuild({
+        'Damage Type': 'Arcane',
+        'Default Attack': 100,
+        'Weapon Type': 'magic'
+    });
+    build.activeEquip.amulet = {
+        name: 'Abyssal Necklace',
+        stats: {},
+        augments: ['', ''],
+        upgradeLevel: 0,
+        abilitiesEdited: false
+    };
+
+    const context = { build, statsValues: {}, settings: {} };
+    assert.equal(specialAbilityManager.getDefenseReductionPercent(context), 20);
+
+    specialAbilityManager.reset();
+});
+
+test('multi-hit: rapid strikes, trinity e gooey blast contano gli hit', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Bronze Dagger', [{
+        kind: 'ability',
+        name: 'Rapid Strikes',
+        energy: 8,
+        text: 'Rapidly hit the target five times for 50% damage.',
+        key: 'Right click'
+    }]);
+    specialAbilityManager.registerAbilities('Bronze Greatbow', [{
+        kind: 'ability',
+        name: 'Trinity',
+        energy: 12,
+        text: 'Shoot three arrows at once dealing 75% damage.',
+        key: 'Right click'
+    }]);
+    specialAbilityManager.registerAbilities('Iron Greatbow', [{
+        kind: 'ability',
+        name: 'Trinity',
+        energy: 12,
+        text: 'Shoot three arrows at once dealing 75% damage.',
+        key: 'Right click'
+    }]);
+    specialAbilityManager.registerAbilities('Silver Greatbow', [{
+        kind: 'ability',
+        name: 'Trinity',
+        energy: 12,
+        text: 'Shoot three arrows at once dealing 75% damage.',
+        key: 'Right click'
+    }]);
+    specialAbilityManager.registerAbilities('Blobblaster', [{
+        kind: 'ability',
+        name: 'Gooey Blast',
+        energy: 20,
+        text: 'Shoot five blobs of slime, dealing 60% of your damage.',
+        key: 'Right click'
+    }]);
+
+    const rapid = onClick.find(entry => entry.name === 'Rapid Strikes-Bronze Dagger');
+    const trinity = onClick.find(entry => entry.name === 'Trinity-Bronze Greatbow');
+    const trinityIron = onClick.find(entry => entry.name === 'Trinity-Iron Greatbow');
+    const trinitySilver = onClick.find(entry => entry.name === 'Trinity-Silver Greatbow');
+    const gooey = onClick.find(entry => entry.name === 'Gooey Blast-Blobblaster');
+
+    assert.equal(rapid.times, 5);
+    assert.equal(trinity.times, 3);
+    assert.equal(trinityIron.times, 3);
+    assert.equal(trinitySilver.times, 3);
+    assert.equal(gooey.times, 5);
+    // Come da convenzione, le istanze multiple contano come un hit effettivo.
+    assert.equal(rapid.hitsPerUse, 1);
+    assert.equal(trinity.hitsPerUse, 1);
+    assert.equal(gooey.hitsPerUse, 1);
+
+    specialAbilityManager.reset();
+});
+
+test('arrow volley: 150% totali e 2 hit; windstorm: 200%', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Bronze Bow', [{
+        kind: 'ability',
+        name: 'Arrow Volley',
+        energy: 8,
+        text: 'Shoot two arrows, the second one dealing half the damage.',
+        key: 'Right click'
+    }]);
+    specialAbilityManager.registerAbilities('Windstorm Greaves', [{
+        kind: 'ability',
+        name: 'Whirlwind',
+        energy: 35,
+        text: 'Create a tornado, moving you forward and dealing 200% damage to enemies in its path.',
+        key: 'F'
+    }]);
+
+    const volley = onClick.find(entry => entry.name === 'Arrow Volley-Bronze Bow');
+    const windstorm = onClick.find(entry => entry.name === 'Whirlwind-Windstorm Greaves');
+
+    assert.equal(volley.damage, 150);
+    assert.equal(volley.hitsPerUse, 1);
+    assert.equal(windstorm.damage, 200);
 
     specialAbilityManager.reset();
 });

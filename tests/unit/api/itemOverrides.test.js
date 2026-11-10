@@ -115,3 +115,31 @@ test('override oggetto: Pirate hat usa i valori massimi aggiornati', () => {
     assert.equal(stats['Crit Chance'], '9.07%');
     assert.equal(stats['Thunder Damage'], '5%');
 });
+
+test('override oggetto: armi di livello basso hanno Default Attack dedotto', () => {
+    const expected = {
+        'Bronze Focus': 60,
+        'Bronze Gauntlet': 60,
+        'Bronze Crux': 110,
+        'Nightweb Crux': 110,
+        'Oak Wand': 85,
+        'Invar Axe': 75,
+        'Bronze Dagger': 65,
+        'Invar Dagger': 65,
+        'Invar Hammer': 175,
+        'Bronze Spear': 120,
+        'Invar Spear': 120,
+        'Flameburster': 100,
+        'Invar Sword': 100,
+        "Royal's Bane": 125,
+        'Bronze Handcannon': 115,
+        'Bronze Pot': 90,
+        'Bronze Kunai': 80,
+        'Recluse Kunai': 80
+    };
+
+    Object.entries(expected).forEach(([name, defaultAttack]) => {
+        const stats = applyItemOverride(name, { 'Default Attack': null }, ITEM_OVERRIDES);
+        assert.equal(stats['Default Attack'], defaultAttack, name);
+    });
+});

@@ -9,8 +9,8 @@ import {
 } from '../../classes/mage.js';
 import { getAttackInterval } from '../attackTiming.js';
 import { getEnergyRegen } from '../energy.js';
-import { getCritChancePercent, getDistillableCritDamagePercent } from '../critStats.js';
-import { getItemPassiveEffects } from '../../itemPassives.js';
+import { getCritChancePercent, getCritTotalHitsPerSecond, getDistillableCritDamagePercent } from '../critStats.js';
+import { getItemPassiveEffects, getStormEchoEffects } from '../../itemPassives.js';
 import { findFlat, findPercent } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -68,6 +68,10 @@ export const damageModifiersStep = {
         const weaponClass = getWeaponClass(context.weapon);
         const element = getWeaponElement(context.weapon);
         const itemPassives = getItemPassiveEffects(context);
+        const stormEcho = getStormEchoEffects(
+            context,
+            getCritTotalHitsPerSecond(context)
+        );
 
         if (baseDamage <= 0) {
             return {
@@ -103,6 +107,12 @@ export const damageModifiersStep = {
                 deteriorateVisible: itemPassives.deteriorate.visible,
                 deteriorateDefenseReductionPercent: 0,
                 deteriorateRampHits: itemPassives.deteriorate.rampHits,
+                stormEchoVisible: stormEcho.visible,
+                stormEchoEnabled: false,
+                stormEchoStacks: 0,
+                stormEchoDamagePercent: 0,
+                stormEchoUltimatePercent: 0,
+                stormEchoPieces: stormEcho.pieces,
                 damage: 0,
                 modifiers: []
             };
@@ -203,7 +213,8 @@ export const damageModifiersStep = {
             (damageBeforeMastery + masteryBonus)
             * blueDamageMultiplier
         ) * (1 + genericDamagePercent / 100)
-            * (1 + itemPassives.backstab.damagePercent / 100);
+            * (1 + itemPassives.backstab.damagePercent / 100)
+            * (1 + stormEcho.damagePercent / 100);
 
         return {
             baseDamage,
@@ -239,6 +250,12 @@ export const damageModifiersStep = {
             deteriorateDefenseReductionPercent:
                 itemPassives.deteriorate.defenseReductionPercent,
             deteriorateRampHits: itemPassives.deteriorate.rampHits,
+            stormEchoVisible: stormEcho.visible,
+            stormEchoEnabled: stormEcho.enabled,
+            stormEchoStacks: stormEcho.averageStacks,
+            stormEchoDamagePercent: stormEcho.damagePercent,
+            stormEchoUltimatePercent: stormEcho.ultimateConsumePercent,
+            stormEchoPieces: stormEcho.pieces,
             damage,
             modifiers
         };
@@ -283,6 +300,21 @@ export const damageModifiersStep = {
                 unit: '%',
                 help: 'Aetheris: -5% difesa per hit, fino a -25%. Nei mostri le prime 5 hit non hanno lo stack.'
             });
+        }
+
+        if (result.stormEchoVisible) {
+            rows.push(
+                {
+                    label: "Storm's Echo Stacks",
+                    value: result.stormEchoStacks ?? 0,
+                    help: `Stack medi: servono almeno 1 hit/s per il massimo (3 stack).`
+                },
+                {
+                    label: "Storm's Echo Damage%",
+                    value: result.stormEchoDamagePercent ?? 0,
+                    unit: '%'
+                }
+            );
         }
 
         const hasElementalDamage = result.elementalDamagePercent !== 0;

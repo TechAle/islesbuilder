@@ -14,6 +14,18 @@ import { findPercent } from './damage/statLookup.js';
 /** @typedef {import('../data/types.js').SpecialAbility} SpecialAbility */
 
 /**
+ * Abilità attive che non infliggono danno diretto: il fallback del 100% non
+ * deve trasformarle in abilità di danno.
+ */
+const NON_DAMAGE_ABILITY_NAMES = new Set([
+    'dash',
+    'evade',
+    'sprint',
+    'bouncy shell',
+    'homing shell'
+]);
+
+/**
  * Cooldown base di un'abilità in base al tipo di danno dell'arma.
  * Le armi Heavy usano 3s, le altre il default.
  * @param {{damageType?: string|null}|undefined} options
@@ -51,16 +63,31 @@ export class SpecialAbilityManager {
 
     /**
      * Estrae l'ultimo numero seguito da `%` dal testo dell'abilità.
+     *
+     * Prima normalizza i moltiplicatori testuali in percentuali, così possono
+     * riusare lo stesso parsing:
+     *   double/twice → 200%, triple/thrice → 300%, quadruple → 400%.
+     *
+     * Restituisce `null` se il testo non contiene alcuna percentuale: il
+     * chiamante decide il fallback.
+     *
      * @param {string} text
-     * @returns {number}
+     * @returns {number|null}
      */
     extractDamage(text) {
-        const matches = String(text ?? '').match(/\d+(?:[.,]\d+)?\s*%/g);
-        if (!matches || matches.length === 0) return 0;
+        const normalized = String(text ?? '')
+            .replace(/\bdouble\b/gi, '200%')
+            .replace(/\btwice\b/gi, '200%')
+            .replace(/\btriple\b/gi, '300%')
+            .replace(/\bthrice\b/gi, '300%')
+            .replace(/\bquadruple\b/gi, '400%');
+
+        const matches = normalized.match(/\d+(?:[.,]\d+)?\s*%/g);
+        if (!matches || matches.length === 0) return null;
 
         const last = matches[matches.length - 1].replace('%', '').replace(',', '.').trim();
         const value = Number.parseFloat(last);
-        return Number.isFinite(value) ? value : 0;
+        return Number.isFinite(value) ? value : null;
     }
 
     /**
@@ -95,6 +122,12 @@ export class SpecialAbilityManager {
 
         const isPassive = typeof ability === 'object' && ability?.kind !== 'ability';
         const fullName = `${trimmedAbility}-${trimmedWeapon}`;
+        const extractedDamage = this.extractDamage(ability?.text);
+        // Se il testo non contiene percentuali, le abilità attive di danno
+        // assumono 100%. Le passive e le utility restano a 0.
+        const isUtility = NON_DAMAGE_ABILITY_NAMES.has(trimmedAbility.toLowerCase());
+        const fallbackDamage = !isPassive && !isUtility ? 100 : 0;
+        const damage = isUtility ? 0 : (extractedDamage ?? fallbackDamage);
 
         /** @type {SpecialAbility} */
         const entry = {
@@ -106,7 +139,7 @@ export class SpecialAbilityManager {
             energy: isPassive
                 ? null
                 : (typeof ability?.energy === 'number' ? ability.energy : 0),
-            damage: this.extractDamage(ability?.text),
+            damage,
             times: 1,
             hitsPerUse: 1,
             cooldown: isPassive ? 0 : getDefaultAbilityCooldown(options),

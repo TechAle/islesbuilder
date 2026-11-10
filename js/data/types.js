@@ -272,6 +272,12 @@
  * @property {boolean} [deteriorateVisible] - Se Aetheris è equipaggiato
  * @property {number} [deteriorateDefenseReductionPercent] - Riduzione difesa a stack massimi
  * @property {number} [deteriorateRampHits] - Hit iniziali senza riduzione
+ * @property {boolean} [stormEchoVisible] - Se il set Storm's Legacy è completo
+ * @property {boolean} [stormEchoEnabled] - Se Storm's Echo dà danno
+ * @property {number} [stormEchoStacks] - Stack medi di Storm's Echo
+ * @property {number} [stormEchoDamagePercent] - Bonus danno da Storm's Echo
+ * @property {number} [stormEchoUltimatePercent] - Bonus del prossimo hit al consumo
+ * @property {number} [stormEchoPieces] - Pezzi Storm's Legacy equipaggiati
  */
 
 /**
@@ -462,6 +468,36 @@
  */
 
 /**
+ * Effetti medi di Fury's Resonance (Storm's Fury).
+ * @typedef {Object} FuryResonanceEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} durationSeconds
+ * @property {number} critChancePercent
+ * @property {number} uptime
+ * @property {number} averageCritChancePercent
+ * @property {string|null} reason
+ */
+
+/**
+ * Effetti di Storm's Echo (set Storm's Legacy).
+ * @typedef {Object} StormEchoEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} pieces
+ * @property {boolean} hasSet
+ * @property {number} hitsPerSecond
+ * @property {number} requiredHitsPerSecond
+ * @property {number} maxStacks
+ * @property {number} averageStacks
+ * @property {number} damagePerStackPercent
+ * @property {number} damagePercent
+ * @property {number} ultimatePercentPerStack
+ * @property {number} ultimateConsumePercent
+ * @property {string|null} reason
+ */
+
+/**
  * Risultato dello step "Critical Damage".
  * @typedef {Object} CriticalDamageStepResult
  * @property {number} baseDamage - Danno non critico di partenza
@@ -484,6 +520,7 @@
  * @property {number} ultimateCritDamagePercent - Crit Damage medio da Ultimatum Vagrus
  * @property {ItemSetEffectsResult} itemSets - Effetti dei set equipaggiati
  * @property {SoulResonatorEffectsResult} soulResonator - Effetti di Soul Resonator
+ * @property {FuryResonanceEffectsResult} furyResonance - Effetti di Fury's Resonance
  * @property {EnhancedReservationRingEffectsResult} enhancedReservationRing - Effetti di Enhanced Reservation Ring
  * @property {number} distillationPercent - Percentuale convertita da Natural Distillation
  * @property {number} convertedCritDamagePercent - Crit Damage convertito in Elemental Power
@@ -770,6 +807,10 @@
  * @property {boolean} [hasReclamation] - Se Reclamation è equipaggiato
  * @property {number} [reclamationKillsPerSecond] - Kill/s usati per Reclamation
  * @property {number} [reclamationCooldownReduction] - Secondi rimossi dal cooldown
+ * @property {boolean} [hasStormEcho] - Se Storm's Echo è attivo
+ * @property {number} [stormEchoStacks] - Stack medi di Storm's Echo
+ * @property {number} [stormEchoUltimatePercent] - Bonus del prossimo hit al consumo
+ * @property {number} [stormEchoConsumeDps] - DPS medio del bonus di consumo
  * @property {number} attackDps
  * @property {number} totalDps
  * @property {number} energyPerSecond

@@ -9,6 +9,12 @@ const AETHERIS_NAME = 'aetheris';
 /** Nome dell'arma con Execution. */
 const DEMEANOR_OF_DRAGONS_NAME = 'demeanor of dragons';
 
+/** Nome dell'arma con Fury's Resonance. */
+const STORM_FURY_NAME = "storm's fury";
+
+/** Pattern dei pezzi del set Storm's Legacy. */
+const STORM_LEGACY_PATTERN = /storm.?s legacy/i;
+
 /** Backstab: bonus massimo. */
 export const BACKSTAB_MAX_PERCENT = 40;
 
@@ -26,6 +32,24 @@ export const DRAGON_EXECUTION_MAX_PERCENT = 30;
 
 /** Reclamation: secondi rimossi dal cooldown dell'Ultimate per kill. */
 export const RECLAMATION_SECONDS_PER_KILL = 1;
+
+/** Fury's Resonance: durata del buff, in secondi. */
+export const FURY_RESONANCE_DURATION = 4;
+
+/** Fury's Resonance: Crit Chance durante il buff. */
+export const FURY_RESONANCE_CRIT_PERCENT = 10;
+
+/** Storm's Echo: stack massimi. */
+export const STORM_ECHO_MAX_STACKS = 3;
+
+/** Storm's Echo: danno% per stack. */
+export const STORM_ECHO_DAMAGE_PER_STACK = 15;
+
+/** Storm's Echo: hit/s necessari per mantenere il massimo. */
+export const STORM_ECHO_REQUIRED_HITS_PER_SECOND = 1;
+
+/** Storm's Echo: bonus del prossimo hit quando l'Ultimate consuma gli stack. */
+export const STORM_ECHO_ULTIMATE_PERCENT_PER_STACK = 50;
 
 /**
  * Nome dell'arma equipaggiata, normalizzato.
@@ -177,7 +201,7 @@ export function getReclamationEffects(context) {
         'boots'
     ]);
     const pieces = armorSlots.filter(slot => (
-        /storm.?s legacy/i.test(String(equipped[slot]?.name ?? ''))
+        STORM_LEGACY_PATTERN.test(String(equipped[slot]?.name ?? ''))
     )).length;
     const visible = pieces > 0;
     const killsSetting = Number(context.settings?.reclamationKillsPerSecond);
@@ -195,6 +219,134 @@ export function getReclamationEffects(context) {
             ? killsPerSecond * RECLAMATION_SECONDS_PER_KILL
             : 0,
         reason: visible ? null : "Requires Storm's Legacy"
+    };
+}
+
+/**
+ * Fury's Resonance (Storm's Fury): +10% Crit Chance per 4s dopo l'Ultimate.
+ *
+ * L'uptime medio dipende dal ciclo della burst:
+ *
+ *   uptime = min(1, 4 / burstCycle)
+ *
+ * @param {DamageContext} context
+ * @param {number} burstCycle
+ * @returns {{
+ *   visible: boolean,
+ *   enabled: boolean,
+ *   durationSeconds: number,
+ *   critChancePercent: number,
+ *   uptime: number,
+ *   averageCritChancePercent: number,
+ *   reason: string|null
+ * }}
+ */
+export function getFuryResonanceEffects(context, burstCycle) {
+    const visible = getWeaponName(context) === STORM_FURY_NAME;
+    const burstActive = !!context.settings?.useBurst;
+    const safeBurstCycle = Number.isFinite(burstCycle) && burstCycle > 0
+        ? burstCycle
+        : 0;
+    const uptime = visible && burstActive && safeBurstCycle > 0
+        ? Math.min(1, FURY_RESONANCE_DURATION / safeBurstCycle)
+        : 0;
+
+    let reason = null;
+    if (!visible) {
+        reason = "Requires Storm's Fury";
+    } else if (!burstActive) {
+        reason = 'Burst disabled';
+    }
+
+    return {
+        visible,
+        enabled: uptime > 0,
+        durationSeconds: FURY_RESONANCE_DURATION,
+        critChancePercent: FURY_RESONANCE_CRIT_PERCENT,
+        uptime,
+        averageCritChancePercent: FURY_RESONANCE_CRIT_PERCENT * uptime,
+        reason
+    };
+}
+
+/**
+ * Storm's Echo (set Storm's Legacy): ogni 3s, se stai infliggendo danno,
+ * ottieni uno Storm Stack. Ogni stack dà +15% danno, fino a 3 stack.
+ *
+ * Per semplicità, la generazione degli stack è proporzionale agli hit/s:
+ * con almeno 1 hit/s si assume il massimo (3 stack). Sotto quella soglia
+ * gli stack medi scendono proporzionalmente.
+ *
+ * L'Ultimate consuma gli stack e dà +50% al prossimo hit per stack.
+ *
+ * @param {DamageContext} context
+ * @param {number} totalHitsPerSecond
+ * @returns {{
+ *   visible: boolean,
+ *   enabled: boolean,
+ *   pieces: number,
+ *   hasSet: boolean,
+ *   hitsPerSecond: number,
+ *   requiredHitsPerSecond: number,
+ *   maxStacks: number,
+ *   averageStacks: number,
+ *   damagePerStackPercent: number,
+ *   damagePercent: number,
+ *   ultimatePercentPerStack: number,
+ *   ultimateConsumePercent: number,
+ *   reason: string|null
+ * }}
+ */
+export function getStormEchoEffects(context, totalHitsPerSecond) {
+    const equipped = context.build?.activeEquip ?? {};
+    const armorSlots = /** @type {import('../data/types.js').EquipSlot[]} */ ([
+        'helmet',
+        'chestplate',
+        'leggings',
+        'boots'
+    ]);
+    const pieces = armorSlots.filter(slot => (
+        STORM_LEGACY_PATTERN.test(String(equipped[slot]?.name ?? ''))
+    )).length;
+    const hasSet = pieces === armorSlots.length;
+    const hits = Number.isFinite(totalHitsPerSecond)
+        ? Math.max(0, totalHitsPerSecond)
+        : 0;
+    // Al first hit non ci sono ancora stack.
+    const firstHit = context.settings?.firstHit === true;
+    const stackFactor = firstHit
+        ? 0
+        : Math.min(1, hits / STORM_ECHO_REQUIRED_HITS_PER_SECOND);
+    const averageStacks = hasSet
+        ? STORM_ECHO_MAX_STACKS * stackFactor
+        : 0;
+    const damagePercent = averageStacks * STORM_ECHO_DAMAGE_PER_STACK;
+    const ultimateConsumePercent =
+        averageStacks * STORM_ECHO_ULTIMATE_PERCENT_PER_STACK;
+
+    let reason = null;
+    if (!hasSet) {
+        reason = "Requires Storm's Legacy set";
+    } else if (firstHit) {
+        reason = 'First hit';
+    } else if (hits <= 0) {
+        reason = 'No hits';
+    }
+
+    return {
+        visible: hasSet,
+        enabled: hasSet && averageStacks > 0,
+        pieces,
+        hasSet,
+        hitsPerSecond: hits,
+        requiredHitsPerSecond: STORM_ECHO_REQUIRED_HITS_PER_SECOND,
+        maxStacks: STORM_ECHO_MAX_STACKS,
+        averageStacks,
+        damagePerStackPercent: STORM_ECHO_DAMAGE_PER_STACK,
+        damagePercent,
+        ultimatePercentPerStack: STORM_ECHO_ULTIMATE_PERCENT_PER_STACK,
+        ultimateConsumePercent,
+        reason
     };
 }
 

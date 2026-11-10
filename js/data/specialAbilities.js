@@ -29,8 +29,58 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     // Smite colpisce ogni 5 attacchi; il 150% viene letto dal testo.
     'Smite-Tempest': { everyHits: 5 },
 
-    // Whirlwind evoca tre tornado, ognuno al 45%.
+    // Whirlwind evoca tre tornado, ognuno al 45%. Come da convenzione, le
+    // istanze multiple moltiplicano il danno ma contano come un hit effettivo.
     'Whirlwind-Tempest': { times: 3 },
+
+    // Windstorm Greaves: il testo API può riportare "200 damage" senza %;
+    // il valore reale è 200%.
+    'Whirlwind-Windstorm Greaves': { damage: 200 },
+
+    // Arrow Volley: due frecce, la seconda a metà. Totale 150%.
+    'Arrow Volley-Bronze Bow': { damage: 150 },
+    'Arrow Volley-Iron Bow': { damage: 150 },
+    'Arrow Volley-Oak Bow': { damage: 150 },
+    'Arrow Volley-Silver Bow': { damage: 150 },
+    'Arrow Volley-Skeletal Bow': { damage: 150 },
+
+    // Multi-hit: il danno viene moltiplicato per `times`, mentre gli hit
+    // effettivi restano 1 (stessa convenzione di Whirlwind).
+    'Rapid Strikes-Bronze Dagger': { times: 5 },
+    'Rapid Strikes-Invar Dagger': { times: 5 },
+    'Rapid Strikes-Iron Dagger': { times: 5 },
+    'Rapid Strikes-Silver Dagger': { times: 5 },
+    'Rapid Strikes-Vicious Dirk': { times: 5 },
+    'Trinity-Bronze Greatbow': { times: 3 },
+    'Trinity-Iron Greatbow': { times: 3 },
+    'Trinity-Silver Greatbow': { times: 3 },
+    'Tusknity-Alpha Tusk Greatbow': { times: 3 },
+    'Gooey Blast-Blobblaster': { times: 5 },
+    'Lovely Bunch-Loaded Coconut': { times: 3 },
+
+    // Pesti che si dividono in 3 shard.
+    'Splinter-Bronze Pot': { times: 3 },
+    'Splinter-Iron Pot': { times: 3 },
+    'Splinter-Silver Pot': { times: 3 },
+
+    // "Rapidly": assumiamo 5 tick.
+    'Flurry Knuckles-Bronze Gauntlet': { damage: 50, times: 5 },
+    'Flurry Knuckles-Iron Gauntlet': { damage: 50, times: 5 },
+    'Flurry Knuckles-Silver Gauntlet': { damage: 50, times: 5 },
+    'Burst of Flames-Flameburster': { times: 5 },
+    'Sporethrower-Fungocap Axe': { times: 5 },
+
+    // Pozza: 45% ogni 0,5s. Assumiamo 5s di durata (10 tick).
+    'Poison Cloud-Pestilent Perfume': { times: 10 },
+
+    // DoT: 250% totali in 5 tick da 50%.
+    "Dragon's Breath-Demeanor of Dragons": { damage: 50, times: 5 },
+
+    // 60% + esplosione 100%: 2 istanze, 80% medio ciascuna.
+    'Fleshy Mess-Cyclaxe': { damage: 80, times: 2 },
+
+    // 125% all'apparire e allo sparire: 2 istanze.
+    'Void Breach-Abysssplitter': { times: 2 },
 
     // Tre direzioni, 60% ciascuna.
     'Triquake-Silver Tome': { times: 3 },
@@ -85,8 +135,11 @@ export const SPECIAL_ABILITY_OVERRIDES = {
         cooldown: 0.9
     },
 
-    // Toxin Hit (Recluse Stinger): 300% totali nel tempo, cooldown 5s.
+    // Toxin Hit (Recluse Stinger): 300% totali nel tempo, 5 tick da 60%,
+    // cooldown 5s.
     'Toxin Hit-Recluse Stinger': {
+        damage: 60,
+        times: 5,
         cooldown: 5
     },
 
@@ -122,6 +175,28 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     'Corrupt Aura-Abyssal Necklace': {
         damage: 125,
         cooldown: 3,
+        periodic: true,
+        // L'aura colpisce ogni 3s e il debuff dura 3s: assumiamo uptime 100%.
+        defenseReductionPercent: 20
+    },
+
+    // Storm's Resonance: i normali attacchi marchiano i nemici e l'aura
+    // infligge 33% ogni 3s. Modellata come passiva periodica.
+    "Storm's Resonance-Storm's Fury": {
+        kind: 'passive',
+        key: null,
+        energy: null,
+        damage: 33,
+        cooldown: 3,
         periodic: true
+    },
+
+    // Aracha Infestation (Voras Harbringer): il testo è solo nel lore.
+    // Assumiamo 5 hit da 100% ciascuno.
+    'Aracha Infestation-Voras Harbringer': {
+        damage: 100,
+        times: 5,
+        hitsPerUse: 5,
+        energy: 24
     }
 };
