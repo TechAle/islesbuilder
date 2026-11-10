@@ -147,7 +147,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         enragedHpPercent: 50,
         infectedHitsOverride: 0,
         deathburstKillsPerSecond: 0.2,
-        calculatedStrikeKillsPerSecond: 0
+        calculatedStrikeKillsPerSecond: 0,
+        relentlessAssaultKillsPerSecond: 0,
+        bloodlustHitsPerSecond: 0,
+        potatoMinesHitsPerSecond: 0
     };
 
     const damageSettingsRenderer = new DamageSettingsRenderer({
@@ -185,6 +188,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         deathburstKillsValue: document.getElementById('deathburst-kills-value'),
         calculatedStrikeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('calculated-strike-kills')),
         calculatedStrikeKillsValue: document.getElementById('calculated-strike-kills-value'),
+        relentlessAssaultKills: /** @type {HTMLInputElement|null} */ (document.getElementById('relentless-assault-kills')),
+        relentlessAssaultKillsValue: document.getElementById('relentless-assault-kills-value'),
+        bloodlustHits: /** @type {HTMLInputElement|null} */ (document.getElementById('bloodlust-hits')),
+        bloodlustHitsValue: document.getElementById('bloodlust-hits-value'),
+        potatoMinesHits: /** @type {HTMLInputElement|null} */ (document.getElementById('potato-mines-hits')),
+        potatoMinesHitsValue: document.getElementById('potato-mines-hits-value'),
         specialAttacksRow: document.getElementById('setting-special-attacks'),
         specialAttacksContainer: document.getElementById('setting-special-attack-list'),
         onChange: settings => {
@@ -277,6 +286,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             damageRenderer.getStepContent('attackSpeed'),
             (dpsManager.getSteps().attackSpeed?.calculatedStrikePercent ?? 0) > 0
         );
+        damageSettingsRenderer.placeRelentlessAssaultControl(
+            damageRenderer.getStepContent('warrior'),
+            (dpsManager.getSteps().warrior?.relentlessAssaultNodePercent ?? 0) > 0
+        );
+        damageSettingsRenderer.placeBloodlustControl(
+            damageRenderer.getStepContent('warrior'),
+            (dpsManager.getSteps().warrior?.bloodlustNodePercent ?? 0) > 0
+        );
+        damageSettingsRenderer.placePotatoMinesControl(
+            damageRenderer.getStepContent('potatoMines'),
+            dpsManager.getSteps().potatoMines?.visible === true
+        );
         damageSettingsRenderer.placeSharpshooterResetsControl(
             damageRenderer.getStepContent('sharpshooter'),
             dpsManager.getSteps().sharpshooter?.visible === true
@@ -354,6 +375,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             health: enemyInputs.health,
             defense: enemyInputs.defense,
             damagePercent: enemyInputs.damagePercent,
+            defenseReductionPercent:
+                dpsManager.getSteps().potatoMines?.averageDefenseReductionPercent ?? 0,
             firstStrikePercent,
             firstHitDamage,
             dps: dpsManager.getDps() ?? 0,

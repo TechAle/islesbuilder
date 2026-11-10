@@ -38,6 +38,12 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLElement|null} deathburstKillsValue
  * @property {HTMLInputElement|null} calculatedStrikeKills
  * @property {HTMLElement|null} calculatedStrikeKillsValue
+ * @property {HTMLInputElement|null} relentlessAssaultKills
+ * @property {HTMLElement|null} relentlessAssaultKillsValue
+ * @property {HTMLInputElement|null} bloodlustHits
+ * @property {HTMLElement|null} bloodlustHitsValue
+ * @property {HTMLInputElement|null} potatoMinesHits
+ * @property {HTMLElement|null} potatoMinesHitsValue
  * @property {HTMLElement|null} specialAttacksRow
  * @property {HTMLElement|null} specialAttacksContainer
  * @property {(settings: DamageSettings) => void} onChange
@@ -84,6 +90,9 @@ export class DamageSettingsRenderer {
         this.infectedHitsControl = /** @type {HTMLElement|null} */ (options.infectedHits?.closest('.damage-uptime') ?? null);
         this.deathburstKillsControl = /** @type {HTMLElement|null} */ (options.deathburstKills?.closest('.damage-uptime') ?? null);
         this.calculatedStrikeKillsControl = /** @type {HTMLElement|null} */ (options.calculatedStrikeKills?.closest('.damage-uptime') ?? null);
+        this.relentlessAssaultKillsControl = /** @type {HTMLElement|null} */ (options.relentlessAssaultKills?.closest('.damage-uptime') ?? null);
+        this.bloodlustHitsControl = /** @type {HTMLElement|null} */ (options.bloodlustHits?.closest('.damage-uptime') ?? null);
+        this.potatoMinesHitsControl = /** @type {HTMLElement|null} */ (options.potatoMinesHits?.closest('.damage-uptime') ?? null);
         this.slowAttackControl = /** @type {HTMLElement|null} */ (options.slowAttack?.closest('.setting-row') ?? null);
         this.burstControl = /** @type {HTMLElement|null} */ (options.useBurst?.closest('.setting-row') ?? null);
 
@@ -169,6 +178,21 @@ export class DamageSettingsRenderer {
             valueEl: options.calculatedStrikeKillsValue,
             onChange: emit
         });
+        this.relentlessAssaultKillsSlider = new SliderControl({
+            input: options.relentlessAssaultKills,
+            valueEl: options.relentlessAssaultKillsValue,
+            onChange: emit
+        });
+        this.bloodlustHitsSlider = new SliderControl({
+            input: options.bloodlustHits,
+            valueEl: options.bloodlustHitsValue,
+            onChange: emit
+        });
+        this.potatoMinesHitsSlider = new SliderControl({
+            input: options.potatoMinesHits,
+            valueEl: options.potatoMinesHitsValue,
+            onChange: emit
+        });
 
         this.sliders = [
             this.griefSlider,
@@ -184,7 +208,10 @@ export class DamageSettingsRenderer {
             this.enragedHpSlider,
             this.infectedHitsSlider,
             this.deathburstKillsSlider,
-            this.calculatedStrikeKillsSlider
+            this.calculatedStrikeKillsSlider,
+            this.relentlessAssaultKillsSlider,
+            this.bloodlustHitsSlider,
+            this.potatoMinesHitsSlider
         ];
 
         this.checkboxes = [
@@ -343,6 +370,30 @@ export class DamageSettingsRenderer {
      */
     placeCalculatedStrikeControl(container, visible) {
         this.placeControl(this.calculatedStrikeKillsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeRelentlessAssaultControl(container, visible) {
+        this.placeControl(this.relentlessAssaultKillsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeBloodlustControl(container, visible) {
+        this.placeControl(this.bloodlustHitsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placePotatoMinesControl(container, visible) {
+        this.placeControl(this.potatoMinesHitsControl, container, visible);
     }
 
     /**
@@ -581,7 +632,10 @@ export class DamageSettingsRenderer {
             enragedHpPercent: this.enragedHpSlider.value,
             infectedHitsOverride: this.infectedHitsSlider.value,
             deathburstKillsPerSecond: this.deathburstKillsSlider.value,
-            calculatedStrikeKillsPerSecond: this.calculatedStrikeKillsSlider.value
+            calculatedStrikeKillsPerSecond: this.calculatedStrikeKillsSlider.value,
+            relentlessAssaultKillsPerSecond: this.relentlessAssaultKillsSlider.value,
+            bloodlustHitsPerSecond: this.bloodlustHitsSlider.value,
+            potatoMinesHitsPerSecond: this.potatoMinesHitsSlider.value
         };
     }
 

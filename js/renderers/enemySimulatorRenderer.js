@@ -214,6 +214,18 @@ export class EnemySimulatorRenderer {
             });
         }
 
+        if (result.defenseReductionPercent > 0) {
+            rows.push({
+                label: 'Defense Reduction',
+                value: `-${format(result.defenseReductionPercent)}%`,
+                help: 'Riduzione media della difesa nemica da Poisoned Potatoes.'
+            });
+            rows.push({
+                label: 'Effective Defense',
+                value: format(result.effectiveDefense)
+            });
+        }
+
         if (result.damagePercent !== 0) {
             rows.push({
                 label: 'Damage%',

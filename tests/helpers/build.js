@@ -108,6 +108,10 @@ export function makeSettings(overrides = {}) {
         infectedHitsOverride: 0,
         deathburstKillsPerSecond: 0.2,
         sharpshooterResetsPerSecond: 0,
+        calculatedStrikeKillsPerSecond: 0,
+        relentlessAssaultKillsPerSecond: 0,
+        bloodlustHitsPerSecond: 0,
+        potatoMinesHitsPerSecond: 0,
         ...overrides
     };
 }

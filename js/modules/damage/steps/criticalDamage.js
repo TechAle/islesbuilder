@@ -37,7 +37,8 @@ export const criticalDamageStep = {
      * @returns {CriticalDamageStepResult}
      */
     run(context) {
-        const previous = context.results.sharpshooter
+        const previous = context.results.warrior
+            ?? context.results.sharpshooter
             ?? context.results.damageMultiplier
             ?? context.results.damageModifiers;
         const baseDamage = previous?.damage ?? 0;

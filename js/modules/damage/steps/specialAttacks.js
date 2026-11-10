@@ -1,4 +1,6 @@
 import { computeEnergyState, getSustainLabel } from '../energy.js';
+import { getWarriorUltimateEffects } from '../../classes/warrior.js';
+import { findPercent } from '../statLookup.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
 /** @typedef {import('../../../data/types.js').SpecialAttackStepResult} SpecialAttackStepResult */
@@ -41,9 +43,19 @@ export const specialAttacksStep = {
         const maxEnergy = attack?.maxEnergy ?? 0;
 
         const manager = context.specialAbilityManager;
+        // Heavy Techniques e Ultimate Vengance aumentano solo le weapon
+        // abilities: li applichiamo qui, dentro le special attacks.
+        const abilityDamagePercent = findPercent(
+            context.statsValues ?? {},
+            'Ability Damage'
+        );
+        const warriorUltimate = getWarriorUltimateEffects(context);
+        const abilityDamageMultiplier = 1 + (
+            abilityDamagePercent + warriorUltimate.venganceDamagePercent
+        ) / 100;
         /** @type {{reverseMultiplier: number, energyRegen: number, abilities: Array<any>}} */
         const effects = manager
-            ? manager.getOnClickEffects(context, averageDamage)
+            ? manager.getOnClickEffects(context, averageDamage, abilityDamageMultiplier)
             : { reverseMultiplier: 0, energyRegen: 0, abilities: [] };
 
         /**
@@ -88,6 +100,10 @@ export const specialAttacksStep = {
             energyRegen: effects.energyRegen,
             baseDps,
             maxEnergy,
+            abilityDamagePercent,
+            ultimateVenganceDamagePercent: warriorUltimate.venganceDamagePercent,
+            ultimateUptime: warriorUltimate.uptime,
+            abilityDamageMultiplier,
             abilities
         };
     },
@@ -122,6 +138,29 @@ export const specialAttacksStep = {
 
         /** @type {import('../../../data/types.js').DamageResult[]} */
         const rows = [];
+
+        if ((result.abilityDamagePercent ?? 0) > 0) {
+            rows.push({
+                label: 'Ability Damage',
+                value: result.abilityDamagePercent ?? 0,
+                unit: '%'
+            });
+        }
+
+        if ((result.ultimateVenganceDamagePercent ?? 0) > 0) {
+            rows.push(
+                {
+                    label: 'Ultimate Vengance',
+                    value: result.ultimateVenganceDamagePercent ?? 0,
+                    unit: '%'
+                },
+                {
+                    label: 'Ultimate Uptime',
+                    value: (result.ultimateUptime ?? 0) * 100,
+                    unit: '%'
+                }
+            );
+        }
 
         result.abilities.forEach(ability => {
             if (!ability.enabled) return;

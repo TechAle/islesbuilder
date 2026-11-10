@@ -46,11 +46,14 @@ export function applyDefenseDamage(damage, defense) {
  * @param {number} input.energyPerSecond
  * @param {number} input.maxEnergy
  * @param {number} [input.damagePercent] - Danno percentuale extra (es. resistenza elementale)
+ * @param {number} [input.defenseReductionPercent] - Riduzione media della difesa nemica
  * @param {number} [input.firstStrikePercent] - Bonus First Strike sul primo colpo
  * @param {EnemySimulationAbility[]} [input.abilities]
  * @returns {{
  *   health: number,
  *   defense: number,
+ *   effectiveDefense: number,
+ *   defenseReductionPercent: number,
  *   damagePercent: number,
  *   firstHitDamage: number,
  *   realFirstHitDamage: number,
@@ -72,17 +75,23 @@ export function simulateEnemy({
     energyPerSecond,
     maxEnergy,
     damagePercent = 0,
+    defenseReductionPercent = 0,
     firstStrikePercent = 0,
     abilities = []
 }) {
     const safeHealth = Math.max(0, Number(health) || 0);
     const safeDefense = Math.max(0, Number(defense) || 0);
+    const safeDefenseReductionPercent = Math.max(
+        0,
+        Math.min(100, Number(defenseReductionPercent) || 0)
+    );
+    const effectiveDefense = safeDefense * (1 - safeDefenseReductionPercent / 100);
     const safeDamagePercent = Number(damagePercent) || 0;
     const damageMultiplier = Math.max(0, 1 + safeDamagePercent / 100);
     const adjustedFirstHitDamage = Math.max(0, (Number(firstHitDamage) || 0) * damageMultiplier);
     const adjustedDps = Math.max(0, (Number(dps) || 0) * damageMultiplier);
-    const realFirstHitDamage = applyDefenseDamage(adjustedFirstHitDamage, safeDefense);
-    const realDps = applyDefenseDamage(adjustedDps, safeDefense);
+    const realFirstHitDamage = applyDefenseDamage(adjustedFirstHitDamage, effectiveDefense);
+    const realDps = applyDefenseDamage(adjustedDps, effectiveDefense);
 
     const oneshot = safeHealth > 0 && realFirstHitDamage >= safeHealth;
     const remainingHealth = oneshot
@@ -125,6 +134,8 @@ export function simulateEnemy({
     return {
         health: safeHealth,
         defense: safeDefense,
+        effectiveDefense,
+        defenseReductionPercent: safeDefenseReductionPercent,
         damagePercent: safeDamagePercent,
         firstHitDamage: adjustedFirstHitDamage,
         realFirstHitDamage,

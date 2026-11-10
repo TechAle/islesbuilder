@@ -567,6 +567,7 @@ export class SpecialAbilityManager {
      *
      * @param {DamageContext} context
      * @param {number} baseDamage
+     * @param {number} [abilityDamageMultiplier] - Moltiplicatore per le weapon abilities
      * @returns {{
      *   reverseMultiplier: number,
      *   energyRegen: number,
@@ -599,10 +600,15 @@ export class SpecialAbilityManager {
      *   }>
      * }}
      */
-    getOnClickEffects(context, baseDamage) {
+    getOnClickEffects(context, baseDamage, abilityDamageMultiplier = 1) {
         const weapon = context.weapon ?? context.build?.activeEquip?.weapon;
         const reverseMultiplier = getDefaultAttackReverseMultiplier(weapon);
-        const reversedAverageDamage = baseDamage * reverseMultiplier;
+        const safeAbilityMultiplier = Number.isFinite(abilityDamageMultiplier)
+            ? Math.max(0, abilityDamageMultiplier)
+            : 1;
+        const reversedAverageDamage = baseDamage
+            * reverseMultiplier
+            * safeAbilityMultiplier;
         const { energyRegen, entries } = this.getOnClickCastStats(context);
 
         const abilities = entries.map(entry => {

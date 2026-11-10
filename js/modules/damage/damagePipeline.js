@@ -2,9 +2,11 @@ import { baseDamageStep } from './steps/baseDamage.js';
 import { damageModifiersStep } from './steps/damageModifiers.js';
 import { damageMultiplierStep } from './steps/mage/damageMultiplier.js';
 import { sharpshooterStep } from './steps/archer/sharpshooter.js';
+import { warriorStep } from './steps/warrior.js';
 import { criticalDamageStep } from './steps/criticalDamage.js';
 import { augmentFinalStep } from './steps/augmentFinal.js';
 import { specialAttacksStep } from './steps/specialAttacks.js';
+import { potatoMinesStep } from './steps/potatoMines.js';
 import { ricochetStep } from './steps/archer/ricochet.js';
 import { augmentDamageStep } from './steps/augmentDamage.js';
 import { attackSpeedStep } from './steps/attackSpeed.js';
@@ -29,11 +31,13 @@ export const DAMAGE_STEPS = [
     damageModifiersStep,
     damageMultiplierStep,
     sharpshooterStep,
+    warriorStep,
     criticalDamageStep,
     augmentFinalStep,
     attackSpeedStep,
     burstStep,
     specialAttacksStep,
+    potatoMinesStep,
     ricochetStep,
     augmentDamageStep,
     crystalCombustionStep,
@@ -88,6 +92,9 @@ export function createDamageContext({
             infectedHitsOverride: 0,
             deathburstKillsPerSecond: 0.2,
             calculatedStrikeKillsPerSecond: 0,
+            relentlessAssaultKillsPerSecond: 0,
+            bloodlustHitsPerSecond: 0,
+            potatoMinesHitsPerSecond: 0,
             sharpshooterResetsPerSecond: 0
         },
         results: {},

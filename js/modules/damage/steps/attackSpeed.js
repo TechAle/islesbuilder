@@ -8,8 +8,9 @@ import { getEnergyCostMultiplier } from '../energyCost.js';
 import { getAttackInterval, getBaseAttackInterval } from '../attackTiming.js';
 import { getCalculatedStrikeEffects } from '../../classes/archer.js';
 import { getPassiveHitStats } from '../../classes/mage.js';
+import { getWarriorUltimateEffects } from '../../classes/warrior.js';
 import { getCritChancePercent } from '../critStats.js';
-import { findFlat, findPercentMultiplier } from '../statLookup.js';
+import { findFlat, findPercent, findPercentMultiplier } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -75,7 +76,19 @@ export const attackSpeedStep = {
         const attackInterval = getAttackInterval(context);
 
         const attacksPerSecond = 1 / attackInterval;
-        const attackDps = damage * attacksPerSecond;
+        // Heavy Strikes e Ultimate Scream aumentano solo i default attacks:
+        // il bonus va qui, non nell'Average Damage, altrimenti verrebbe
+        // applicato anche alle abilità e agli altri effetti che usano lo
+        // stesso danno base.
+        const defaultDamagePercent = findPercent(
+            context.statsValues ?? {},
+            'Default Damage'
+        );
+        const warriorUltimate = getWarriorUltimateEffects(context);
+        const defaultAttackMultiplier = 1 + (
+            defaultDamagePercent + warriorUltimate.screamDamagePercent
+        ) / 100;
+        const attackDps = damage * attacksPerSecond * defaultAttackMultiplier;
         const passiveHits = getPassiveHitStats(
             context,
             getCritChancePercent(context)
@@ -114,6 +127,9 @@ export const attackSpeedStep = {
             attackInterval,
             attacksPerSecond,
             dps,
+            defaultDamagePercent,
+            ultimateScreamDamagePercent: warriorUltimate.screamDamagePercent,
+            ultimateUptime: warriorUltimate.uptime,
             passiveDps: passiveDamage.dps,
             passiveHitsPerSecond: passiveHits.hitsPerSecond,
             passiveBreakdown: passiveDamage.applied,
@@ -172,6 +188,27 @@ export const attackSpeedStep = {
                     {
                         label: 'Calculated Strike Attack Speed',
                         value: result.calculatedStrikeAttackSpeedPercent ?? 0,
+                        unit: '%'
+                    }
+                ]
+                : []),
+            ...((result.defaultDamagePercent ?? 0) > 0
+                ? [{
+                    label: 'Default Damage',
+                    value: result.defaultDamagePercent ?? 0,
+                    unit: '%'
+                }]
+                : []),
+            ...((result.ultimateScreamDamagePercent ?? 0) > 0
+                ? [
+                    {
+                        label: 'Ultimate Scream',
+                        value: result.ultimateScreamDamagePercent ?? 0,
+                        unit: '%'
+                    },
+                    {
+                        label: 'Ultimate Uptime',
+                        value: (result.ultimateUptime ?? 0) * 100,
                         unit: '%'
                     }
                 ]

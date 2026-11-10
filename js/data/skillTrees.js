@@ -78,10 +78,10 @@ export const CLASS_SKILL_TREES = {
             'DL1': {
                 x: 34, y: 84, max: 5, costBase: 1,
                 name: "Heavy Strikes",
-                statKey: "{val}% Normal Damage",
+                statKey: "{val}% Default Damage",
                 isDirect: true,
-                description: "{val}% Increase in Normal Damage",
-                parameters: { val: { base: 2, increase: 2 } }
+                description: "{val}% Increase in Default Attacks",
+                parameters: { val: { base: 5, increase: 5 } }
             },
             'DL2': {
                 x: 43, y: 84, max: 5, costBase: 1,
@@ -89,7 +89,7 @@ export const CLASS_SKILL_TREES = {
                 statKey: "{val}% Ability Damage",
                 isDirect: true,
                 description: "{val}% Ability Damage",
-                parameters: { val: { base: 2.5, increase: 2.5 } }
+                parameters: { val: { base: 4, increase: 4 } }
             },
 
             'DR': {
@@ -241,8 +241,8 @@ export const CLASS_SKILL_TREES = {
             'R2b': {
                 x: 92, y: 78, max: 5, costBase: 1,
                 name: "Apex Aggressor",
-                statKey: "{level} Apex Aggressor",
-                isDirect: false,
+                statKey: "{val}% Damage",
+                isDirect: true,
                 description: "Deal {val}% more damage while you are the enemy's highest threat.",
                 parameters: { val: { base: 4, increase: 4 } }
             }

@@ -474,6 +474,81 @@
  */
 
 /**
+ * Risultato degli Ultimate warrior.
+ * @typedef {Object} WarriorUltimateEffectsResult
+ * @property {boolean} visible - Se almeno uno dei due nodi è livellato
+ * @property {boolean} enabled - Se il buff è attivo
+ * @property {number} durationSeconds - Durata del buff (5s)
+ * @property {number} burstCycle - Ciclo effettivo della burst
+ * @property {number} burstCastsPerSecond - Cast della burst al secondo
+ * @property {number} uptime - Uptime medio del buff (0-1)
+ * @property {number} screamNodePercent - Valore del nodo Ultimate Scream
+ * @property {number} venganceNodePercent - Valore del nodo Ultimate Vengance
+ * @property {number} screamDamagePercent - Bonus medio ai default attacks
+ * @property {number} venganceDamagePercent - Bonus medio alle weapon abilities
+ * @property {number} screamLevel - Livello di Ultimate Scream
+ * @property {number} venganceLevel - Livello di Ultimate Vengance
+ * @property {number} secondWindChancePercent - Chance di Second Wind
+ * @property {number} secondWindCooldownSeconds - Cooldown interno di Second Wind
+ * @property {number} secondWindResetsPerSecond - Reset al secondo di Second Wind
+ * @property {boolean} hasSecondWind - Se Second Wind è equipaggiato
+ * @property {string|null} reason - Motivo per cui non è attivo
+ */
+
+/**
+ * Risultato dello step "Warrior".
+ * @typedef {Object} WarriorStepResult
+ * @property {boolean} visible - Se almeno un nodo warrior è attivo
+ * @property {boolean} enabled - Se lo step produce un modificatore
+ * @property {number} baseDamage - Danno prima dei bonus warrior
+ * @property {number} damage - Danno dopo i bonus warrior
+ * @property {number} totalHitsPerSecond - Hit/s usati per Relentless Assault
+ * @property {{visible: boolean, enabled: boolean, level: number, nodePercent: number, killsPerSecond: number, totalHitsPerSecond: number, coverage: number, damagePercent: number, reason: string|null}} relentlessAssault
+ * @property {{visible: boolean, enabled: boolean, level: number, nodePercent: number, hitInterval: number, damagePercent: number, reason: string|null}} chainedStrike
+ * @property {{visible: boolean, enabled: boolean, level: number, capacityLevel: number, bloodthirstyLevel: number, windowSeconds: number, hitsTakenPerSecond: number, dmgPerStackPercent: number, bloodthirstyPerStackPercent: number, maxStacks: number, averageStacks: number, expiryChance: number, damagePercent: number, bloodthirstyDamagePercent: number, totalDamagePercent: number, reason: string|null}} bloodlust
+ * @property {{visible: boolean, enabled: boolean, level: number, poisonedLevel: number, hotPotatoLevel: number, hitsTakenPerSecond: number, spawnChancePercent: number, explosionDamagePercent: number, maxMines: number, rechargeSeconds: number, spawnAttemptsPerSecond: number, explosionsPerSecond: number, poisonDefenseReductionPercent: number, poisonDurationSeconds: number, poisonUptime: number, averageDefenseReductionPercent: number, hotPotatoPerStackPercent: number, hotPotatoCoverage: number, hotPotatoDamagePercent: number, reason: string|null}} potatoMines
+ * @property {number} relentlessAssaultNodePercent - Valore del nodo Relentless Assault
+ * @property {number} chainedStrikeNodePercent - Valore del nodo Chained Strike
+ * @property {number} bloodlustNodePercent - Danno% per stack di Bloodlust
+ * @property {number} potatoMinesNodePercent - Danno% per esplosione di Potato Mines
+ * @property {number} relentlessAssaultDamagePercent - Bonus medio da Relentless Assault
+ * @property {number} chainedStrikeDamagePercent - Bonus medio da Chained Strike
+ * @property {number} bloodlustDamagePercent - Bonus medio da Bloodlust
+ * @property {number} bloodthirstyDamagePercent - Bonus medio da Bloodthirsty
+ * @property {number} hotPotatoDamagePercent - Bonus medio da Hot Potato
+ * @property {number} totalDamagePercent - Somma dei bonus warrior
+ * @property {number} multiplier - Moltiplicatore totale
+ */
+
+/**
+ * Risultato dello step "Potato Mines".
+ * @typedef {Object} PotatoMinesStepResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} level
+ * @property {number} poisonedLevel
+ * @property {number} hotPotatoLevel
+ * @property {number} hitsTakenPerSecond
+ * @property {number} spawnChancePercent
+ * @property {number} explosionDamagePercent
+ * @property {number} maxMines
+ * @property {number} rechargeSeconds
+ * @property {number} spawnAttemptsPerSecond
+ * @property {number} explosionsPerSecond
+ * @property {number} poisonDefenseReductionPercent
+ * @property {number} poisonDurationSeconds
+ * @property {number} poisonUptime
+ * @property {number} averageDefenseReductionPercent
+ * @property {number} hotPotatoPerStackPercent
+ * @property {number} hotPotatoCoverage
+ * @property {number} hotPotatoDamagePercent
+ * @property {string|null} reason
+ * @property {number} averageDamage
+ * @property {number} damagePerExplosion
+ * @property {number} dps
+ */
+
+/**
  * Risultato dello step "Ricochet".
  * @typedef {Object} RicochetStepResult
  * @property {number} ricochetPercent - Valore del nodo Ricochet
@@ -500,6 +575,10 @@
  * @property {number} energyRegen
  * @property {number} baseDps
  * @property {number} maxEnergy
+ * @property {number} [abilityDamagePercent] - Bonus permanente alle weapon abilities
+ * @property {number} [ultimateVenganceDamagePercent] - Bonus medio alle weapon abilities
+ * @property {number} [ultimateUptime] - Uptime del buff Ultimate
+ * @property {number} [abilityDamageMultiplier] - Moltiplicatore applicato alle weapon abilities
  * @property {Array<{
  *   name: string,
  *   ability: string,
@@ -544,6 +623,9 @@
  * @property {number} attacksPerSecond - Attacchi al secondo
  * @property {number} [firstHitDamage] - Danno di un singolo colpo, senza DPS di passive/abilità
  * @property {number} dps - Danno al secondo
+ * @property {number} [defaultDamagePercent] - Bonus permanente ai default attacks
+ * @property {number} [ultimateScreamDamagePercent] - Bonus medio ai default attacks
+ * @property {number} [ultimateUptime] - Uptime del buff Ultimate
  * @property {number} [dpsAll] - DPS totale: attack + burst + combustion + orb + special attack
  * @property {number} passiveDps - Danno al secondo dalle passive
  * @property {number} passiveHitsPerSecond - Hit al secondo dalle passive
@@ -592,6 +674,9 @@
  * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)
  * @property {number} [deathburstKillsPerSecond] - Kill al secondo per Deathburst
  * @property {number} [calculatedStrikeKillsPerSecond] - Kill al secondo per Calculated Strike (0-4)
+ * @property {number} [relentlessAssaultKillsPerSecond] - Kill al secondo per Relentless Assault (0-4)
+ * @property {number} [bloodlustHitsPerSecond] - Hit subiti al secondo per Bloodlust (0-10)
+ * @property {number} [potatoMinesHitsPerSecond] - Hit subiti al secondo per Potato Mines (0-10)
  * @property {number} [sharpshooterResetsPerSecond] - Reset di Sharpshooter al secondo (0-2)
  * @property {number} [targetHealth] - Vita del target, usata per stimare gli stack di Infected
  * @property {number} [targetDefense] - Difesa del target, usata per stimare il TTK
