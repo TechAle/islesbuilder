@@ -23,6 +23,7 @@ export const ITEM_DATABASE = {
     core: [
         {name: "Archer Core", stats: {"Pierce Damage": "20%"}},
         {name: "Assassin Core", stats: {"Stab Damage": "20%"}},
+        {name: "Bombardier Core", stats: {"Throwables Damage": "20%"}},
         {name: "Mage Core", stats: {"Arcane Damage": "20%"}},
         {name: "Swordsman Core", stats: {"Slash Damage": "20%"}}
     ],

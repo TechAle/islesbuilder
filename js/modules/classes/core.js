@@ -2,6 +2,8 @@ import {
     ARCHER_BURST_DAMAGE_PERCENT,
     ASSASSIN_BURST_ACTIVE_SECONDS,
     ASSASSIN_BURST_DAMAGE_PERCENT,
+    BOMBARDIER_BURST_DAMAGE_PERCENT,
+    BOMBARDIER_BURST_HITS,
     BURST_ACTIVE_SECONDS,
     BURST_DAMAGE_PERCENT,
     BURST_ENERGY_COST,
@@ -16,7 +18,7 @@ import {
 /**
  * Chiave del core equipaggiato, ricavata dal nome dell'oggetto.
  * @param {DamageContext} context
- * @returns {'mage'|'archer'|'assassin'|'swordsman'|null}
+ * @returns {'mage'|'archer'|'assassin'|'swordsman'|'bombardier'|null}
  */
 export function getCoreKey(context) {
     const core = context.build?.activeEquip?.core;
@@ -27,6 +29,7 @@ export function getCoreKey(context) {
     if (name.includes('archer')) return 'archer';
     if (name.includes('assassin')) return 'assassin';
     if (name.includes('swordsman')) return 'swordsman';
+    if (name.includes('bombardier')) return 'bombardier';
     return null;
 }
 
@@ -67,6 +70,15 @@ export function hasSwordsmanCore(context) {
 }
 
 /**
+ * Verifica se il core equipaggiato è un Bombardier Core.
+ * @param {DamageContext} context
+ * @returns {boolean}
+ */
+export function hasBombardierCore(context) {
+    return getCoreKey(context) === 'bombardier';
+}
+
+/**
  * Verifica se il core equipaggiato abilita una burst.
  * @param {DamageContext} context
  * @returns {boolean}
@@ -85,15 +97,17 @@ export function hasBurstCore(context) {
  * - Archer Core: burst a frecce ogni 0.75s.
  * - Assassin Core: buff di danno per 6s.
  * - Swordsman Core: proc melee ogni 0.5s, solo con armi melee.
+ * - Bombardier Core: un singolo hit da 950% (200% + 3×100% + 9×50%).
  *
  * @param {DamageContext} context
  * @returns {{
- *   key: 'mage'|'archer'|'assassin'|'swordsman',
+ *   key: 'mage'|'archer'|'assassin'|'swordsman'|'bombardier',
  *   name: string,
  *   damagePercent: number,
  *   energyCost: number,
  *   activeSeconds: number,
  *   hitInterval: number,
+ *   hitsPerBurst?: number,
  *   cycleSeconds: number,
  *   buffDamagePercent: number,
  *   requiresMelee: boolean
@@ -158,5 +172,37 @@ export function getBurstCore(context) {
         };
     }
 
+    if (key === 'bombardier') {
+        return {
+            key,
+            name: 'Bombardier Core',
+            // 200% + 3 × 100% + 9 × 50%: un solo hit per cast.
+            damagePercent: BOMBARDIER_BURST_DAMAGE_PERCENT,
+            energyCost: BURST_ENERGY_COST,
+            activeSeconds: 1,
+            hitInterval: 1,
+            hitsPerBurst: BOMBARDIER_BURST_HITS,
+            cycleSeconds: BURST_INTERVAL,
+            buffDamagePercent: 0,
+            requiresMelee: false
+        };
+    }
+
     return null;
+}
+
+/**
+ * Numero di hit per cast della burst.
+ * Se il core non dichiara `hitsPerBurst`, usa `activeSeconds / hitInterval`.
+ * @param {{activeSeconds: number, hitInterval: number, hitsPerBurst?: number}|null} core
+ * @returns {number}
+ */
+export function getBurstHitsPerBurst(core) {
+    if (!core) return 0;
+    if (Number.isFinite(core.hitsPerBurst)) {
+        return Math.max(0, /** @type {number} */ (core.hitsPerBurst));
+    }
+    return core.hitInterval > 0
+        ? Math.max(0, core.activeSeconds / core.hitInterval)
+        : 0;
 }

@@ -184,6 +184,7 @@ test('special abilities: override per abilità senza danno', () => {
 
     const toxicGas = onClick.find(entry => entry.name === 'Toxic Gas-Sporeheart Orb');
     assert.equal(toxicGas.damage, 0);
+    assert.equal(toxicGas.defenseReductionPercent, 25);
 
     specialAbilityManager.reset();
 });
@@ -531,7 +532,7 @@ test('smite: burst e altri hit aumentano i proc', () => {
     specialAbilityManager.reset();
 });
 
-test('ability speciali: Toxic Gas aumenta il danno del 25%', () => {
+test('ability speciali: Toxic Gas riduce la difesa del 25%', () => {
     specialAbilityManager.reset();
     specialAbilityManager.registerAbilities('Sporeheart Orb', [
         {
@@ -563,7 +564,10 @@ test('ability speciali: Toxic Gas aumenta il danno del 25%', () => {
         settings: { disabledSpecialAttacks: ['Toxic Gas-Sporeheart Orb'] }
     });
 
-    assert.ok(Math.abs(enabled.damageMultiplier.damage - disabled.damageMultiplier.damage * 1.25) < 1e-9);
+    assert.equal(enabled.specialAttacks.defenseReductionPercent, 25);
+    assert.equal(disabled.specialAttacks.defenseReductionPercent, 0);
+    assert.equal(enabled.damageMultiplier.damageTakenIncreasePercent, 0);
+    assert.ok(Math.abs(enabled.damageMultiplier.damage - disabled.damageMultiplier.damage) < 1e-9);
 
     specialAbilityManager.reset();
 });

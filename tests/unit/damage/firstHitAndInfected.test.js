@@ -212,14 +212,14 @@ describe('first hit optional effects', () => {
         expect(steps.damageMultiplier.focusDamagePercent).toBeGreaterThan(0);
     });
 
-    it('keeps Toxic Gas damage taken increase on the first hit', () => {
+    it('keeps Toxic Gas defense reduction on the first hit', () => {
         const special = new SpecialAbilityManager();
         special.reset();
         special.registerAbilities('Sporeheart Orb', [{
             kind: 'ability',
             name: 'Toxic Gas',
             energy: 20,
-            text: 'Create a toxic cloud. Enemies inside take +25% damage.',
+            text: 'Poison enemies around you, lowering their Defense by 25%.',
             key: 'Right click'
         }]);
 
@@ -244,7 +244,8 @@ describe('first hit optional effects', () => {
             settings: makeSettings({ firstHit: true })
         });
 
-        expect(steps.damageMultiplier.damageTakenIncreasePercent).toBe(25);
+        expect(steps.damageMultiplier.damageTakenIncreasePercent).toBe(0);
+        expect(steps.specialAttacks.defenseReductionPercent).toBe(25);
     });
 
     it('keeps Soil Infestation damage taken increase on the first hit', () => {

@@ -1,7 +1,8 @@
 import { BURST_ACTIVE_SECONDS, BURST_INTERVAL } from '../../../data/constants.js';
 import { getAugmentEffects } from '../../augmentManager.js';
+import { getReclamationEffects } from '../../itemPassives.js';
 import { getWeaponClass } from '../../damage/weaponProps.js';
-import { getBurstCore } from '../core.js';
+import { getBurstCore, getBurstHitsPerBurst } from '../core.js';
 import { getMageNodeValue, MAGE_NODES } from './shared.js';
 
 /** @typedef {import('../../../data/types.js').DamageContext} DamageContext */
@@ -58,7 +59,10 @@ export function getPotentialChargeEffects(context, kills) {
  *   secondWindChancePercent: number,
  *   secondWindCooldownSeconds: number,
  *   secondWindResetsPerSecond: number,
- *   hasSecondWind: boolean
+ *   hasSecondWind: boolean,
+ *   hasReclamation: boolean,
+ *   reclamationKillsPerSecond: number,
+ *   reclamationCooldownReduction: number
  * }}
  */
 export function getBurstCycleEffects(context) {
@@ -80,6 +84,18 @@ export function getBurstCycleEffects(context) {
             burstCooldown: Math.max(0, cycleSeconds - activeSeconds),
             burstCycle: cycleSeconds
         };
+
+    // Reclamation (Storm's Legacy): ogni kill riduce di 1s il cooldown
+    // dell'Ultimate. La riduzione non può superare il cooldown disponibile.
+    const reclamation = getReclamationEffects(context);
+    const reclamationCooldownReduction = Math.min(
+        potentialCharge.burstCooldown,
+        reclamation.cooldownReductionSeconds
+    );
+    const cooldownAfterReclamation = Math.max(
+        0,
+        potentialCharge.burstCooldown - reclamationCooldownReduction
+    );
 
     // Second Wind resetta l'Ultimate del mago. L'Archer Core mantiene sempre
     // il cooldown fisso di 30 secondi.
@@ -113,8 +129,8 @@ export function getBurstCycleEffects(context) {
 
     // Cooldown atteso quando i reset di Second Wind possono accorciarlo.
     const effectiveBurstCooldown = resetRate > 0
-        ? (1 - Math.exp(-resetRate * potentialCharge.burstCooldown)) / resetRate
-        : potentialCharge.burstCooldown;
+        ? (1 - Math.exp(-resetRate * cooldownAfterReclamation)) / resetRate
+        : cooldownAfterReclamation;
     const burstCycle = activeSeconds + effectiveBurstCooldown;
 
     return {
@@ -127,7 +143,10 @@ export function getBurstCycleEffects(context) {
         secondWindChancePercent,
         secondWindCooldownSeconds,
         secondWindResetsPerSecond: resetRate,
-        hasSecondWind: augmentEffects.hasSecondWind
+        hasSecondWind: augmentEffects.hasSecondWind,
+        hasReclamation: reclamation.visible,
+        reclamationKillsPerSecond: reclamation.killsPerSecond,
+        reclamationCooldownReduction
     };
 }
 
@@ -140,7 +159,7 @@ export function getBurstHitsPerSecond(context) {
     if (!context.settings?.useBurst) return 0;
 
     const burstCore = getBurstCore(context);
-    if (!burstCore || burstCore.damagePercent <= 0 || burstCore.hitInterval <= 0) {
+    if (!burstCore || burstCore.damagePercent <= 0) {
         return 0;
     }
     if (burstCore.requiresMelee && getWeaponClass(context.weapon) !== 'melee') {
@@ -149,5 +168,5 @@ export function getBurstHitsPerSecond(context) {
 
     const burstCycle = getBurstCycleEffects(context).burstCycle;
 
-    return (burstCore.activeSeconds / burstCore.hitInterval) / burstCycle;
+    return getBurstHitsPerBurst(burstCore) / burstCycle;
 }

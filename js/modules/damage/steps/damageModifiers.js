@@ -10,6 +10,7 @@ import {
 import { getAttackInterval } from '../attackTiming.js';
 import { getEnergyRegen } from '../energy.js';
 import { getCritChancePercent, getDistillableCritDamagePercent } from '../critStats.js';
+import { getItemPassiveEffects } from '../../itemPassives.js';
 import { findFlat, findPercent } from '../statLookup.js';
 import { getWeaponClass } from '../weaponProps.js';
 
@@ -66,6 +67,7 @@ export const damageModifiersStep = {
         const damageType = base?.damageType ?? null;
         const weaponClass = getWeaponClass(context.weapon);
         const element = getWeaponElement(context.weapon);
+        const itemPassives = getItemPassiveEffects(context);
 
         if (baseDamage <= 0) {
             return {
@@ -93,6 +95,14 @@ export const damageModifiersStep = {
                 blueDamageMultiplier: 1,
                 blueDamagePercent: 0,
                 genericDamagePercent: 0,
+                backstabVisible: itemPassives.backstab.visible,
+                backstabEnabled: false,
+                backstabChancePercent: itemPassives.backstab.chancePercent,
+                backstabMaxPercent: itemPassives.backstab.maxPercent,
+                backstabDamagePercent: 0,
+                deteriorateVisible: itemPassives.deteriorate.visible,
+                deteriorateDefenseReductionPercent: 0,
+                deteriorateRampHits: itemPassives.deteriorate.rampHits,
                 damage: 0,
                 modifiers: []
             };
@@ -192,7 +202,8 @@ export const damageModifiersStep = {
         const damage = Math.max(0,
             (damageBeforeMastery + masteryBonus)
             * blueDamageMultiplier
-        ) * (1 + genericDamagePercent / 100);
+        ) * (1 + genericDamagePercent / 100)
+            * (1 + itemPassives.backstab.damagePercent / 100);
 
         return {
             baseDamage,
@@ -219,6 +230,15 @@ export const damageModifiersStep = {
             blueDamageMultiplier,
             blueDamagePercent: (blueDamageMultiplier - 1) * 100,
             genericDamagePercent,
+            backstabVisible: itemPassives.backstab.visible,
+            backstabEnabled: itemPassives.backstab.enabled,
+            backstabChancePercent: itemPassives.backstab.chancePercent,
+            backstabMaxPercent: itemPassives.backstab.maxPercent,
+            backstabDamagePercent: itemPassives.backstab.damagePercent,
+            deteriorateVisible: itemPassives.deteriorate.visible,
+            deteriorateDefenseReductionPercent:
+                itemPassives.deteriorate.defenseReductionPercent,
+            deteriorateRampHits: itemPassives.deteriorate.rampHits,
             damage,
             modifiers
         };
@@ -238,6 +258,31 @@ export const damageModifiersStep = {
 
         if (result.genericDamagePercent !== 0) {
             rows.push({ label: 'Damage%', value: result.genericDamagePercent, unit: '%' });
+        }
+
+        if (result.backstabVisible) {
+            rows.push(
+                {
+                    label: 'Backstab Chance',
+                    value: result.backstabChancePercent ?? 0,
+                    unit: '%'
+                },
+                {
+                    label: 'Backstab Damage%',
+                    value: result.backstabDamagePercent ?? 0,
+                    unit: '%',
+                    help: `Oblivion: +${result.backstabMaxPercent ?? 40}% danno da dietro, pesato sulla probabilità.`
+                }
+            );
+        }
+
+        if (result.deteriorateVisible) {
+            rows.push({
+                label: 'Deteriorate Defense',
+                value: -(result.deteriorateDefenseReductionPercent ?? 0),
+                unit: '%',
+                help: 'Aetheris: -5% difesa per hit, fino a -25%. Nei mostri le prime 5 hit non hanno lo stack.'
+            });
         }
 
         const hasElementalDamage = result.elementalDamagePercent !== 0;

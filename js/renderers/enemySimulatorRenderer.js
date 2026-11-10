@@ -218,12 +218,19 @@ export class EnemySimulatorRenderer {
             rows.push({
                 label: 'Defense Reduction',
                 value: `-${format(result.defenseReductionPercent)}%`,
-                help: 'Riduzione media della difesa nemica da Poisoned Potatoes.'
+                help: 'Riduzione della difesa nemica da Poisoned Potatoes, Deteriorate e Toxic Gas.'
             });
             rows.push({
                 label: 'Effective Defense',
                 value: format(result.effectiveDefense)
             });
+            if (result.defenseReductionRampHits > 0) {
+                rows.push({
+                    label: 'Ramp Hits',
+                    value: formatInteger(result.defenseReductionRampHits),
+                    help: 'Prime hit senza riduzione della difesa (Deteriorate).'
+                });
+            }
         }
 
         if (result.damagePercent !== 0) {

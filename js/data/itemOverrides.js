@@ -17,6 +17,12 @@ export const ITEM_OVERRIDES = {
     "Royal Blowpipe": {
         element: 'thunder'
     },
+    "Oblivion": {
+        "Default Attack": 100
+    },
+    "Demeanor of Dragons": {
+        "Default Attack": 100
+    },
     "Pirate hat": {
         "Blunt Damage": "9.78%",
         "Heavy Damage": "9.83%",

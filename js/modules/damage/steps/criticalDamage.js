@@ -5,8 +5,10 @@ import {
     getCriticalPityCritStats,
     getDeadeyeCritStats,
     getElementalBurstCritStats,
+    getEnhancedReservationRingCritStats,
     getItemSetCritStats,
     getSharpshooterCritStats,
+    getSoulResonatorCritStats,
     getUltimateCritStats
 } from '../critStats.js';
 
@@ -51,6 +53,8 @@ export const criticalDamageStep = {
         const elementalBurst = getElementalBurstCritStats(context);
         const ultimate = getUltimateCritStats(context);
         const itemSets = getItemSetCritStats(context);
+        const soulResonator = getSoulResonatorCritStats(context);
+        const enhancedReservationRing = getEnhancedReservationRingCritStats(context);
         const sharpshooterCritChance = sharpshooter.hotStreakCritChancePercent;
         const sharpshooterCritDamage = sharpshooter.hotStreakCritDamagePercent;
         const deadeyeCritChance = deadeye.critChanceBonusPercent;
@@ -79,6 +83,8 @@ export const criticalDamageStep = {
                 ultimateCritChancePercent: 0,
                 ultimateCritDamagePercent: 0,
                 itemSets,
+                soulResonator,
+                enhancedReservationRing,
                 distillationPercent: 0,
                 convertedCritDamagePercent: 0,
                 criticalHit: 0,
@@ -129,6 +135,8 @@ export const criticalDamageStep = {
             ultimateCritChancePercent: ultimate.critChancePercent,
             ultimateCritDamagePercent: ultimate.critDamagePercent,
             itemSets,
+            soulResonator,
+            enhancedReservationRing,
             distillationPercent,
             convertedCritDamagePercent,
             criticalHit,
@@ -234,6 +242,49 @@ export const criticalDamageStep = {
                     unit: '%'
                 }
             );
+        }
+
+        if (result.soulResonator?.visible) {
+            if (!result.soulResonator.enabled) {
+                rows.push({
+                    label: 'Soul Resonator',
+                    value: result.soulResonator.reason ?? 'Not active'
+                });
+            } else {
+                rows.push(
+                    {
+                        label: 'Soul Resonator Stacks',
+                        value: result.soulResonator.averageStacks
+                    },
+                    {
+                        label: 'Soul Resonator Crit Chance',
+                        value: result.soulResonator.critChancePercent,
+                        unit: '%'
+                    }
+                );
+            }
+        }
+
+        if (result.enhancedReservationRing?.visible) {
+            if (!result.enhancedReservationRing.enabled) {
+                rows.push({
+                    label: 'Enhanced Reservation Ring',
+                    value: result.enhancedReservationRing.reason ?? 'Not active'
+                });
+            } else {
+                rows.push(
+                    {
+                        label: 'Reservation Ring Uptime',
+                        value: result.enhancedReservationRing.uptime * 100,
+                        unit: '%'
+                    },
+                    {
+                        label: 'Reservation Ring Crit Chance',
+                        value: result.enhancedReservationRing.critChancePercent,
+                        unit: '%'
+                    }
+                );
+            }
         }
 
         if (result.ultimate?.visible) {

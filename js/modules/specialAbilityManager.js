@@ -335,10 +335,27 @@ export class SpecialAbilityManager {
      */
     getPassiveHitsFromBase(context, baseHitsPerSecond) {
         let hitsPerSecond = 0;
-        /** @type {Array<{name: string, everyHits: number, hitsPerSecond: number}>} */
+        /** @type {Array<{name: string, everyHits: number, hitsPerSecond: number, periodic?: boolean}>} */
         const applied = [];
 
         this.getActivePassives(context).forEach(passive => {
+            // Passive periodiche (es. Corrupt Aura): scattano ogni `cooldown`
+            // secondi, indipendentemente dal numero di attacchi.
+            if (passive.periodic) {
+                const cooldown = Number(passive.cooldown);
+                if (!Number.isFinite(cooldown) || cooldown <= 0) return;
+
+                const extraHits = 1 / cooldown;
+                hitsPerSecond += extraHits;
+                applied.push({
+                    name: passive.name,
+                    everyHits: 0,
+                    hitsPerSecond: extraHits,
+                    periodic: true
+                });
+                return;
+            }
+
             const everyHits = passive.everyHits ?? 0;
             if (!Number.isFinite(everyHits) || everyHits <= 0) return;
 
@@ -375,17 +392,28 @@ export class SpecialAbilityManager {
         const reversedAverageDamage = averageDamage * reverseMultiplier;
 
         let dps = 0;
-        /** @type {Array<{name: string, everyHits: number, damagePercent: number, hitsPerSecond: number, dps: number}>} */
+        /** @type {Array<{name: string, everyHits: number, damagePercent: number, hitsPerSecond: number, dps: number, periodic?: boolean}>} */
         const applied = [];
 
         this.getActivePassives(context).forEach(passive => {
-            const everyHits = passive.everyHits ?? 0;
             const damagePercent = passive.damage;
 
-            if (!Number.isFinite(everyHits) || everyHits <= 0) return;
             if (!Number.isFinite(damagePercent) || damagePercent <= 0) return;
 
-            const hitsPerSecond = baseHitsPerSecond / everyHits;
+            let hitsPerSecond = 0;
+            let everyHits = 0;
+
+            if (passive.periodic) {
+                // Passive periodiche: un colpo ogni `cooldown` secondi.
+                const cooldown = Number(passive.cooldown);
+                if (!Number.isFinite(cooldown) || cooldown <= 0) return;
+                hitsPerSecond = 1 / cooldown;
+            } else {
+                everyHits = passive.everyHits ?? 0;
+                if (!Number.isFinite(everyHits) || everyHits <= 0) return;
+                hitsPerSecond = baseHitsPerSecond / everyHits;
+            }
+
             const passiveDps = hitsPerSecond
                 * reversedAverageDamage
                 * (damagePercent / 100);
@@ -396,7 +424,8 @@ export class SpecialAbilityManager {
                 everyHits,
                 damagePercent,
                 hitsPerSecond,
-                dps: passiveDps
+                dps: passiveDps,
+                ...(passive.periodic ? { periodic: true } : {})
             });
         });
 
@@ -586,6 +615,22 @@ export class SpecialAbilityManager {
     }
 
     /**
+     * Riduzione della difesa nemica fornita da abilità/passive equipaggiate
+     * (es. Toxic Gas). Non è un aumento del danno subito: entra nella difesa
+     * usata dall'Enemy Simulator.
+     * @param {DamageContext} context
+     * @returns {number}
+     */
+    getDefenseReductionPercent(context) {
+        const disabled = new Set(context.settings?.disabledSpecialAttacks ?? []);
+
+        return this.getActiveEffectAbilities(context).reduce((sum, ability) => {
+            if (disabled.has(ability.name)) return sum;
+            return sum + (ability.defenseReductionPercent ?? 0);
+        }, 0);
+    }
+
+    /**
      * Statistiche delle abilità onClick dell'arma equipaggiata.
      *
      * Il cast rate è limitato dal cooldown e dall'energia rigenerata:
@@ -617,6 +662,7 @@ export class SpecialAbilityManager {
      *     extraHitsPerSecond: number,
      *     extraDps: number,
      *     damageTakenIncreasePercent: number,
+     *     defenseReductionPercent: number,
      *     minHits: number|null,
      *     maxHits: number|null,
      *     minDamage: number|null,
@@ -674,6 +720,7 @@ export class SpecialAbilityManager {
                 extraHitsPerSecond,
                 extraDps,
                 damageTakenIncreasePercent: ability.damageTakenIncreasePercent ?? 0,
+                defenseReductionPercent: ability.defenseReductionPercent ?? 0,
                 dps: damagePerUse * entry.castsPerSecond + extraDps,
                 energyPerSecond: entry.castsPerSecond * entry.energy
             };

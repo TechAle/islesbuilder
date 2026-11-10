@@ -1,4 +1,5 @@
 import { getAugmentEffects, getAugmentStatBonuses } from '../../augmentManager.js';
+import { getDemeanorExecutionEffects } from '../../itemPassives.js';
 import { getItemSetEffects } from '../../itemSets.js';
 import { getCritTotalHitsPerSecond } from '../critStats.js';
 
@@ -29,6 +30,8 @@ export const augmentFinalStep = {
         const effects = getAugmentEffects(context);
         const itemSets = getItemSetEffects(context);
         const setExecutionPercent = itemSets.executionPercent;
+        const dragonExecution = getDemeanorExecutionEffects(context);
+        const dragonExecutionPercent = dragonExecution.executionPercent;
 
         const totalHitsPerSecond = getCritTotalHitsPerSecond(context);
         const infectedHitOverride = Number(context.settings?.infectedHitsOverride) || 0;
@@ -77,6 +80,7 @@ export const augmentFinalStep = {
         const augmentPercent = effects.enragedPercent
             + effects.executionPercent
             + setExecutionPercent
+            + dragonExecutionPercent
             + effects.hunterPercent
             + effects.prosecutionPercent
             + infectedPercent
@@ -86,12 +90,14 @@ export const augmentFinalStep = {
         const multiplier = (1 + augmentPercent / 100) * natureBlessMultiplier;
         const enabled = effects.hasEffects
             || damageStatPercent !== 0
-            || itemSets.hasExecution;
+            || itemSets.hasExecution
+            || dragonExecution.visible;
 
         return {
             enabled,
             hasExecution: effects.hasExecution,
             hasSetExecution: itemSets.hasExecution,
+            hasDragonExecution: dragonExecution.visible,
             hasProsecution: effects.hasProsecution,
             hasHunter: effects.hasHunter,
             hasEnraged: effects.hasEnraged,
@@ -108,6 +114,8 @@ export const augmentFinalStep = {
             enragedPercent: effects.enragedPercent,
             executionPercent: effects.executionPercent,
             setExecutionPercent,
+            dragonExecutionPercent,
+            dragonEnemyHpPercent: dragonExecution.enemyHpPercent,
             hunterPercent: effects.hunterPercent,
             prosecutionPercent: effects.prosecutionPercent,
             firstStrikePercent,
@@ -140,6 +148,14 @@ export const augmentFinalStep = {
         }
         if (result.setExecutionPercent > 0) {
             rows.push({ label: 'Aetherbloom Execution', value: result.setExecutionPercent, unit: '%' });
+        }
+        if (result.hasDragonExecution) {
+            rows.push({
+                label: 'Demeanor Execution',
+                value: result.dragonExecutionPercent,
+                unit: '%',
+                help: `+30% massimo in base alla vita mancante del nemico (HP attuali ${result.dragonEnemyHpPercent ?? 0}%).`
+            });
         }
         if (result.hasProsecution) {
             rows.push({ label: 'Prosecution Damage%', value: result.prosecutionPercent, unit: '%' });

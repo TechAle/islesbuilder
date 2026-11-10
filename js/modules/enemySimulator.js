@@ -28,6 +28,7 @@ export function applyDefenseDamage(damage, defense) {
  * @property {number} castsPerSecond
  * @property {number} damagePercent
  * @property {number} damageTakenIncreasePercent
+ * @property {number} [defenseReductionPercent]
  * @property {number} extraHitsPerSecond
  */
 
@@ -47,6 +48,8 @@ export function applyDefenseDamage(damage, defense) {
  * @param {number} input.maxEnergy
  * @param {number} [input.damagePercent] - Danno percentuale extra (es. resistenza elementale)
  * @param {number} [input.defenseReductionPercent] - Riduzione media della difesa nemica
+ * @param {number} [input.defenseReductionRampHits] - Hit iniziali senza riduzione (Deteriorate)
+ * @param {number} [input.hitsPerSecond] - Hit/s usati per la rampa della difesa
  * @param {number} [input.firstStrikePercent] - Bonus First Strike sul primo colpo
  * @param {EnemySimulationAbility[]} [input.abilities]
  * @returns {{
@@ -54,6 +57,7 @@ export function applyDefenseDamage(damage, defense) {
  *   defense: number,
  *   effectiveDefense: number,
  *   defenseReductionPercent: number,
+ *   defenseReductionRampHits: number,
  *   damagePercent: number,
  *   firstHitDamage: number,
  *   realFirstHitDamage: number,
@@ -76,6 +80,8 @@ export function simulateEnemy({
     maxEnergy,
     damagePercent = 0,
     defenseReductionPercent = 0,
+    defenseReductionRampHits = 0,
+    hitsPerSecond = 0,
     firstStrikePercent = 0,
     abilities = []
 }) {
@@ -90,18 +96,53 @@ export function simulateEnemy({
     const damageMultiplier = Math.max(0, 1 + safeDamagePercent / 100);
     const adjustedFirstHitDamage = Math.max(0, (Number(firstHitDamage) || 0) * damageMultiplier);
     const adjustedDps = Math.max(0, (Number(dps) || 0) * damageMultiplier);
-    const realFirstHitDamage = applyDefenseDamage(adjustedFirstHitDamage, effectiveDefense);
+    const safeHitsPerSecond = Math.max(0, Number(hitsPerSecond) || 0);
+    const safeRampHits = Math.max(0, Math.floor(Number(defenseReductionRampHits) || 0));
+    // La rampa ha senso solo con più di un hit e con un hit rate noto.
+    const useRamp = safeRampHits > 1 && safeHitsPerSecond > 0;
+    const firstHitDefense = useRamp ? safeDefense : effectiveDefense;
+    const realFirstHitDamage = applyDefenseDamage(adjustedFirstHitDamage, firstHitDefense);
     const realDps = applyDefenseDamage(adjustedDps, effectiveDefense);
 
-    const oneshot = safeHealth > 0 && realFirstHitDamage >= safeHealth;
-    const remainingHealth = oneshot
-        ? 0
-        : Math.max(0, safeHealth - realFirstHitDamage);
-
     const firstStrikeBonusTime = Number(firstStrikePercent) > 0 ? 0.6 : 0;
-    const timeToKill = oneshot
-        ? 0
-        : (realDps > 0 ? remainingHealth / realDps + firstStrikeBonusTime : Infinity);
+
+    let oneshot;
+    let timeToKill;
+
+    if (useRamp) {
+        // Le prime `rampHits` hit usano la difesa piena. La prima è il first hit
+        // (istantaneo), le successive usano il danno medio per hit.
+        const hitDamageBeforeDefense = adjustedDps / safeHitsPerSecond;
+        const rampHitDamage = applyDefenseDamage(hitDamageBeforeDefense, safeDefense);
+        const rampDamage = realFirstHitDamage + (safeRampHits - 1) * rampHitDamage;
+
+        if (safeHealth > 0 && realFirstHitDamage >= safeHealth) {
+            oneshot = true;
+            timeToKill = 0;
+        } else if (rampDamage >= safeHealth) {
+            const remainingAfterFirst = Math.max(0, safeHealth - realFirstHitDamage);
+            const extraHits = rampHitDamage > 0
+                ? Math.ceil(remainingAfterFirst / rampHitDamage)
+                : Infinity;
+            oneshot = false;
+            timeToKill = extraHits / safeHitsPerSecond;
+        } else {
+            const remainingHealth = safeHealth - rampDamage;
+            const rampTime = (safeRampHits - 1) / safeHitsPerSecond;
+            oneshot = false;
+            timeToKill = rampTime + (realDps > 0 ? remainingHealth / realDps : Infinity);
+        }
+    } else {
+        oneshot = safeHealth > 0 && realFirstHitDamage >= safeHealth;
+        const remainingHealth = oneshot
+            ? 0
+            : Math.max(0, safeHealth - realFirstHitDamage);
+        timeToKill = oneshot
+            ? 0
+            : (realDps > 0 ? remainingHealth / realDps : Infinity);
+    }
+
+    if (!oneshot) timeToKill += firstStrikeBonusTime;
 
     const deficit = Math.max(0, -(Number(energyPerSecond) || 0));
     const energyAtEnd = Number.isFinite(timeToKill)
@@ -123,6 +164,7 @@ export function simulateEnemy({
             && ability.castsPerSecond > 0
             && (ability.damagePercent > 0
                 || ability.damageTakenIncreasePercent > 0
+                || (ability.defenseReductionPercent ?? 0) > 0
                 || ability.extraHitsPerSecond > 0))
         .map(ability => ({
             name: ability.ability ?? ability.name,
@@ -136,6 +178,7 @@ export function simulateEnemy({
         defense: safeDefense,
         effectiveDefense,
         defenseReductionPercent: safeDefenseReductionPercent,
+        defenseReductionRampHits: useRamp ? safeRampHits : 0,
         damagePercent: safeDamagePercent,
         firstHitDamage: adjustedFirstHitDamage,
         realFirstHitDamage,

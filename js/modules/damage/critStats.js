@@ -7,7 +7,8 @@ import {
     getUltimateEffects
 } from '../classes/archer.js';
 import { getTotalHitsPerSecond } from '../classes/mage.js';
-import { getItemSetEffects } from '../itemSets.js';
+import { getEnhancedReservationRingEffects } from '../itemProcs.js';
+import { getItemSetEffects, getSoulResonatorEffects } from '../itemSets.js';
 import { findPercent } from './statLookup.js';
 
 /** @typedef {import('../../data/types.js').DamageContext} DamageContext */
@@ -61,7 +62,9 @@ const CRIT_STATS_HIT_TOLERANCE = 1e-9;
  *   criticalPity: ReturnType<typeof getCriticalPityEffects>,
  *   elementalBurst: ReturnType<typeof getElementalBurstEffects>,
  *   ultimate: ReturnType<typeof getUltimateEffects>,
- *   itemSets: ReturnType<typeof getItemSetEffects>
+ *   itemSets: ReturnType<typeof getItemSetEffects>,
+ *   soulResonator: ReturnType<typeof getSoulResonatorEffects>,
+ *   enhancedReservationRing: ReturnType<typeof getEnhancedReservationRingEffects>
  * }}
  */
 function computeCritStats(context) {
@@ -72,11 +75,13 @@ function computeCritStats(context) {
         context.statsValues ?? {},
         'Crit Chance'
     );
-    // Alliance è una Crit Chance statica: entra nella base usata anche da
-    // Deadeye/Pity, non solo nel totale finale.
+    // Alliance e Soul Resonator sono Crit Chance statiche (medie): entrano
+    // nella base usata anche da Deadeye/Pity, non solo nel totale finale.
     const itemSets = getItemSetEffects(context);
+    const soulResonator = getSoulResonatorEffects(context);
     const baseCritChancePercent = baseCritChanceStatPercent
-        + itemSets.allianceCritChancePercent;
+        + itemSets.allianceCritChancePercent
+        + soulResonator.critChancePercent;
     // L'uptime della burst non dipende dalla Crit Chance: calcoliamolo una
     // volta sola e usiamolo per entrambe le statistiche critiche.
     const ultimate = getUltimateEffects(context);
@@ -90,6 +95,12 @@ function computeCritStats(context) {
     let deadeye;
     /** @type {ReturnType<typeof getCriticalPityEffects>} */
     let criticalPity;
+    /** @type {ReturnType<typeof getEnhancedReservationRingEffects>} */
+    let enhancedReservationRing = getEnhancedReservationRingEffects(
+        context,
+        totalHitsPerSecond,
+        baseCritChancePercent
+    );
     let critChancePercent = baseCritChancePercent;
 
     for (let i = 0; i < CRIT_STATS_MAX_ITERATIONS; i++) {
@@ -109,8 +120,16 @@ function computeCritStats(context) {
             totalHitsPerSecond,
             independentCritChancePercent
         );
+        // Enhanced Reservation Ring: uptime autoconsistente calcolato sul
+        // crit rate senza il bonus dell'anello stesso.
+        enhancedReservationRing = getEnhancedReservationRingEffects(
+            context,
+            totalHitsPerSecond,
+            independentCritChancePercent
+        );
 
         critChancePercent = independentCritChancePercent
+            + enhancedReservationRing.critChancePercent
             + deadeye.critChanceBonusPercent
             + criticalPity.critChanceBonusPercent
             + ultimate.critChancePercent;
@@ -144,7 +163,13 @@ function computeCritStats(context) {
         totalHitsPerSecond,
         independentCritChancePercent
     );
+    enhancedReservationRing = getEnhancedReservationRingEffects(
+        context,
+        totalHitsPerSecond,
+        independentCritChancePercent
+    );
     critChancePercent = independentCritChancePercent
+        + enhancedReservationRing.critChancePercent
         + deadeye.critChanceBonusPercent
         + criticalPity.critChanceBonusPercent
         + ultimate.critChancePercent;
@@ -169,7 +194,9 @@ function computeCritStats(context) {
         criticalPity,
         elementalBurst,
         ultimate,
-        itemSets
+        itemSets,
+        soulResonator,
+        enhancedReservationRing
     };
 
     cache.critStats = stats;
@@ -222,6 +249,22 @@ export function getItemSetCritStats(context) {
  */
 export function getUltimateCritStats(context) {
     return computeCritStats(context).ultimate;
+}
+
+/**
+ * @param {DamageContext} context
+ * @returns {ReturnType<typeof getSoulResonatorEffects>}
+ */
+export function getSoulResonatorCritStats(context) {
+    return computeCritStats(context).soulResonator;
+}
+
+/**
+ * @param {DamageContext} context
+ * @returns {ReturnType<typeof getEnhancedReservationRingEffects>}
+ */
+export function getEnhancedReservationRingCritStats(context) {
+    return computeCritStats(context).enhancedReservationRing;
 }
 
 /**

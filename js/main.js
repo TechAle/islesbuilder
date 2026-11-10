@@ -133,6 +133,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         lastSorrowUptime: 100,
         focusStacks: 0,
         nearbyPlayers: 0,
+        soulResonatorKillsPerSecond: 0,
+        backstabChancePercent: 100,
+        reclamationKillsPerSecond: 0,
         sharpshooterResetsPerSecond: 0,
         potentialChargeKills: 0,
         ultimateKillsPerSecond: 0.2,
@@ -167,6 +170,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         focusStacksValue: document.getElementById('focus-stacks-value'),
         nearbyPlayers: /** @type {HTMLInputElement|null} */ (document.getElementById('nearby-players')),
         nearbyPlayersValue: document.getElementById('nearby-players-value'),
+        soulResonatorKills: /** @type {HTMLInputElement|null} */ (document.getElementById('soul-resonator-kills')),
+        soulResonatorKillsValue: document.getElementById('soul-resonator-kills-value'),
+        backstabChance: /** @type {HTMLInputElement|null} */ (document.getElementById('backstab-chance')),
+        backstabChanceValue: document.getElementById('backstab-chance-value'),
+        reclamationKills: /** @type {HTMLInputElement|null} */ (document.getElementById('reclamation-kills')),
+        reclamationKillsValue: document.getElementById('reclamation-kills-value'),
         sharpshooterResets: /** @type {HTMLInputElement|null} */ (document.getElementById('sharpshooter-resets')),
         sharpshooterResetsValue: document.getElementById('sharpshooter-resets-value'),
         potentialChargeKills: /** @type {HTMLInputElement|null} */ (document.getElementById('potential-charge-kills')),
@@ -305,6 +314,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageSettingsRenderer.placeBurstControl(
             damageRenderer.getStepContent('burst')
         );
+        damageSettingsRenderer.placeReclamationKillsControl(
+            damageRenderer.getStepContent('burst'),
+            dpsManager.getSteps().burst?.hasReclamation === true
+        );
         damageSettingsRenderer.placeSpecialAttacksControl(
             damageRenderer.getStepContent('specialAttacks')
         );
@@ -331,6 +344,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         damageSettingsRenderer.placeNearbyPlayersControl(
             damageRenderer.getStepContent('criticalDamage'),
             dpsManager.getSteps().criticalDamage?.itemSets?.hasAlliance === true
+        );
+        damageSettingsRenderer.placeSoulResonatorKillsControl(
+            damageRenderer.getStepContent('criticalDamage'),
+            dpsManager.getSteps().criticalDamage?.soulResonator?.visible === true
+        );
+        damageSettingsRenderer.placeBackstabControl(
+            damageRenderer.getStepContent('damageModifiers'),
+            dpsManager.getSteps().damageModifiers?.backstabVisible === true
         );
         damageSettingsRenderer.placeUltimateKillsControl(
             damageRenderer.getStepContent('burst'),
@@ -370,13 +391,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Rilegge i valori dopo syncElement: il Damage% può essere stato
         // aggiornato in base all'elemento dell'arma corrente.
         const enemyInputs = enemySimulatorRenderer.getInputs();
+        const potatoDefenseReduction =
+            dpsManager.getSteps().potatoMines?.averageDefenseReductionPercent ?? 0;
+        const deteriorateEffects = dpsManager.getSteps().damageModifiers;
+        const deteriorateDefenseReduction =
+            deteriorateEffects?.deteriorateDefenseReductionPercent ?? 0;
+        const toxicGasDefenseReduction =
+            dpsManager.getSteps().specialAttacks?.defenseReductionPercent ?? 0;
 
         enemySimulatorRenderer.render(simulateEnemy({
             health: enemyInputs.health,
             defense: enemyInputs.defense,
             damagePercent: enemyInputs.damagePercent,
             defenseReductionPercent:
-                dpsManager.getSteps().potatoMines?.averageDefenseReductionPercent ?? 0,
+                potatoDefenseReduction
+                + deteriorateDefenseReduction
+                + toxicGasDefenseReduction,
+            defenseReductionRampHits: deteriorateEffects?.deteriorateVisible
+                ? (deteriorateEffects.deteriorateRampHits ?? 0)
+                : 0,
+            hitsPerSecond: attackStep?.attacksPerSecond ?? 0,
             firstStrikePercent,
             firstHitDamage,
             dps: dpsManager.getDps() ?? 0,

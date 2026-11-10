@@ -17,6 +17,12 @@ import { CheckboxControl, SliderControl } from './controls.js';
  * @property {HTMLElement|null} focusStacksValue
  * @property {HTMLInputElement|null} nearbyPlayers
  * @property {HTMLElement|null} nearbyPlayersValue
+ * @property {HTMLInputElement|null} soulResonatorKills
+ * @property {HTMLElement|null} soulResonatorKillsValue
+ * @property {HTMLInputElement|null} backstabChance
+ * @property {HTMLElement|null} backstabChanceValue
+ * @property {HTMLInputElement|null} reclamationKills
+ * @property {HTMLElement|null} reclamationKillsValue
  * @property {HTMLInputElement|null} sharpshooterResets
  * @property {HTMLElement|null} sharpshooterResetsValue
  * @property {HTMLInputElement|null} potentialChargeKills
@@ -80,6 +86,9 @@ export class DamageSettingsRenderer {
         this.lastSorrowControl = /** @type {HTMLElement|null} */ (options.lastSorrowUptime?.closest('.damage-uptime') ?? null);
         this.focusControl = /** @type {HTMLElement|null} */ (options.focusStacks?.closest('.damage-uptime') ?? null);
         this.nearbyPlayersControl = /** @type {HTMLElement|null} */ (options.nearbyPlayers?.closest('.damage-uptime') ?? null);
+        this.soulResonatorKillsControl = /** @type {HTMLElement|null} */ (options.soulResonatorKills?.closest('.damage-uptime') ?? null);
+        this.backstabChanceControl = /** @type {HTMLElement|null} */ (options.backstabChance?.closest('.damage-uptime') ?? null);
+        this.reclamationKillsControl = /** @type {HTMLElement|null} */ (options.reclamationKills?.closest('.damage-uptime') ?? null);
         this.sharpshooterResetsControl = /** @type {HTMLElement|null} */ (options.sharpshooterResets?.closest('.damage-uptime') ?? null);
         this.potentialChargeControl = /** @type {HTMLElement|null} */ (options.potentialChargeKills?.closest('.damage-uptime') ?? null);
         this.ultimateKillsControl = /** @type {HTMLElement|null} */ (options.ultimateKills?.closest('.damage-uptime') ?? null);
@@ -120,6 +129,24 @@ export class DamageSettingsRenderer {
             valueEl: options.nearbyPlayersValue,
             onChange: emit,
             format: value => `${value} / 6`
+        });
+        this.soulResonatorKillsSlider = new SliderControl({
+            input: options.soulResonatorKills,
+            valueEl: options.soulResonatorKillsValue,
+            onChange: emit,
+            format: value => `${value} /s`
+        });
+        this.backstabChanceSlider = new SliderControl({
+            input: options.backstabChance,
+            valueEl: options.backstabChanceValue,
+            onChange: emit,
+            format: value => `${value}%`
+        });
+        this.reclamationKillsSlider = new SliderControl({
+            input: options.reclamationKills,
+            valueEl: options.reclamationKillsValue,
+            onChange: emit,
+            format: value => `${value} /s`
         });
         this.sharpshooterResetsSlider = new SliderControl({
             input: options.sharpshooterResets,
@@ -199,6 +226,9 @@ export class DamageSettingsRenderer {
             this.lastSorrowSlider,
             this.focusSlider,
             this.nearbyPlayersSlider,
+            this.soulResonatorKillsSlider,
+            this.backstabChanceSlider,
+            this.reclamationKillsSlider,
             this.sharpshooterResetsSlider,
             this.potentialChargeSlider,
             this.ultimateKillsSlider,
@@ -331,6 +361,30 @@ export class DamageSettingsRenderer {
      * @param {HTMLElement|null} container
      * @param {boolean} visible
      */
+    placeSoulResonatorKillsControl(container, visible) {
+        this.placeControl(this.soulResonatorKillsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeBackstabControl(container, visible) {
+        this.placeControl(this.backstabChanceControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
+    placeReclamationKillsControl(container, visible) {
+        this.placeControl(this.reclamationKillsControl, container, visible);
+    }
+
+    /**
+     * @param {HTMLElement|null} container
+     * @param {boolean} visible
+     */
     placeUltimateKillsControl(container, visible) {
         this.placeControl(this.ultimateKillsControl, container, visible);
     }
@@ -449,6 +503,7 @@ export class DamageSettingsRenderer {
      *   cooldown: number,
      *   extraHitsPerSecond?: number,
      *   damageTakenIncreasePercent?: number,
+     *   defenseReductionPercent?: number,
      *   minHits?: number|null,
      *   maxHits?: number|null,
      *   minDamage?: number|null,
@@ -464,6 +519,7 @@ export class DamageSettingsRenderer {
             ability.damagePercent > 0
             || (ability.extraHitsPerSecond ?? 0) > 0
             || (ability.damageTakenIncreasePercent ?? 0) > 0
+            || (ability.defenseReductionPercent ?? 0) > 0
             || typeof ability.minDamage === 'number'
         ));
         const signature = list
@@ -618,6 +674,9 @@ export class DamageSettingsRenderer {
             lastSorrowUptime: this.lastSorrowSlider.value,
             focusStacks: this.focusSlider.value,
             nearbyPlayers: this.nearbyPlayersSlider.value,
+            soulResonatorKillsPerSecond: this.soulResonatorKillsSlider.value,
+            backstabChancePercent: this.backstabChanceSlider.value,
+            reclamationKillsPerSecond: this.reclamationKillsSlider.value,
             sharpshooterResetsPerSecond: this.sharpshooterResetsSlider.value,
             potentialChargeKills: this.potentialChargeSlider.value,
             ultimateKillsPerSecond: this.ultimateKillsSlider.value,

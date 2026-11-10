@@ -86,11 +86,13 @@
  * @property {number} [extraHitsPerSwing] - Hit extra per ogni attacco base
  * @property {number} [extraHitDamagePercent] - Danno percentuale degli hit extra
  * @property {number} [damageTakenIncreasePercent] - Aumento danno subito dal nemico
+ * @property {number} [defenseReductionPercent] - Riduzione della difesa nemica
  * @property {Record<string, number>} [resistancePercent] - Resistenza nemica per elemento (es. { nature: -20 })
  * @property {number} [elementalPowerPercent] - Elemental Power% aggiunto dall'abilità
  * @property {boolean} [requiresPriorHit] - True se l'effetto richiede un colpo precedente
  * @property {number} cooldown - Cooldown in secondi (default 1.6 per onClick)
  * @property {number|null} everyHits - Per le passive: ogni quanti attacchi scatta
+ * @property {boolean} [periodic] - Per le passive: scatta ogni `cooldown` secondi
  * @property {string} text
  */
 
@@ -262,6 +264,14 @@
  * @property {number} blueDamageMultiplier - Moltiplicatore danno dato dalle BLUE orb
  * @property {number} blueDamagePercent - Bonus percentuale delle BLUE orb
  * @property {number} genericDamagePercent - Bonus `Damage%` generico (es. Glass Cannon)
+ * @property {boolean} [backstabVisible] - Se Oblivion è equipaggiato
+ * @property {boolean} [backstabEnabled] - Se il bonus Backstab è attivo
+ * @property {number} [backstabChancePercent] - Probabilità media di attaccare da dietro
+ * @property {number} [backstabMaxPercent] - Bonus massimo di Backstab
+ * @property {number} [backstabDamagePercent] - Bonus medio di Backstab
+ * @property {boolean} [deteriorateVisible] - Se Aetheris è equipaggiato
+ * @property {number} [deteriorateDefenseReductionPercent] - Riduzione difesa a stack massimi
+ * @property {number} [deteriorateRampHits] - Hit iniziali senza riduzione
  */
 
 /**
@@ -304,6 +314,7 @@
  * @property {boolean} enabled
  * @property {boolean} hasExecution
  * @property {boolean} hasSetExecution
+ * @property {boolean} hasDragonExecution
  * @property {boolean} hasProsecution
  * @property {boolean} hasHunter
  * @property {boolean} hasEnraged
@@ -320,6 +331,8 @@
  * @property {number} enragedPercent
  * @property {number} executionPercent
  * @property {number} setExecutionPercent
+ * @property {number} dragonExecutionPercent
+ * @property {number} dragonEnemyHpPercent
  * @property {number} hunterPercent
  * @property {number} prosecutionPercent
  * @property {number} firstStrikePercent
@@ -413,6 +426,39 @@
  * @property {number} executionMaxPercent
  * @property {number} allianceCritChancePerPlayer
  * @property {number} allianceMaxPlayers
+ * @property {number} reaperPieces
+ * @property {boolean} hasSoulResonator
+ */
+
+/**
+ * Effetti medi di Soul Resonator (set Reaper).
+ * @typedef {Object} SoulResonatorEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {boolean} hasSet
+ * @property {number} reaperPieces
+ * @property {number} killsPerSecond
+ * @property {number} durationSeconds
+ * @property {number} maxStacks
+ * @property {number} averageStacks
+ * @property {number} critChancePerStackPercent
+ * @property {number} critChancePercent
+ * @property {string|null} reason
+ */
+
+/**
+ * Effetti medi di Enhanced Reservation Ring.
+ * @typedef {Object} EnhancedReservationRingEffectsResult
+ * @property {boolean} visible
+ * @property {boolean} enabled
+ * @property {number} ringCount
+ * @property {number} buffCritChancePercent
+ * @property {number} durationSeconds
+ * @property {number} totalHitsPerSecond
+ * @property {number} critChanceWithoutRingPercent
+ * @property {number} uptime
+ * @property {number} critChancePercent
+ * @property {string|null} reason
  */
 
 /**
@@ -437,6 +483,8 @@
  * @property {number} ultimateCritChancePercent - Crit Chance media da Ultimatum Criterium
  * @property {number} ultimateCritDamagePercent - Crit Damage medio da Ultimatum Vagrus
  * @property {ItemSetEffectsResult} itemSets - Effetti dei set equipaggiati
+ * @property {SoulResonatorEffectsResult} soulResonator - Effetti di Soul Resonator
+ * @property {EnhancedReservationRingEffectsResult} enhancedReservationRing - Effetti di Enhanced Reservation Ring
  * @property {number} distillationPercent - Percentuale convertita da Natural Distillation
  * @property {number} convertedCritDamagePercent - Crit Damage convertito in Elemental Power
  * @property {number} criticalHit - Danno del colpo critico
@@ -581,6 +629,7 @@
  * @property {number} [ultimateVenganceDamagePercent] - Bonus medio alle weapon abilities
  * @property {number} [ultimateUptime] - Uptime del buff Ultimate
  * @property {number} [abilityDamageMultiplier] - Moltiplicatore applicato alle weapon abilities
+ * @property {number} [defenseReductionPercent] - Riduzione difesa nemica dalle abilità
  * @property {Array<{
  *   name: string,
  *   ability: string,
@@ -595,6 +644,7 @@
  *   extraHitsPerSecond: number,
  *   extraDps: number,
  *   damageTakenIncreasePercent: number,
+ *   defenseReductionPercent: number,
  *   minHits: number|null,
  *   maxHits: number|null,
  *   minDamage: number|null,
@@ -671,6 +721,9 @@
  * @property {Record<string, number>} [abilityDamageOverrides] - Danno % per abilità
  * @property {number} [executionHpPercent] - HP attuali del nemico per Execution (0-100)
  * @property {number} [nearbyPlayers] - Giocatori vicini per Alliance (0-6)
+ * @property {number} [soulResonatorKillsPerSecond] - Kill al secondo per Soul Resonator (0-10)
+ * @property {number} [backstabChancePercent] - Probabilità di attaccare da dietro per Backstab (0-100)
+ * @property {number} [reclamationKillsPerSecond] - Kill al secondo per Reclamation (0-10)
  * @property {number} [prosecutionHpPercent] - HP attuali del nemico per Prosecution (0-100)
  * @property {number} [enragedHpPercent] - HP attuali del player per Enraged (0-100)
  * @property {number} [infectedHitsOverride] - Override hit/stacks di Infected (0 = automatico)
@@ -714,6 +767,9 @@
  * @property {number} secondWindCooldownSeconds
  * @property {number} secondWindResetsPerSecond
  * @property {boolean} hasSecondWind
+ * @property {boolean} [hasReclamation] - Se Reclamation è equipaggiato
+ * @property {number} [reclamationKillsPerSecond] - Kill/s usati per Reclamation
+ * @property {number} [reclamationCooldownReduction] - Secondi rimossi dal cooldown
  * @property {number} attackDps
  * @property {number} totalDps
  * @property {number} energyPerSecond

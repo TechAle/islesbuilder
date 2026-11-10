@@ -86,7 +86,8 @@ export const specialAttacksStep = {
         /** @param {any} ability */
         const hasEffect = ability => ability.damagePercent > 0
             || ability.extraHitsPerSecond > 0
-            || ability.damageTakenIncreasePercent > 0;
+            || ability.damageTakenIncreasePercent > 0
+            || ability.defenseReductionPercent > 0;
         const enabled = effects.reverseMultiplier > 0
             && abilities.some(ability => ability.enabled && hasEffect(ability));
         const visible = effects.reverseMultiplier > 0
@@ -104,6 +105,7 @@ export const specialAttacksStep = {
             ultimateVenganceDamagePercent: warriorUltimate.venganceDamagePercent,
             ultimateUptime: warriorUltimate.uptime,
             abilityDamageMultiplier,
+            defenseReductionPercent: manager?.getDefenseReductionPercent(context) ?? 0,
             abilities
         };
     },
@@ -167,7 +169,8 @@ export const specialAttacksStep = {
 
             const hasEffect = ability.damagePercent > 0
                 || ability.extraHitsPerSecond > 0
-                || ability.damageTakenIncreasePercent > 0;
+                || ability.damageTakenIncreasePercent > 0
+                || ability.defenseReductionPercent > 0;
             if (!hasEffect) return;
 
             if (ability.damagePercent > 0) {
@@ -192,6 +195,15 @@ export const specialAttacksStep = {
                     label: 'Damage%',
                     value: ability.damageTakenIncreasePercent,
                     unit: '%'
+                });
+            }
+
+            if (ability.defenseReductionPercent > 0) {
+                rows.push({
+                    label: `${ability.ability} Defense`,
+                    value: -ability.defenseReductionPercent,
+                    unit: '%',
+                    help: 'Riduzione della difesa nemica, applicata nell\'Enemy Simulator.'
                 });
             }
 

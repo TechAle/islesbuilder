@@ -40,7 +40,7 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     'Tremble-Silver Crux': { times: 2, damage: 100 },
 
     // Abilità difensive/utility: la percentuale nel testo non è danno inflitto.
-    'Toxic Gas-Sporeheart Orb': { damage: 0, damageTakenIncreasePercent: 25 },
+    'Toxic Gas-Sporeheart Orb': { damage: 0, defenseReductionPercent: 25 },
     'Bound By Spirits-Essencebinder Tome': { damage: 0 },
 
     // Il parser prende l'ultima %, che qui è la cura: forziamo il danno.
@@ -115,5 +115,13 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     'Soil Infestation-Gloomfang Mace': {
         damage: 0,
         damageTakenIncreasePercent: 25
+    },
+
+    // Corrupt Aura (Abyssal Necklace): aura periodica ogni 3s mentre ci si
+    // muove, 125% di danno ai nemici vicini.
+    'Corrupt Aura-Abyssal Necklace': {
+        damage: 125,
+        cooldown: 3,
+        periodic: true
     }
 };

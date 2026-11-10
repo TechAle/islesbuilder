@@ -4,7 +4,7 @@ import {
     getDefaultAttackReverseMultiplier,
     getWeaponClass
 } from '../weaponProps.js';
-import { getBurstCore } from '../../classes/core.js';
+import { getBurstCore, getBurstHitsPerBurst } from '../../classes/core.js';
 import { getCoreBuffEffects } from '../../classes/coreBuff.js';
 import { getBurstCycleEffects } from '../../classes/mage.js';
 
@@ -79,6 +79,9 @@ export const burstStep = {
             secondWindCooldownSeconds: 0,
             secondWindResetsPerSecond: 0,
             hasSecondWind: false,
+            hasReclamation: false,
+            reclamationKillsPerSecond: 0,
+            reclamationCooldownReduction: 0,
             buffDamagePercent: 0,
             buffUptime: 0,
             buffDurationSeconds: 0,
@@ -114,13 +117,13 @@ export const burstStep = {
         let burstHitsPerSecond = 0;
         let burstDps = 0;
 
-        if (burstCore.damagePercent > 0 && burstCore.hitInterval > 0) {
+        const hitsPerBurst = getBurstHitsPerBurst(burstCore);
+
+        if (burstCore.damagePercent > 0 && hitsPerBurst > 0) {
             burstDamagePerHit = damage
                 * reverseMultiplier
                 * (burstCore.damagePercent / 100);
-            burstHitsPerSecond = (
-                burstCore.activeSeconds / burstCore.hitInterval
-            ) / potentialCharge.burstCycle;
+            burstHitsPerSecond = hitsPerBurst / potentialCharge.burstCycle;
             burstDps = burstDamagePerHit * burstHitsPerSecond;
         }
 
@@ -153,6 +156,9 @@ export const burstStep = {
             secondWindCooldownSeconds: potentialCharge.secondWindCooldownSeconds,
             secondWindResetsPerSecond: potentialCharge.secondWindResetsPerSecond,
             hasSecondWind: potentialCharge.hasSecondWind,
+            hasReclamation: potentialCharge.hasReclamation,
+            reclamationKillsPerSecond: potentialCharge.reclamationKillsPerSecond,
+            reclamationCooldownReduction: potentialCharge.reclamationCooldownReduction,
             buffDamagePercent: coreBuff.buffDamagePercent,
             buffUptime: coreBuff.uptime,
             buffDurationSeconds: coreBuff.activeSeconds,
@@ -215,6 +221,20 @@ export const burstStep = {
                     unit: '%'
                 },
                 { label: 'Burst Cycle', value: result.burstCycle, unit: 's' },
+                ...(result.hasReclamation
+                    ? [
+                        {
+                            label: 'Reclamation Kills / s',
+                            value: result.reclamationKillsPerSecond ?? 0,
+                            unit: '/s'
+                        },
+                        {
+                            label: 'Reclamation Cooldown',
+                            value: -(result.reclamationCooldownReduction ?? 0),
+                            unit: 's'
+                        }
+                    ]
+                    : []),
                 {
                     label: 'Energy per Second',
                     value: result.energyPerSecondBurstOnly,
@@ -237,6 +257,21 @@ export const burstStep = {
             ...(result.potentialChargeSeconds > 0
                 ? [
                     { label: 'Cooldown Reduction', value: result.cooldownReduction, unit: 's' },
+                    { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
+                ]
+                : []),
+            ...(result.hasReclamation
+                ? [
+                    {
+                        label: 'Reclamation Kills / s',
+                        value: result.reclamationKillsPerSecond ?? 0,
+                        unit: '/s'
+                    },
+                    {
+                        label: 'Reclamation Cooldown',
+                        value: -(result.reclamationCooldownReduction ?? 0),
+                        unit: 's'
+                    },
                     { label: 'Burst Cycle', value: result.burstCycle, unit: 's' }
                 ]
                 : []),

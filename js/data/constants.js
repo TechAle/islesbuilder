@@ -110,6 +110,15 @@ export const SWORDSMAN_BURST_DAMAGE_PERCENT = 200;
 /** Swordsman Core burst: intervallo tra i proc melee, in secondi. */
 export const SWORDSMAN_BURST_HIT_INTERVAL = 0.5;
 
+/**
+ * Bombardier Core burst: danno totale di un singolo lancio.
+ * 200% (pentola principale) + 3 × 100% + 9 × 50% = 950%.
+ */
+export const BOMBARDIER_BURST_DAMAGE_PERCENT = 950;
+
+/** Bombardier Core burst: colpi per cast (un solo hit). */
+export const BOMBARDIER_BURST_HITS = 1;
+
 /** Durata del buff Crit Chance/Crit Damage di Ultimatum Criterium/Vagrus. */
 export const ULTIMATE_BUFF_SECONDS = 5;
 
