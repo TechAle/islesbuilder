@@ -73,7 +73,7 @@ describe('Backstab (Oblivion)', () => {
         expect(half.damage).toBeCloseTo(base * 1.2, 10);
     });
 
-    it('reports the effect values', () => {
+    it('reports the Backstab values', () => {
         const effects = getBackstabEffects({
             build: { activeEquip: { weapon: { name: 'Oblivion' } } },
             settings: makeSettings({ backstabChancePercent: 25 })
@@ -201,7 +201,7 @@ describe('Execution (Demeanor of Dragons)', () => {
         expect(steps.augmentFinal.dragonExecutionPercent).toBe(0);
     });
 
-    it('reports the effect values', () => {
+    it('reports the Demeanor Execution values', () => {
         const effects = getDemeanorExecutionEffects({
             build: { activeEquip: { weapon: { name: 'Demeanor of Dragons' } } },
             settings: makeSettings({ executionHpPercent: 25 })
@@ -239,7 +239,7 @@ describe("Fury's Resonance (Storm's Fury)", () => {
         expect(steps.criticalDamage.critChance).toBe(0);
     });
 
-    it('reports the effect values', () => {
+    it("reports the Fury's Resonance values", () => {
         const effects = getFuryResonanceEffects({
             build: { activeEquip: { weapon: { name: "Storm's Fury" } } },
             settings: makeSettings({ useBurst: true })

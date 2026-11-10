@@ -49,7 +49,7 @@ function run({ levels = {}, settings = {} } = {}) {
 }
 
 describe('Warrior — Relentless Assault', () => {
-    it('legge il valore del nodo a 5/5', () => {
+    it('Relentless Assault: legge il valore del nodo a 5/5', () => {
         const context = {
             build: {
                 treeLevels: { warrior: new Map([['UL1', 5]]) }
@@ -113,7 +113,7 @@ describe('Warrior — Relentless Assault', () => {
 });
 
 describe('Warrior — Chained Strike', () => {
-    it('legge il valore del nodo a 5/5', () => {
+    it('Chained Strike: legge il valore del nodo a 5/5', () => {
         const context = {
             build: {
                 treeLevels: { warrior: new Map([['UL2', 5]]) }
