@@ -70,8 +70,8 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     'Burst of Flames-Flameburster': { times: 5 },
     'Sporethrower-Fungocap Axe': { times: 5 },
 
-    // Pozza: 45% ogni 0,5s. Assumiamo 5s di durata (10 tick).
-    'Poison Cloud-Pestilent Perfume': { times: 10 },
+    // Pozza: 45% ogni 0,5s per 10s (20 tick), cooldown 10s.
+    'Poison Cloud-Pestilent Perfume': { times: 20, hitsPerUse: 20, cooldown: 10 },
 
     // DoT: 250% totali in 5 tick da 50%.
     "Dragon's Breath-Demeanor of Dragons": { damage: 50, times: 5 },
@@ -102,10 +102,10 @@ export const SPECIAL_ABILITY_OVERRIDES = {
     },
     'Honey Healing-The Drizzler': { damage: 250 },
 
-    // Death Ledger: 30% ogni 0.5s, 28 hit totali, cooldown 10s.
+    // Death Ledger: 30% ogni 0.5s per 10s (20 hit), cooldown 10s.
     'Death Ledger-Voras Deathnote': {
-        times: 28,
-        hitsPerUse: 28,
+        times: 20,
+        hitsPerUse: 20,
         cooldown: 10
     },
 
@@ -180,16 +180,21 @@ export const SPECIAL_ABILITY_OVERRIDES = {
         defenseReductionPercent: 20
     },
 
-    // Storm's Resonance: i normali attacchi marchiano i nemici e l'aura
-    // infligge 33% ogni 3s. Modellata come passiva periodica.
+    // Storm's Resonance: 5 aure da 33% (una al secondo), durata 5s e
+    // cooldown 5s. Modellata come abilità attiva con 5 hit per cast.
     "Storm's Resonance-Storm's Fury": {
-        kind: 'passive',
-        key: null,
-        energy: null,
+        kind: 'ability',
         damage: 33,
-        cooldown: 3,
-        periodic: true
+        times: 5,
+        hitsPerUse: 5,
+        cooldown: 5
     },
+
+    // Cooldown specifici.
+    'Log Throw-Giant Log': { cooldown: 1.2 },
+    'Piercing-Windripper Crossbow': { cooldown: 1.2 },
+    'Piercing-Silver Crossbow': { cooldown: 1 },
+    'Godpierce-Aetheris': { cooldown: 1.5 },
 
     // Aracha Infestation (Voras Harbringer): il testo è solo nel lore.
     // Assumiamo 5 hit da 100% ciascuno.

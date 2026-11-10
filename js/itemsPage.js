@@ -1,6 +1,7 @@
 import {
     API_AUGMENTS_ENDPOINT,
     API_ITEM_ENDPOINTS,
+    DEFAULT_ABILITY_COOLDOWN,
     ITEM_UPGRADE_STAT_PER_LEVEL,
     MAX_ITEM_UPGRADE_LEVEL,
     SLOT_TO_ITEM_CATEGORY
@@ -14,7 +15,7 @@ import { readNumber } from './modules/damage/statResolver.js';
 
 const BASE_DAMAGE_KEY = '@baseDamage';
 const SCALED_DAMAGE_KEY = '@scaledBaseDamage';
-const SCALED_SPECIAL_KEY = '@scaledWithSpecial';
+const SPECIAL_DPS_KEY = '@specialDps';
 const LEVEL_KEY = '@level';
 
 const CATEGORY_OPTIONS = [
@@ -29,7 +30,7 @@ const CATEGORY_OPTIONS = [
 const STATIC_STAT_OPTIONS = [
     { value: BASE_DAMAGE_KEY, label: 'Base Damage' },
     { value: SCALED_DAMAGE_KEY, label: 'Scaled Base Damage' },
-    { value: SCALED_SPECIAL_KEY, label: 'Scaled Base Damage + Special' },
+    { value: SPECIAL_DPS_KEY, label: 'Special DPS' },
     { value: LEVEL_KEY, label: 'Base Level' }
 ];
 
@@ -138,7 +139,8 @@ function getTargetCategory(gear) {
 }
 
 function getWeaponSpecialAttack(gear, weaponName, parser) {
-    let specialPercent = 0;
+    let specialDpsPercent = 0;
+    let specialTotalPercent = 0;
     let specialName = '';
 
     (gear?.abilities ?? []).forEach(ability => {
@@ -146,14 +148,23 @@ function getWeaponSpecialAttack(gear, weaponName, parser) {
 
         try {
             const parsed = parser.parseAbility(weaponName, ability, {
-                damageType: gear.damageType
+                damageType: gear.damageType,
+                slot: gear.slot
             });
             if (!parsed || parsed.kind !== 'ability' || !(parsed.damage > 0)) return;
 
             const times = parsed.times > 0 ? parsed.times : 1;
             const totalPercent = parsed.damage * times;
-            if (totalPercent > specialPercent) {
-                specialPercent = totalPercent;
+            const cooldown = parsed.cooldown > 0
+                ? parsed.cooldown
+                : DEFAULT_ABILITY_COOLDOWN;
+            // Confronta le abilità sul danno percentuale al secondo, non sul
+            // totale: una Death Ledger da 840% in 14s non è meglio di un Log
+            // Throw da 225% ogni 1.6s.
+            const dpsPercent = totalPercent / cooldown;
+            if (dpsPercent > specialDpsPercent) {
+                specialDpsPercent = dpsPercent;
+                specialTotalPercent = totalPercent;
                 specialName = parsed.ability || ability.name || 'Ability';
             }
         } catch {
@@ -161,7 +172,7 @@ function getWeaponSpecialAttack(gear, weaponName, parser) {
         }
     });
 
-    return { specialPercent, specialName };
+    return { specialDpsPercent, specialTotalPercent, specialName };
 }
 
 function buildItemEntry(raw, api, abilityParser) {
@@ -189,7 +200,7 @@ function buildItemEntry(raw, api, abilityParser) {
                 : (ability?.name || ability?.title || '')
         ))
         .filter(Boolean);
-    const { specialPercent, specialName } = getWeaponSpecialAttack(
+    const { specialDpsPercent, specialTotalPercent, specialName } = getWeaponSpecialAttack(
         gear,
         name,
         abilityParser
@@ -205,7 +216,8 @@ function buildItemEntry(raw, api, abilityParser) {
         baseLevel,
         rawStats: normalizeStats(stats),
         abilityNames: abilities,
-        specialPercent,
+        specialDpsPercent,
+        specialTotalPercent,
         specialName,
         defaultAttack,
         damageType,
@@ -227,7 +239,8 @@ function buildCoreEntry(item) {
         baseLevel: null,
         rawStats: normalizeStats(item.stats),
         abilityNames: [],
-        specialPercent: 0,
+        specialDpsPercent: 0,
+        specialTotalPercent: 0,
         specialName: '',
         defaultAttack: 0,
         damageType: null,
@@ -276,7 +289,8 @@ function buildAugmentEntry(augment) {
         baseLevel: null,
         rawStats,
         abilityNames: [],
-        specialPercent: 0,
+        specialDpsPercent: 0,
+        specialTotalPercent: 0,
         specialName: '',
         defaultAttack: 0,
         damageType: null,
@@ -382,13 +396,12 @@ function buildView(entry) {
 
     const baseDamage = damageStat;
     const scaledBaseDamage = baseDamage * (entry.defaultAttack / 100);
-    const scaledWithSpecial = baseDamage * (
-        (entry.defaultAttack + entry.specialPercent) / 100
-    );
+    // Danno al secondo dell'abilità migliore: base × DPS% / 100.
+    const specialDpsDamage = baseDamage * (entry.specialDpsPercent / 100);
 
     statsMap[BASE_DAMAGE_KEY] = baseDamage;
     statsMap[SCALED_DAMAGE_KEY] = scaledBaseDamage;
-    statsMap[SCALED_SPECIAL_KEY] = scaledWithSpecial;
+    statsMap[SPECIAL_DPS_KEY] = specialDpsDamage;
     statsMap[LEVEL_KEY] = entry.baseLevel === null ? undefined : entry.baseLevel;
 
     return {
@@ -397,7 +410,7 @@ function buildView(entry) {
         statsMap,
         baseDamage,
         scaledBaseDamage,
-        scaledWithSpecial
+        specialDpsDamage
     };
 }
 
@@ -633,15 +646,16 @@ function appendRow(view) {
         : '—';
 
     const specialCell = makeCell('items-num');
-    specialCell.textContent = view.scaledWithSpecial > 0
-        ? formatNumber(view.scaledWithSpecial)
+    specialCell.textContent = view.specialDpsDamage > 0
+        ? formatNumber(view.specialDpsDamage)
         : '—';
 
     const abilityCell = makeCell('items-ability');
     if (entry.isAugment) {
         abilityCell.textContent = entry.effectLabel;
-    } else if (entry.specialPercent > 0) {
-        abilityCell.textContent = `${entry.specialName} (${formatNumber(entry.specialPercent)}%)`;
+    } else if (entry.specialDpsPercent > 0) {
+        abilityCell.textContent = `${entry.specialName} (${formatNumber(entry.specialDpsPercent)}%/s)`;
+        abilityCell.title = `${entry.specialName}: ${formatNumber(entry.specialTotalPercent)}% totali, ${formatNumber(entry.specialDpsPercent)}%/s`;
     } else {
         abilityCell.textContent = entry.abilityNames.join(', ') || '—';
     }

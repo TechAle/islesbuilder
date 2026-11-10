@@ -25,14 +25,24 @@ const NON_DAMAGE_ABILITY_NAMES = new Set([
     'homing shell'
 ]);
 
+/** Armi le cui abilità non devono essere registrate. */
+const IGNORED_WEAPON_NAMES = new Set([
+    'invar hammer'
+]);
+
+/** Cooldown di default delle Greatbow, in secondi. */
+const GREATBOW_ABILITY_COOLDOWN = 0.9;
+
 /**
- * Cooldown base di un'abilità in base al tipo di danno dell'arma.
- * Le armi Heavy usano 3s, le altre il default.
- * @param {{damageType?: string|null}|undefined} options
+ * Cooldown base di un'abilità in base allo slot/tipo di danno dell'arma.
+ * Le Greatbow usano 0.9s, le Heavy 3s, le altre il default.
+ * @param {{damageType?: string|null, slot?: string|null}|undefined} options
  * @returns {number}
  */
 function getDefaultAbilityCooldown(options) {
     const damageType = String(options?.damageType ?? '').trim().toLowerCase();
+    const slot = String(options?.slot ?? '').trim().toLowerCase();
+    if (slot === 'greatbow') return GREATBOW_ABILITY_COOLDOWN;
     return damageType === 'heavy'
         ? HEAVY_ABILITY_COOLDOWN
         : DEFAULT_ABILITY_COOLDOWN;
@@ -108,7 +118,7 @@ export class SpecialAbilityManager {
      * Converte una voce `abilities` dell'API in una voce interna.
      * @param {string} weaponName
      * @param {any} ability
-     * @param {{damageType?: string|null}} [options]
+     * @param {{damageType?: string|null, slot?: string|null}} [options]
      * @returns {SpecialAbility|null}
      */
     parseAbility(weaponName, ability, options = {}) {
@@ -119,6 +129,7 @@ export class SpecialAbilityManager {
         const trimmedWeapon = String(weaponName ?? '').trim();
 
         if (!trimmedAbility || !trimmedWeapon) return null;
+        if (IGNORED_WEAPON_NAMES.has(trimmedWeapon.toLowerCase())) return null;
 
         const isPassive = typeof ability === 'object' && ability?.kind !== 'ability';
         const fullName = `${trimmedAbility}-${trimmedWeapon}`;
@@ -155,7 +166,7 @@ export class SpecialAbilityManager {
      * Registra le abilità di un'arma nelle liste globali.
      * @param {string} weaponName
      * @param {any[]|null|undefined} abilities
-     * @param {{damageType?: string|null}} [options]
+     * @param {{damageType?: string|null, slot?: string|null}} [options]
      */
     registerAbilities(weaponName, abilities, options = {}) {
         if (!weaponName || !Array.isArray(abilities)) return;
@@ -220,7 +231,10 @@ export class SpecialAbilityManager {
                 this.registerAbilities(
                     item?.name ?? item?.gear?.name,
                     abilities,
-                    { damageType: item?.gear?.damageType ?? item?.stats?.['Damage Type'] }
+                    {
+                        damageType: item?.gear?.damageType ?? item?.stats?.['Damage Type'],
+                        slot: item?.gear?.slot ?? null
+                    }
                 );
                 this.registerAbilitiesFromStats(
                     item?.name ?? item?.gear?.name,

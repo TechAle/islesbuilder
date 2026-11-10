@@ -659,7 +659,7 @@ test('ability speciali: Bug Vitality usa il numero di hit scelto', () => {
     specialAbilityManager.reset();
 });
 
-test('ability speciali: Death Ledger fa 28 hit con cooldown 10s', () => {
+test('ability speciali: Death Ledger fa 20 hit in 10s con cooldown 10s', () => {
     specialAbilityManager.reset();
     specialAbilityManager.registerAbilities('Voras Deathnote', [
         {
@@ -686,9 +686,43 @@ test('ability speciali: Death Ledger fa 28 hit con cooldown 10s', () => {
 
     const deathLedger = steps.specialAttacks.abilities[0];
     assert.equal(deathLedger.cooldown, 10);
-    assert.equal(deathLedger.times, 28);
-    assert.equal(deathLedger.hitsPerUse, 28);
-    assert.ok(Math.abs(deathLedger.hitsPerSecond - 2.8) < 1e-9);
+    assert.equal(deathLedger.times, 20);
+    assert.equal(deathLedger.hitsPerUse, 20);
+    assert.ok(Math.abs(deathLedger.hitsPerSecond - 2) < 1e-9);
+
+    specialAbilityManager.reset();
+});
+
+test('ability speciali: Poison Cloud fa 20 tick in 10s con cooldown 10s', () => {
+    specialAbilityManager.reset();
+    specialAbilityManager.registerAbilities('Pestilent Perfume', [
+        {
+            kind: 'ability',
+            name: 'Poison Cloud',
+            energy: 12,
+            text: 'Cast a pot that will leave a poisonous pool dealing 45% damage every half a second.',
+            key: 'Right click'
+        }
+    ]);
+
+    const build = makeDamageBuild({
+        'Damage Type': 'Throwables',
+        'Default Attack': 90,
+        'Weapon Type': 'ranged'
+    });
+    build.activeEquip.weapon.name = 'Pestilent Perfume';
+
+    const steps = new DpsManager({ specialAbilityManager }).recalculate({
+        statsValues: { 'Throwables Damage': { flat: 33.1, percent: 0 } },
+        skillValues: {},
+        build
+    });
+
+    const poison = steps.specialAttacks.abilities[0];
+    assert.equal(poison.cooldown, 10);
+    assert.equal(poison.times, 20);
+    assert.equal(poison.hitsPerUse, 20);
+    assert.ok(Math.abs(poison.hitsPerSecond - 2) < 1e-9);
 
     specialAbilityManager.reset();
 });
@@ -1101,7 +1135,7 @@ test('parser: senza percentuale assume 100%, utility resta 0', () => {
     specialAbilityManager.reset();
 });
 
-test("storm's resonance: aura periodica al 33% ogni 3s", () => {
+test("storm's resonance: 5 aure da 33% in 5s", () => {
     specialAbilityManager.reset();
 
     specialAbilityManager.registerAbilities("Storm's Fury", [
@@ -1114,12 +1148,14 @@ test("storm's resonance: aura periodica al 33% ogni 3s", () => {
         }
     ]);
 
-    const aura = passives.find(entry => entry.name === "Storm's Resonance-Storm's Fury");
+    const aura = onClick.find(entry => entry.name === "Storm's Resonance-Storm's Fury");
     assert.ok(aura);
-    assert.equal(aura.kind, 'passive');
+    assert.equal(aura.kind, 'ability');
     assert.equal(aura.damage, 33);
-    assert.equal(aura.cooldown, 3);
-    assert.equal(aura.periodic, true);
+    assert.equal(aura.times, 5);
+    assert.equal(aura.hitsPerUse, 5);
+    assert.equal(aura.cooldown, 5);
+    assert.equal(passives.some(entry => entry.name === "Storm's Resonance-Storm's Fury"), false);
 
     specialAbilityManager.reset();
 });
@@ -1141,7 +1177,7 @@ test('voras harbringer: aracha infestation 5 hit da 100%', () => {
     specialAbilityManager.reset();
 });
 
-test("storm's resonance: la passiva periodica genera hit e danno ogni 3s", () => {
+test("storm's resonance: 1 hit/s e 33% DPS con 5 aure per cast", () => {
     specialAbilityManager.reset();
 
     specialAbilityManager.registerAbilities("Storm's Fury", [
@@ -1161,14 +1197,23 @@ test("storm's resonance: la passiva periodica genera hit e danno ogni 3s", () =>
     });
     build.activeEquip.weapon.name = "Storm's Fury";
 
-    const context = { build, statsValues: {}, settings: {} };
-    const hits = specialAbilityManager.getPassiveHitsFromBase(context, 2);
-    const damage = specialAbilityManager.applyDamagePassives(context, 100, 2);
+    const context = {
+        build,
+        weapon: build.activeEquip.weapon,
+        statsValues: {},
+        settings: {}
+    };
+    const effects = specialAbilityManager.getOnClickEffects(context, 100, 1);
+    const aura = effects.abilities.find(
+        entry => entry.name === "Storm's Resonance-Storm's Fury"
+    );
 
-    assert.ok(Math.abs(hits.hitsPerSecond - 1 / 3) < 1e-9);
-    assert.ok(Math.abs(damage.applied[0].hitsPerSecond - 1 / 3) < 1e-9);
-    assert.ok(damage.dps > 0);
-    assert.ok(Math.abs(damage.dps - (100 * (100 / 100) * 0.33 / 3)) < 1e-9);
+    assert.ok(aura);
+    assert.equal(aura.times, 5);
+    assert.equal(aura.hitsPerUse, 5);
+    assert.ok(Math.abs(aura.damagePerUse - 165) < 1e-9);
+    assert.ok(Math.abs(aura.hitsPerSecond - 1) < 1e-9);
+    assert.ok(Math.abs(aura.dps - 33) < 1e-9);
 
     specialAbilityManager.reset();
 });
@@ -1311,6 +1356,72 @@ test('arrow volley: 150% totali e 2 hit; windstorm: 200%', () => {
     assert.equal(volley.damage, 150);
     assert.equal(volley.hitsPerUse, 1);
     assert.equal(windstorm.damage, 200);
+
+    specialAbilityManager.reset();
+});
+
+test('greatbow: cooldown di default 0.9s', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Bronze Greatbow', [
+        {
+            kind: 'ability',
+            name: 'Trinity',
+            energy: 12,
+            text: 'Shoot three arrows at once dealing 75% damage.',
+            key: 'Right click'
+        }
+    ], { slot: 'Greatbow' });
+
+    const trinity = onClick.find(entry => entry.name === 'Trinity-Bronze Greatbow');
+    assert.ok(trinity);
+    assert.equal(trinity.cooldown, 0.9);
+
+    specialAbilityManager.reset();
+});
+
+test('cooldown specifici: Giant Log, Windripper, Silver Crossbow, Aetheris', () => {
+    specialAbilityManager.reset();
+
+    const cases = [
+        ['Giant Log', 'Log Throw', 1.2, 'Log Throw-Giant Log'],
+        ['Windripper Crossbow', 'Piercing', 1.2, 'Piercing-Windripper Crossbow'],
+        ['Silver Crossbow', 'Piercing', 1, 'Piercing-Silver Crossbow'],
+        ['Aetheris', 'Godpierce', 1.5, 'Godpierce-Aetheris']
+    ];
+
+    cases.forEach(([weapon, ability, cooldown, fullName]) => {
+        specialAbilityManager.registerAbilities(weapon, [
+            {
+                kind: 'ability',
+                name: ability,
+                energy: 12,
+                text: 'Deal 100% damage.',
+                key: 'Right click'
+            }
+        ]);
+        const entry = onClick.find(item => item.name === fullName);
+        assert.ok(entry, fullName);
+        assert.equal(entry.cooldown, cooldown, fullName);
+    });
+
+    specialAbilityManager.reset();
+});
+
+test('invar hammer: le abilità vengono ignorate dal parser', () => {
+    specialAbilityManager.reset();
+
+    specialAbilityManager.registerAbilities('Invar Hammer', [
+        {
+            kind: 'ability',
+            name: 'Full Swing',
+            energy: 16,
+            text: 'Deal 75% damage to all enemies around you.',
+            key: 'Right click'
+        }
+    ], { slot: 'Hammer' });
+
+    assert.equal(onClick.some(entry => entry.weapon === 'Invar Hammer'), false);
 
     specialAbilityManager.reset();
 });

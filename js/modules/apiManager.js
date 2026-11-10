@@ -253,7 +253,7 @@ export class ApiManager {
                     this.specialAbilityManager?.registerAbilities(
                         name,
                         gear.abilities,
-                        { damageType: gear.damageType }
+                        { damageType: gear.damageType, slot: gear.slot }
                     );
                 }
 
