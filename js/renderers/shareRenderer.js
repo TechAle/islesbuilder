@@ -25,27 +25,27 @@ export class ShareRenderer {
     /** @param {string} url */
     copyLink(url) {
         if (!navigator.clipboard?.writeText) {
-            alert('Copia manuale: seleziona e copia il link dalla barra degli indirizzi.');
+            alert('Manual copy: select and copy the link from the address bar.');
             return;
         }
 
         navigator.clipboard.writeText(url)
             .then(() => {
-                alert('Link di condivisione copiato negli appunti!');
+                alert('Share link copied to clipboard!');
             })
             .catch(() => {
-                alert('Impossibile copiare automaticamente. Copia il link dalla barra degli indirizzi.');
+                alert('Unable to copy automatically. Copy the link from the address bar.');
             });
     }
 
     /** @returns {string|null} */
     promptForLink() {
-        return prompt("Incolla qui il link della build oppure direttamente il codice hash (valore):");
+        return prompt("Paste the build link here, or the hash code (value) directly:");
     }
 
     /** Mostra un messaggio di link non valido. */
     alertInvalid() {
-        alert("Codice o link non valido.");
+        alert("Invalid code or link.");
     }
 
     /**

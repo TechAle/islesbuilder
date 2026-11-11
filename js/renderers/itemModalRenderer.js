@@ -40,7 +40,7 @@ export class ItemModalRenderer {
         const titleEl = this.getElementById('modal-slot-title');
         const nameEl = /** @type {HTMLInputElement|null} */ (this.getElementById('modal-item-name'));
 
-        if (titleEl) titleEl.textContent = `Modifica Slot: ${slot.toUpperCase()}`;
+        if (titleEl) titleEl.textContent = `Edit Slot: ${slot.toUpperCase()}`;
         if (nameEl) nameEl.value = item.name || '';
 
         const container = this.getElementById('modal-stat-list');
@@ -80,13 +80,13 @@ export class ItemModalRenderer {
         nameInput.type = 'text';
         nameInput.className = 'stat-name-input';
         nameInput.setAttribute('list', 'stat-suggestions');
-        nameInput.placeholder = 'Statistica';
+        nameInput.placeholder = 'Stat';
         nameInput.value = statName;
 
         const valueInput = document.createElement('input');
         valueInput.type = 'text';
         valueInput.className = 'stat-val-input';
-        valueInput.placeholder = 'Valore (es. 10 o 35%)';
+        valueInput.placeholder = 'Value (e.g. 10 or 35%)';
         valueInput.value = statVal;
 
         const deleteButton = document.createElement('button');

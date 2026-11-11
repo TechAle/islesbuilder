@@ -153,7 +153,7 @@ export class EnemySimulatorRenderer {
         if (!root) return;
 
         if (result.health <= 0) {
-            root.innerHTML = '<div class="damage-empty">Inserisci la vita del nemico.</div>';
+            root.innerHTML = '<div class="damage-empty">Enter the enemy\'s health.</div>';
             return;
         }
 
@@ -196,13 +196,13 @@ export class EnemySimulatorRenderer {
             rows.push({
                 label: 'Real Damage / Hit',
                 value: format(result.realFirstHitDamage),
-                help: 'Danno del primo colpo, senza gli effetti che richiedono un hit precedente.'
+                help: 'First-hit damage, without effects that require a previous hit.'
             });
             rows.push({ label: 'Raw DPS', value: format(result.dps) });
             rows.push({
                 label: 'Potions Needed',
                 value: formatInteger(result.potionsNeeded),
-                help: 'Pozioni da 25 energia necessarie per sostenere il combattimento.'
+                help: '25-energy potions needed to sustain the fight.'
             });
             rows.push({
                 label: 'Right-click Casts',
@@ -218,7 +218,7 @@ export class EnemySimulatorRenderer {
             rows.push({
                 label: 'Defense Reduction',
                 value: `-${format(result.defenseReductionPercent)}%`,
-                help: 'Riduzione della difesa nemica da Poisoned Potatoes, Deteriorate e Toxic Gas.'
+                help: 'Enemy defense reduction from Poisoned Potatoes, Deteriorate and Toxic Gas.'
             });
             rows.push({
                 label: 'Effective Defense',
@@ -228,7 +228,7 @@ export class EnemySimulatorRenderer {
                 rows.push({
                     label: 'Ramp Hits',
                     value: formatInteger(result.defenseReductionRampHits),
-                    help: 'Prime hit senza riduzione della difesa (Deteriorate).'
+                    help: 'First hits without defense reduction (Deteriorate).'
                 });
             }
         }
@@ -237,7 +237,7 @@ export class EnemySimulatorRenderer {
             rows.push({
                 label: 'Damage%',
                 value: formatSignedPercent(result.damagePercent),
-                help: 'Danno extra applicato prima della difesa del nemico.'
+                help: 'Extra damage applied before enemy defense.'
             });
         }
 

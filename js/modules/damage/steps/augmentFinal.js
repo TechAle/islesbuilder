@@ -154,7 +154,7 @@ export const augmentFinalStep = {
                 label: 'Demeanor Execution',
                 value: result.dragonExecutionPercent,
                 unit: '%',
-                help: `+30% massimo in base alla vita mancante del nemico (HP attuali ${result.dragonEnemyHpPercent ?? 0}%).`
+                help: `+30% max based on the enemy's missing health (current HP ${result.dragonEnemyHpPercent ?? 0}%).`
             });
         }
         if (result.hasProsecution) {

@@ -217,7 +217,7 @@ export const attackSpeedStep = {
                 ? [{
                     label: 'First Hit',
                     value: result.firstHitDamage,
-                    help: 'Danno di un singolo colpo con tutti i modificatori, senza DPS di passive o abilità.'
+                    help: 'Damage of a single hit with all modifiers, excluding passive or ability DPS.'
                 }]
                 : []),
             ...(result.passiveDps > 0

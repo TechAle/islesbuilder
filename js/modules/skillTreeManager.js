@@ -187,7 +187,7 @@ export class SkillTreeManager {
     getNodeInfo(id) {
         const node = this.getActiveNodes()[id];
         const level = this.getActiveLevels().get(id) || 0;
-        let description = node.description || "Nessuna descrizione disponibile.";
+        let description = node.description || "No description available.";
 
         if (node.parameters) {
             Object.entries(node.parameters).forEach(([key, param]) => {

@@ -154,7 +154,7 @@ export const augmentDamageStep = {
                 label: 'First Strike',
                 value: result.firstStrikePercent,
                 unit: '%',
-                help: 'Si applica solo al primo colpo, non al DPS sostenuto.'
+                help: 'Applies only to the first hit, not to sustained DPS.'
             });
         }
 

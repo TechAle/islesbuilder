@@ -90,7 +90,7 @@ export class SkillTreeRenderer {
             button.addEventListener('mouseenter', () => {
                 const info = this.getNodeInfo(id);
                 const costLabel = info.isMax ? 'MAX' : `${info.nextCost} SP`;
-                this.tooltip.innerHTML = `<strong>${info.name}</strong> (${info.level}/${info.max})<br>${info.description}<br><small>Costo prossimo livello: ${costLabel}</small>`;
+                this.tooltip.innerHTML = `<strong>${info.name}</strong> (${info.level}/${info.max})<br>${info.description}<br><small>Next level cost: ${costLabel}</small>`;
                 this.tooltip.style.display = 'block';
             });
 

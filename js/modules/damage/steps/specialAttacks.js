@@ -203,7 +203,7 @@ export const specialAttacksStep = {
                     label: `${ability.ability} Defense`,
                     value: -ability.defenseReductionPercent,
                     unit: '%',
-                    help: 'Riduzione della difesa nemica, applicata nell\'Enemy Simulator.'
+                    help: 'Enemy defense reduction, applied in the Enemy Simulator.'
                 });
             }
 

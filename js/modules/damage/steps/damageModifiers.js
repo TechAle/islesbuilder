@@ -288,7 +288,7 @@ export const damageModifiersStep = {
                     label: 'Backstab Damage%',
                     value: result.backstabDamagePercent ?? 0,
                     unit: '%',
-                    help: `Oblivion: +${result.backstabMaxPercent ?? 40}% danno da dietro, pesato sulla probabilità.`
+                    help: `Oblivion: +${result.backstabMaxPercent ?? 40}% backstab damage, weighted by chance.`
                 }
             );
         }
@@ -298,7 +298,7 @@ export const damageModifiersStep = {
                 label: 'Deteriorate Defense',
                 value: -(result.deteriorateDefenseReductionPercent ?? 0),
                 unit: '%',
-                help: 'Aetheris: -5% difesa per hit, fino a -25%. Nei mostri le prime 5 hit non hanno lo stack.'
+                help: 'Aetheris: -5% defense per hit, up to -25%. Against monsters the first 5 hits have no stack.'
             });
         }
 
@@ -307,7 +307,7 @@ export const damageModifiersStep = {
                 {
                     label: "Storm's Echo Stacks",
                     value: result.stormEchoStacks ?? 0,
-                    help: `Stack medi: servono almeno 1 hit/s per il massimo (3 stack).`
+                    help: `Average stacks: at least 1 hit/s is needed for the max (3 stacks).`
                 },
                 {
                     label: "Storm's Echo Damage%",
@@ -322,7 +322,7 @@ export const damageModifiersStep = {
             rows.push({
                 label: 'Natural Distillation EP',
                 value: result.distilledElementalPowerFlat,
-                help: `Crit Damage convertito ×${NATURAL_DISTILLATION_EP_MULTIPLIER} Elemental Power.`
+                help: `Crit Damage converted ×${NATURAL_DISTILLATION_EP_MULTIPLIER} Elemental Power.`
             });
         }
         if (hasElementalDamage) {
@@ -357,12 +357,12 @@ export const damageModifiersStep = {
                 label: masteryName,
                 value: result.masteryPercent,
                 unit: '%',
-                help: `${masteryName} aumenta il danno del ${result.masteryPercent}%.`
+                help: `${masteryName} increases damage by ${result.masteryPercent}%.`
             });
             rows.push({
                 label: `${masteryName} Damage`,
                 value: result.masteryBonus,
-                help: `Danno piatto aggiunto da ${masteryName}: ${result.masteryPercent}% del danno del colpo prima della mastery.`
+                help: `Flat damage added by ${masteryName}: ${result.masteryPercent}% of the hit damage before mastery.`
             });
         }
 

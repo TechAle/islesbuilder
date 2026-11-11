@@ -21,7 +21,7 @@ export class StatsRenderer {
         root.innerHTML = '';
 
         if (Object.keys(statsValues).length === 0) {
-            root.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Nessuna statistica applicata</div>';
+            root.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">No stats applied</div>';
             return;
         }
 

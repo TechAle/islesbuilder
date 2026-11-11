@@ -95,7 +95,7 @@ export class ApiManager {
                     ? AbortSignal.timeout(API_REQUEST_TIMEOUT_MS)
                     : undefined;
                 const res = await fetch(this.url + endpoint, { signal });
-                if (!res.ok) throw new Error(`HTTP ${res.status} su ${endpoint}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status} at ${endpoint}`);
                 const json = await res.json();
                 return json.data || json;
             } catch (error) {
@@ -297,10 +297,10 @@ export class ApiManager {
             // 5. Aggiornamento dello store e notifica automatica
             this.dataStore.updateData({ items: itemsCopy }, 'items');
 
-            console.log("Oggetti, armi, abilità e statistiche sincronizzati con successo!");
+            console.log("Items, weapons, abilities and stats synced successfully!");
 
         } catch (error) {
-            console.error("Errore durante il fetch delle categorie API:", error);
+            console.error("Error while fetching the API categories:", error);
         }
     }
 
@@ -311,7 +311,7 @@ export class ApiManager {
             registerAugments(rawAugments);
             this.dataStore.updateData({ augments: [...AUGMENT_DATABASE] }, 'augments');
         } catch (error) {
-            console.error("Errore durante il fetch degli augment:", error);
+            console.error("Error while fetching augments:", error);
         }
     }
 
@@ -343,10 +343,10 @@ export class ApiManager {
 
             this.dataStore.updateData({ elixirsConfig: mappedElixirs }, 'elixirs');
 
-            console.log("Elisir sincronizzati con distinzione percentuale!");
+            console.log("Elixirs synced with percent distinction!");
 
         } catch (error) {
-            console.error("Errore durante il fetch degli elisir:", error);
+            console.error("Error while fetching elixirs:", error);
         }
     }
 }

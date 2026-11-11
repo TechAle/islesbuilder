@@ -352,7 +352,7 @@ export const criticalDamageStep = {
                     label: 'Natural Distillation',
                     value: -result.convertedCritDamagePercent,
                     unit: '%',
-                    help: `${result.distillationPercent}% del Crit Damage convertito in Elemental Power a 2×.`
+                    help: `${result.distillationPercent}% of Crit Damage converted into Elemental Power at 2×.`
                 },
                 {
                     label: 'Effective Crit Damage',

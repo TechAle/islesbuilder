@@ -55,7 +55,7 @@ export class DamageRenderer {
         if (groups.every(group => group.results.length === 0)) {
             const empty = document.createElement('div');
             empty.className = 'damage-empty';
-            empty.textContent = 'Nessun danno calcolabile';
+            empty.textContent = 'No calculable damage';
             root.appendChild(empty);
             return;
         }
@@ -87,7 +87,7 @@ export class DamageRenderer {
             if (group.results.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'damage-empty';
-                empty.textContent = 'Nessun valore';
+                empty.textContent = 'No value';
                 content.appendChild(empty);
             } else {
                 group.results.forEach(result => content.appendChild(createRow(result)));

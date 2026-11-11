@@ -218,7 +218,7 @@ export class ShareManager {
             this.equippedStore.setState(newState, 'all');
             return true;
         } catch (error) {
-            console.error('Errore nel caricamento dello stato:', error);
+            console.error('Error loading state:', error);
             return false;
         }
     }
