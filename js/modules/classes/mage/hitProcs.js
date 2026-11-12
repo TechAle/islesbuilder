@@ -63,7 +63,11 @@ export function getCrystalInsightsElementalPowerPercent(context, critChancePerce
     );
     const critsPerSecond = combatHits.totalHitsPerSecond * critRate;
     const shardsPerSecond = critsPerSecond * (insights.chancePercent / 100);
-    const averageActiveShards = shardsPerSecond * CRYSTAL_INSIGHTS_DURATION;
+    // Crystal Insights non stacka: al massimo 1 shard attivo.
+    const averageActiveShards = Math.min(
+        1,
+        shardsPerSecond * CRYSTAL_INSIGHTS_DURATION
+    );
 
     return averageActiveShards * insights.elementalPowerPercent;
 }

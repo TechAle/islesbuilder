@@ -139,6 +139,24 @@ export const ITEM_OVERRIDES = {
     "Abyssal Blight Boots": {
         "Void Damage": "5%",
     },
+    // Storm's Legacy: in gioco ogni pezzo dà anche +5% Void Damage e
+    // +29 Elemental Power, non presenti nei dati API.
+    "Storm's Legacy Helmet": {
+        "Void Damage": "5%",
+        "Elemental Power": 29,
+    },
+    "Storm's Legacy Chestplate": {
+        "Void Damage": "5%",
+        "Elemental Power": 29,
+    },
+    "Storm's Legacy Leggings": {
+        "Void Damage": "5%",
+        "Elemental Power": 29,
+    },
+    "Storm's Legacy Boots": {
+        "Void Damage": "5%",
+        "Elemental Power": 29,
+    },
     "Blackrib Helmet": {
         "Thunder Damage": "5%"
     },

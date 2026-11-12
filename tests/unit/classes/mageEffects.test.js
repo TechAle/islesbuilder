@@ -230,14 +230,15 @@ test('crystal insights: stima EP% da crit rate, attack speed e durata', () => {
         elementalPowerPercent: 30
     });
 
-    // 50% crit, 1 attacco/0.6s → 0.833 crit/s → 0.208 shard/s → 1.667 shard medi → 50% EP
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 50) < 1e-9);
+    // 50% crit, 1 attacco/0.6s → 0.833 crit/s → 0.208 shard/s → 1.667 shard medi,
+    // ma Crystal Insights non stacka: massimo 1 → 30% EP.
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 
-    // Con intervallo 1.2s la metà
+    // Con intervallo 1.2s la metà (0.833 shard medi < 1)
     assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 1.2) - 25) < 1e-9);
 
-    // Crit chance oltre 100 viene contata come 100
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 150, 0.6) - 100) < 1e-9);
+    // Crit chance oltre 100 viene contata come 100, ma il cap resta 1 stack
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 150, 0.6) - 30) < 1e-9);
 });
 
 test('crystal insights: aumenta Elemental Power nel calcolo del danno', () => {
@@ -262,10 +263,10 @@ test('crystal insights: aumenta Elemental Power nel calcolo del danno', () => {
         skillTrees: CLASS_SKILL_TREES
     });
 
-    assert.ok(Math.abs(steps.damageModifiers.crystalInsightsPercent - 50) < 1e-9);
-    assert.ok(Math.abs(steps.damageModifiers.elementalPower - 150) < 1e-9);
-    assert.ok(Math.abs(steps.damageModifiers.effectiveElementalPercent - 30) < 1e-9);
-    assert.ok(Math.abs(steps.damageModifiers.damage - 26) < 1e-9);
+    assert.ok(Math.abs(steps.damageModifiers.crystalInsightsPercent - 30) < 1e-9);
+    assert.ok(Math.abs(steps.damageModifiers.elementalPower - 130) < 1e-9);
+    assert.ok(Math.abs(steps.damageModifiers.effectiveElementalPercent - 26) < 1e-9);
+    assert.ok(Math.abs(steps.damageModifiers.damage - 25.2) < 1e-9);
 
     const group = manager.getStepGroups().find(g => g.id === 'damageModifiers');
     assert.deepEqual(group.results.map(r => r.label), [
@@ -284,7 +285,8 @@ test('crystal insights: nessun effetto senza il nodo, indipendentemente dalla cl
         build: { currentClass: 'archer', treeLevels: { mage: new Map([['UL1', 5]]) } },
         skillTrees: CLASS_SKILL_TREES
     };
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(archer, 50, 0.6) - 50) < 1e-9);
+    // Crystal Insights non stacka: massimo 1 stack → 30% EP
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(archer, 50, 0.6) - 30) < 1e-9);
 });
 
 test('natural distillation: converte Crit Damage in EP e riduce il Crit Damage', () => {
@@ -420,12 +422,12 @@ test('crystal insights: con la burst considera anche i suoi critici', () => {
         settings: { useBurst: true, potentialChargeKills: 0 }
     };
 
-    // 0.5/0.6 + (10/0.75/30)*0.5 = 1.0556 crit/s → 2.111 shard → 63.33% EP
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 63.33333333333333) < 1e-9);
+    // 0.5/0.6 + (10/0.75/30)*0.5 = 1.0556 crit/s → 2.111 shard medi, ma il cap è 1 stack → 30% EP
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 
-    // Con Potential Charge a 10 kill il ciclo scende a 10s → 90% EP
+    // Con Potential Charge a 10 kill il ciclo scende a 10s, ma il cap resta 1 stack → 30% EP
     context.settings.potentialChargeKills = 10;
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 90) < 1e-9);
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 });
 
 test('crystal insights: senza Mage Core i critici burst non contano', () => {
@@ -439,7 +441,7 @@ test('crystal insights: senza Mage Core i critici burst non contano', () => {
         settings: { useBurst: true, potentialChargeKills: 0 }
     };
 
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 50) < 1e-9);
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 });
 
 test('crystal combustion: drop indipendenti, cooldown e danno da Average Damage', () => {
@@ -568,7 +570,7 @@ test('crystal insights: le esplosioni contano come hit e crit', () => {
 
     // Senza Crystal Combustion i cristalli non esplodono e non contano come hit.
     const noCombustion = { build: baseBuild, skillTrees: CLASS_SKILL_TREES };
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(noCombustion, 50, 0.6) - 50) < 1e-9);
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(noCombustion, 50, 0.6) - 30) < 1e-9);
 
     // Con Crystal Combustion: hit base 1.6667 + esplosioni 1.3636 = 3.0303 hit/s
     // 50% crit → 1.515 crit/s → 3.030 shard medi → 90.909% EP
@@ -579,10 +581,10 @@ test('crystal insights: le esplosioni contano come hit e crit', () => {
         },
         skillTrees: CLASS_SKILL_TREES
     };
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 90.9090909090909) < 1e-9);
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 
     context.settings = { crystalExplosionOverride: true, crystalExplosionsPerSecond: 0 };
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 50) < 1e-9);
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 });
 
 test('support orbs: 1 hit/s per orb, fino a 3 orb', () => {
@@ -649,8 +651,8 @@ test('crystal insights: anche le orb rosse contano come hit e crit', () => {
     // Senza Magical Capacity non esistono orb speciali:
     // 2 orb normali → 0.667 RED
     // hit base 1.667 + 0.667 = 2.333 hit/s
-    // 50% crit → 1.167 crit/s → 2.333 shard medi → 70% EP
-    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 70) < 1e-9);
+    // 50% crit → 1.167 crit/s → 2.333 shard medi, ma il cap è 1 stack → 30% EP
+    assert.ok(Math.abs(getCrystalInsightsElementalPowerPercent(context, 50, 0.6) - 30) < 1e-9);
 });
 
 test('support orbs: senza Magical Capacity non ci sono orb speciali', () => {
