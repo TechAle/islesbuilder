@@ -554,9 +554,9 @@ export const CLASS_SKILL_TREES = {
             'DL': {
                 x: 42, y: 68, max: 5, costBase: 2,
                 name: "Energetic",
-                statKey: "{val} Energy Regen",
+                statKey: "{val}% Energy Regen",
                 isDirect: true,
-                description: "Gain {val} Energy Regen",
+                description: "Gain {val}% Energy Regen",
                 parameters: { val: { base: 5.0, increase: 5.0 } }
             },
             'DL1': {
