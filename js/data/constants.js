@@ -10,6 +10,19 @@ export const API_ITEM_ENDPOINTS = [
 
 export const API_ELIXIRS_ENDPOINT = "/elixirs";
 export const API_AUGMENTS_ENDPOINT = "/augments";
+
+/**
+ * Backup locale delle risposte API, usato come fallback se l'API non è
+ * raggiungibile. I file si trovano in `js/data/backup/`.
+ * @type {Record<string, string>}
+ */
+export const API_BACKUP_FILES = {
+    "/items?category=weapons": "items-weapons.json",
+    "/items?category=armor": "items-armor.json",
+    "/items?category=accessories": "items-accessories.json",
+    [API_ELIXIRS_ENDPOINT]: "elixirs.json",
+    [API_AUGMENTS_ENDPOINT]: "augments.json"
+};
 export const API_REQUEST_TIMEOUT_MS = 10000;
 export const API_MAX_ATTEMPTS = 2;
 

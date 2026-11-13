@@ -376,18 +376,18 @@ test('the avatar: +10% Elemental Power per livello', () => {
     assert.ok(Math.abs(steps.damageModifiers.damage - 111) < 1e-9);
 });
 
-test('energetic: +5 Energy Regen flat per livello', () => {
+test('energetic: +5% Energy Regen per livello', () => {
     const { dataStore, equippedStore } = makeWorld();
     equippedStore.setCurrentClass('mage');
     equippedStore.state.treeLevels.mage.set('DL', 1);
 
     const { statsValues } = selectStats(dataStore.data, equippedStore.state);
-    assert.equal(statsValues['Energy Regen'].flat, 5);
-    assert.equal(statsValues['Energy Regen'].percent, 0);
+    assert.equal(statsValues['Energy Regen'].flat, 0);
+    assert.equal(statsValues['Energy Regen'].percent, 5);
 
     equippedStore.state.treeLevels.mage.set('DL', 5);
     const level5 = selectStats(dataStore.data, equippedStore.state).statsValues;
-    assert.equal(level5['Energy Regen'].flat, 25);
+    assert.equal(level5['Energy Regen'].percent, 25);
 });
 
 test('magical capacity: massimo livello 3 e valori del nodo', () => {

@@ -165,6 +165,22 @@ describe('ApiManager fetch retry', () => {
 
         await expect(manager.fetchJson('/ok')).resolves.toEqual([{ id: 1 }]);
     });
+
+    it('falls back to the local backup when the API is unreachable', async () => {
+        const { manager } = makeManager();
+        const fetchMock = vi.fn(async url => {
+            if (String(url).includes('/api/v1')) throw new Error('network down');
+            return jsonResponse([{ id: 'backup' }]);
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(manager.fetchJson('/items?category=weapons'))
+            .resolves.toEqual([{ id: 'backup' }]);
+        // 2 tentativi API + 1 lettura del backup locale
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+        const backupCall = fetchMock.mock.calls.find(([url]) => !String(url).includes('/api/v1'));
+        expect(String(backupCall[0])).toContain('data/backup/items-weapons.json');
+    });
 });
 
 describe('ApiManager updates with mocked fetch', () => {

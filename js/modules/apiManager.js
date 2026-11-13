@@ -3,6 +3,7 @@ import {
     API_ITEM_ENDPOINTS,
     API_ELIXIRS_ENDPOINT,
     API_AUGMENTS_ENDPOINT,
+    API_BACKUP_FILES,
     API_MAX_ATTEMPTS,
     API_REQUEST_TIMEOUT_MS,
     DEFAULT_ELIXIR_LEVEL,
@@ -100,6 +101,21 @@ export class ApiManager {
                 return json.data || json;
             } catch (error) {
                 lastError = error;
+            }
+        }
+
+        // Fallback locale: se l'API non è raggiungibile, usa il backup JSON.
+        const backupFile = API_BACKUP_FILES[endpoint];
+        if (backupFile) {
+            try {
+                const backupUrl = new URL(`../data/backup/${backupFile}`, import.meta.url);
+                const res = await fetch(backupUrl);
+                if (res.ok) {
+                    const json = await res.json();
+                    return json.data || json;
+                }
+            } catch {
+                // Ignora: viene rilanciato l'errore originale dell'API.
             }
         }
 
