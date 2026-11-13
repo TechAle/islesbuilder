@@ -16,3 +16,9 @@ builds can be optimized instead of guessed.
 This project is built and maintained for **Isles version 1.0.6**. Newer game
 versions may change items, abilities, formulas or mechanics, so results are not
 guaranteed to match the live game.
+
+---
+
+## License
+
+Released under the **MIT License**. See [LICENSE](LICENSE).
